@@ -119,21 +119,23 @@ const Convert = () => {
 
       if (conversionError) throw conversionError;
 
-      // 4. Create transaction record
+      // 4. Create transaction record with correct format
       const { error: txError } = await supabase
         .from('transactions')
         .insert({
           user_id: user.id,
           kind: 'CONVERT',
-          title: `Converted ${selectedToken} to NGN`,
-          subtitle: `Rate: ₦${quote.rate.toLocaleString()} per ${selectedToken}`,
-          amount_display: `+₦${quote.netAmount.toLocaleString()}`,
+          title: 'Crypto Conversion',
+          subtitle: `${selectedToken} to NGN`,
+          amount_display: `-${numAmount} ${selectedToken} → +₦${quote.netAmount.toLocaleString()} (fee: ₦${quote.fee.toLocaleString()})`,
           status: 'SUCCESS',
           metadata: {
             from_amount: numAmount,
             from_token: selectedToken,
+            from_network: 'base',
             rate: quote.rate,
             fee: quote.fee,
+            ngn_amount: quote.netAmount,
           },
         });
 
@@ -370,37 +372,55 @@ const Convert = () => {
           </Card>
         )}
 
-        {/* Insufficient Balance Warning */}
-        {parseFloat(amount) > availableBalance && (
-          <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
-            <AlertCircle className="w-4 h-4 text-destructive mt-0.5" />
-            <p className="text-xs text-destructive">
-              Insufficient balance. You only have {availableBalance.toFixed(2)} {selectedToken}.
+        {/* Helper Text - show when conversion is not possible */}
+        {availableBalance === 0 && (
+          <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 border border-border">
+            <Info className="w-4 h-4 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">
+              Deposit crypto to enable conversion.
+            </p>
+          </div>
+        )}
+
+        {availableBalance > 0 && parseFloat(amount) > availableBalance && (
+          <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 border border-border">
+            <Info className="w-4 h-4 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">
+              Amount exceeds your balance of {availableBalance.toFixed(2)} {selectedToken}.
             </p>
           </div>
         )}
 
         {/* Convert Button */}
-        <Button
-          className="w-full touch-target gradient-primary hover:opacity-90"
-          onClick={handleConvert}
-          disabled={
+        {(() => {
+          const numAmount = parseFloat(amount) || 0;
+          const isDisabled = 
             converting || 
+            availableBalance === 0 ||
             !quote || 
             !amount || 
-            parseFloat(amount) <= 0 || 
-            parseFloat(amount) > availableBalance
-          }
-        >
-          {converting ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <>
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Convert to NGN
-            </>
-          )}
-        </Button>
+            numAmount <= 0 || 
+            numAmount > availableBalance;
+
+          return (
+            <Button
+              className={`w-full touch-target gradient-primary hover:opacity-90 transition-opacity ${
+                isDisabled && !converting ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+              onClick={handleConvert}
+              disabled={isDisabled}
+            >
+              {converting ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Convert to NGN
+                </>
+              )}
+            </Button>
+          );
+        })()}
 
         {/* Info Note */}
         <p className="text-xs text-muted-foreground text-center">
