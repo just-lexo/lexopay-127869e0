@@ -40,6 +40,7 @@ const Deposit = () => {
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showDevTools, setShowDevTools] = useState(false);
+  const [testAmount, setTestAmount] = useState<number>(100);
 
   // Check if we're in dev mode
   const isDev = import.meta.env.DEV;
@@ -141,7 +142,7 @@ const Deposit = () => {
         return;
       }
 
-      const depositAmount = 100; // Simulate 100 USDT/USDC deposit
+      const depositAmount = testAmount; // Use dev-configurable test amount
 
       // Update deposit status
       const { error: depositError } = await supabase
@@ -394,7 +395,17 @@ const Deposit = () => {
               </div>
             </CardHeader>
             {showDevTools && (
-              <CardContent className="space-y-2">
+              <CardContent className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <label className="text-sm text-muted-foreground">Test Amount:</label>
+                  <input
+                    type="number"
+                    value={testAmount}
+                    onChange={(e) => setTestAmount(Math.max(1, Number(e.target.value)))}
+                    className="w-24 px-2 py-1 rounded bg-background border border-border text-sm"
+                    min="1"
+                  />
+                </div>
                 {pendingDeposits.length > 0 ? (
                   pendingDeposits.map((deposit) => (
                     <Button
@@ -405,7 +416,7 @@ const Deposit = () => {
                       disabled={loading}
                     >
                       <span>Confirm {deposit.token} deposit</span>
-                      <Badge variant="secondary">+100</Badge>
+                      <Badge variant="secondary">+{testAmount}</Badge>
                     </Button>
                   ))
                 ) : (
