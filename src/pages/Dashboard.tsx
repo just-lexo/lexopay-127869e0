@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWallets } from '@/hooks/useWallets';
+import { RecentActivity } from '@/components/dashboard/RecentActivity';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -144,7 +145,9 @@ const Dashboard = () => {
                     </div>
                     <div>
                       <CardTitle className="text-base">NGN Wallet</CardTitle>
-                      <p className="text-xs text-muted-foreground">Ready to withdraw</p>
+                      <p className="text-xs text-muted-foreground">
+                        {(ngnBalance?.balance ?? 0) > 0 ? 'Ready to withdraw' : 'No funds yet'}
+                      </p>
                     </div>
                   </div>
                 </CardHeader>
@@ -205,6 +208,9 @@ const Dashboard = () => {
                 <span className="font-medium">History</span>
               </Button>
             </div>
+
+            {/* Recent Activity */}
+            <RecentActivity />
 
             {/* Username Display */}
             <Card className="glass-card border-border/50">

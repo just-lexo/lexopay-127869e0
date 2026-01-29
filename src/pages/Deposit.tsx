@@ -117,20 +117,42 @@ const Deposit = () => {
   };
 
   // DEV TOOL: Simulate deposit confirmation
+  // Prevents double-crediting by checking current status before confirming
   const handleSimulateConfirm = async (deposit: PendingDeposit) => {
     if (!user) return;
 
     setLoading(true);
     try {
+      // First, verify deposit is still PENDING (prevent double-credit)
+      const { data: currentDeposit, error: checkError } = await supabase
+        .from('deposits')
+        .select('status')
+        .eq('id', deposit.id)
+        .single();
+
+      if (checkError) throw checkError;
+
+      if (currentDeposit?.status !== 'PENDING') {
+        toast({
+          title: 'Already processed',
+          description: 'This deposit has already been confirmed.',
+        });
+        await fetchPendingDeposits();
+        return;
+      }
+
+      const depositAmount = 100; // Simulate 100 USDT/USDC deposit
+
       // Update deposit status
       const { error: depositError } = await supabase
         .from('deposits')
         .update({ 
           status: 'CONFIRMED', 
-          amount: 100, // Simulate 100 USDT/USDC deposit
+          amount: depositAmount,
           tx_hash: `0x${Math.random().toString(16).slice(2)}${Math.random().toString(16).slice(2)}`
         })
-        .eq('id', deposit.id);
+        .eq('id', deposit.id)
+        .eq('status', 'PENDING'); // Double-check status in update
 
       if (depositError) throw depositError;
 
@@ -144,7 +166,7 @@ const Deposit = () => {
 
       if (walletError) throw walletError;
 
-      // Update crypto balance - add 100 to existing balance
+      // Update crypto balance - add depositAmount to existing balance
       const { data: existingBalance } = await supabase
         .from('crypto_balances')
         .select('balance')
@@ -153,39 +175,35 @@ const Deposit = () => {
         .eq('network', deposit.network)
         .single();
 
-      const newBalance = (Number(existingBalance?.balance) || 0) + 100;
+      const newBalance = (Number(existingBalance?.balance) || 0) + depositAmount;
 
       const { error: balanceError } = await supabase
         .from('crypto_balances')
-        .upsert({
-          wallet_id: wallet.id,
-          token: deposit.token,
-          network: deposit.network,
-          balance: newBalance,
-        }, {
-          onConflict: 'wallet_id,token,network'
-        });
+        .update({ balance: newBalance })
+        .eq('wallet_id', wallet.id)
+        .eq('token', deposit.token)
+        .eq('network', deposit.network);
 
       if (balanceError) throw balanceError;
 
-      // Create transaction record
+      // Create transaction record with correct format
       const { error: txError } = await supabase
         .from('transactions')
         .insert({
           user_id: user.id,
           kind: 'DEPOSIT',
-          title: `Deposited ${deposit.token}`,
-          subtitle: `via ${deposit.network} network`,
-          amount_display: `+100 ${deposit.token}`,
-          status: 'CONFIRMED',
-          metadata: { deposit_id: deposit.id },
+          title: 'Crypto Deposit',
+          subtitle: `${deposit.token} on ${deposit.network.charAt(0).toUpperCase() + deposit.network.slice(1)}`,
+          amount_display: `+${depositAmount} ${deposit.token}`,
+          status: 'SUCCESS',
+          metadata: { deposit_id: deposit.id, amount: depositAmount },
         });
 
       if (txError) throw txError;
 
       toast({
         title: 'Deposit confirmed!',
-        description: `100 ${deposit.token} added to your wallet.`,
+        description: `${depositAmount} ${deposit.token} added to your wallet.`,
       });
 
       await fetchPendingDeposits();
