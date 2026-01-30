@@ -339,7 +339,7 @@ export type Database = {
       app_role: "admin" | "moderator" | "user"
       conversion_status: "PROCESSING" | "SUCCESS" | "FAILED"
       deposit_status: "PENDING" | "CONFIRMED" | "FAILED"
-      transaction_kind: "DEPOSIT" | "CONVERT" | "WITHDRAW"
+      transaction_kind: "DEPOSIT" | "CONVERT" | "WITHDRAW" | "SEND" | "RECEIVE"
       wallet_type: "CRYPTO" | "NGN"
       withdrawal_status: "PROCESSING" | "SUCCESS" | "FAILED"
     }
@@ -472,7 +472,7 @@ export const Constants = {
       app_role: ["admin", "moderator", "user"],
       conversion_status: ["PROCESSING", "SUCCESS", "FAILED"],
       deposit_status: ["PENDING", "CONFIRMED", "FAILED"],
-      transaction_kind: ["DEPOSIT", "CONVERT", "WITHDRAW"],
+      transaction_kind: ["DEPOSIT", "CONVERT", "WITHDRAW", "SEND", "RECEIVE"],
       wallet_type: ["CRYPTO", "NGN"],
       withdrawal_status: ["PROCESSING", "SUCCESS", "FAILED"],
     },
