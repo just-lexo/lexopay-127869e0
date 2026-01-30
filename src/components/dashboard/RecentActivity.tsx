@@ -1,7 +1,9 @@
+import { useNavigate } from 'react-router-dom';
 import { useTransactions } from '@/hooks/useTransactions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, ArrowDownToLine, RefreshCw, ArrowUpFromLine, Clock } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Loader2, ArrowDownToLine, RefreshCw, ArrowUpFromLine, Clock, Send, Download, ChevronRight } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 const getStatusBadge = (status: string) => {
@@ -21,17 +23,22 @@ const getStatusBadge = (status: string) => {
 const getKindIcon = (kind: string) => {
   switch (kind) {
     case 'DEPOSIT':
-      return <ArrowDownToLine className="w-4 h-4 text-primary" />;
+      return <ArrowDownToLine className="w-4 h-4 text-success" />;
     case 'CONVERT':
-      return <RefreshCw className="w-4 h-4 text-success" />;
+      return <RefreshCw className="w-4 h-4 text-primary" />;
     case 'WITHDRAW':
       return <ArrowUpFromLine className="w-4 h-4 text-warning" />;
+    case 'SEND':
+      return <Send className="w-4 h-4 text-warning" />;
+    case 'RECEIVE':
+      return <Download className="w-4 h-4 text-success" />;
     default:
       return <Clock className="w-4 h-4 text-muted-foreground" />;
   }
 };
 
 export function RecentActivity() {
+  const navigate = useNavigate();
   const { transactions, loading } = useTransactions(3);
 
   if (loading) {
@@ -64,14 +71,24 @@ export function RecentActivity() {
 
   return (
     <Card className="glass-card border-border/50">
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-3 flex flex-row items-center justify-between">
         <CardTitle className="text-base">Recent Activity</CardTitle>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-xs text-primary"
+          onClick={() => navigate('/transactions')}
+        >
+          View All
+          <ChevronRight className="w-3 h-3 ml-1" />
+        </Button>
       </CardHeader>
       <CardContent className="space-y-2">
         {transactions.map((tx) => (
           <div
             key={tx.id}
-            className="flex items-center justify-between p-3 rounded-lg bg-background/50"
+            className="flex items-center justify-between p-3 rounded-lg bg-background/50 cursor-pointer hover:bg-background/80 transition-colors"
+            onClick={() => navigate(`/transactions/${tx.id}`)}
           >
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
@@ -85,7 +102,9 @@ export function RecentActivity() {
               </div>
             </div>
             <div className="flex flex-col items-end gap-1">
-              <p className="font-mono text-sm font-medium">{tx.amount_display}</p>
+              <p className={`font-mono text-sm font-medium ${
+                tx.amount_display.startsWith('+') ? 'text-success' : ''
+              }`}>{tx.amount_display}</p>
               {getStatusBadge(tx.status)}
             </div>
           </div>

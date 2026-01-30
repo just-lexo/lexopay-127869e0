@@ -10,6 +10,11 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Deposit from "./pages/Deposit";
 import Convert from "./pages/Convert";
+import Withdraw from "./pages/Withdraw";
+import Send from "./pages/Send";
+import Transactions from "./pages/Transactions";
+import TransactionDetail from "./pages/TransactionDetail";
+import Receipt from "./pages/Receipt";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,6 +50,46 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Convert />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/withdraw" 
+              element={
+                <ProtectedRoute>
+                  <Withdraw />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/send" 
+              element={
+                <ProtectedRoute>
+                  <Send />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/transactions" 
+              element={
+                <ProtectedRoute>
+                  <Transactions />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/transactions/:id" 
+              element={
+                <ProtectedRoute>
+                  <TransactionDetail />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/receipt/:id" 
+              element={
+                <ProtectedRoute>
+                  <Receipt />
                 </ProtectedRoute>
               } 
             />

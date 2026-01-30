@@ -13,7 +13,8 @@ import {
   History,
   LogOut,
   Shield,
-  Loader2
+  Loader2,
+  Send
 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -163,7 +164,7 @@ const Dashboard = () => {
             </div>
 
             {/* Quick Actions */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <Button
                 variant="outline"
                 className="h-auto py-4 flex-col gap-2 glass-card-hover border-border/50"
@@ -172,7 +173,18 @@ const Dashboard = () => {
                 <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                   <ArrowDownToLine className="w-5 h-5 text-primary" />
                 </div>
-                <span className="font-medium">Deposit</span>
+                <span className="font-medium text-sm">Deposit</span>
+              </Button>
+
+              <Button
+                variant="outline"
+                className="h-auto py-4 flex-col gap-2 glass-card-hover border-border/50"
+                onClick={() => navigate('/send')}
+              >
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Send className="w-5 h-5 text-primary" />
+                </div>
+                <span className="font-medium text-sm">Send</span>
               </Button>
 
               <Button
@@ -183,7 +195,7 @@ const Dashboard = () => {
                 <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                   <RefreshCw className="w-5 h-5 text-primary" />
                 </div>
-                <span className="font-medium">Convert</span>
+                <span className="font-medium text-sm">Convert</span>
               </Button>
 
               <Button
@@ -194,18 +206,18 @@ const Dashboard = () => {
                 <div className="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center">
                   <ArrowUpFromLine className="w-5 h-5 text-success" />
                 </div>
-                <span className="font-medium">Withdraw</span>
+                <span className="font-medium text-sm">Withdraw</span>
               </Button>
 
               <Button
                 variant="outline"
-                className="h-auto py-4 flex-col gap-2 glass-card-hover border-border/50"
+                className="h-auto py-4 flex-col gap-2 glass-card-hover border-border/50 col-span-2"
                 onClick={() => navigate('/transactions')}
               >
                 <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
                   <History className="w-5 h-5 text-muted-foreground" />
                 </div>
-                <span className="font-medium">History</span>
+                <span className="font-medium text-sm">Transaction History</span>
               </Button>
             </div>
 
