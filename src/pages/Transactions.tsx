@@ -1,9 +1,10 @@
 import { useNavigate } from 'react-router-dom';
 import { useTransactions } from '@/hooks/useTransactions';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { TransactionAmount } from '@/components/transactions/TransactionAmount';
 import { 
   ArrowLeft, 
   ArrowDownToLine,
@@ -93,43 +94,40 @@ const Transactions = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {transactions.map((tx) => (
               <Card 
                 key={tx.id} 
                 className="glass-card border-border/50 cursor-pointer hover:border-primary/30 transition-colors"
                 onClick={() => navigate(`/transactions/${tx.id}`)}
               >
-                <CardContent className="py-3 px-4">
-                  <div className="flex items-center gap-3">
+                <CardContent className="py-4 px-4">
+                  <div className="flex items-start gap-3">
                     {/* Icon */}
-                    <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center shrink-0 mt-0.5">
                       {getTransactionIcon(tx.kind)}
                     </div>
 
                     {/* Details */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 mb-0.5">
                         <p className="font-medium truncate">{tx.title}</p>
                         {getStatusBadge(tx.status)}
                       </div>
                       <p className="text-xs text-muted-foreground truncate">{tx.subtitle}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {formatDistanceToNow(new Date(tx.created_at), { addSuffix: true })}
+                      </p>
                     </div>
 
                     {/* Amount & Arrow */}
-                    <div className="text-right shrink-0 flex items-center gap-2">
-                      <div>
-                        <p className={`font-mono font-medium text-sm ${
-                          tx.amount_display.startsWith('+') ? 'text-success' : 
-                          tx.amount_display.startsWith('-') ? 'text-foreground' : ''
-                        }`}>
-                          {tx.amount_display}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatDistanceToNow(new Date(tx.created_at), { addSuffix: true })}
-                        </p>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    <div className="shrink-0 flex items-start gap-2">
+                      <TransactionAmount
+                        kind={tx.kind}
+                        amountDisplay={tx.amount_display}
+                        metadata={tx.metadata as Record<string, unknown> | null}
+                      />
+                      <ChevronRight className="w-4 h-4 text-muted-foreground mt-1" />
                     </div>
                   </div>
                 </CardContent>
