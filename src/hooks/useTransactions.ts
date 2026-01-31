@@ -4,8 +4,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import type { Database } from '@/integrations/supabase/types';
 
 type TransactionKind = Database['public']['Enums']['transaction_kind'];
+type Json = Database['public']['Tables']['transactions']['Row']['metadata'];
 
-interface Transaction {
+export interface Transaction {
   id: string;
   kind: TransactionKind;
   title: string;
@@ -13,6 +14,7 @@ interface Transaction {
   amount_display: string;
   status: string;
   created_at: string;
+  metadata: Json;
 }
 
 interface TransactionsData {
@@ -39,7 +41,7 @@ export function useTransactions(limit?: number): TransactionsData {
       
       let query = supabase
         .from('transactions')
-        .select('id, kind, title, subtitle, amount_display, status, created_at')
+        .select('id, kind, title, subtitle, amount_display, status, created_at, metadata')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
