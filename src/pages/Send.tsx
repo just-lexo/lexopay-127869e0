@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWallets } from '@/hooks/useWallets';
@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { 
   ArrowLeft, 
@@ -35,6 +34,7 @@ const Send = () => {
   const [selectedToken, setSelectedToken] = useState<SupportedToken>('USDT');
   const [recipientUsername, setRecipientUsername] = useState('');
   const [recipient, setRecipient] = useState<RecipientProfile | null>(null);
+  const [recipientError, setRecipientError] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
@@ -45,57 +45,56 @@ const Send = () => {
   const sendAmount = parseFloat(amount) || 0;
   const canSend = recipient && sendAmount > 0 && availableBalance >= sendAmount;
 
+  // Normalize username: remove @, trim, lowercase
+  const normalizeUsername = (input: string): string => {
+    return input.replace('@', '').trim().toLowerCase();
+  };
+
   // Search for recipient by username
   const handleSearchRecipient = async () => {
-    const cleanUsername = recipientUsername.replace('@', '').trim().toLowerCase();
+    const cleanUsername = normalizeUsername(recipientUsername);
     
     if (!cleanUsername) {
-      toast({
-        title: 'Enter username',
-        description: 'Please enter a valid @username.',
-        variant: 'destructive',
-      });
+      setRecipientError('Please enter a valid @username');
+      setRecipient(null);
       return;
     }
 
-    if (cleanUsername === profile?.username?.toLowerCase()) {
-      toast({
-        title: 'Invalid recipient',
-        description: "You can't send crypto to yourself.",
-        variant: 'destructive',
-      });
+    // Prevent self-transfer
+    if (profile?.username && cleanUsername === normalizeUsername(profile.username)) {
+      setRecipientError("You can't send crypto to yourself");
+      setRecipient(null);
       return;
     }
 
     setIsSearching(true);
+    setRecipientError(null);
+    
     try {
       const { data, error } = await supabase
         .from('profiles')
         .select('user_id, username, display_name')
         .ilike('username', cleanUsername)
-        .single();
+        .maybeSingle();
 
-      if (error || !data) {
+      if (error) {
+        console.error('Search error:', error);
+        setRecipientError('Failed to search for user');
         setRecipient(null);
-        toast({
-          title: 'User not found',
-          description: `No user found with username @${cleanUsername}`,
-          variant: 'destructive',
-        });
+        return;
+      }
+
+      if (!data) {
+        setRecipientError(`User @${cleanUsername} not found`);
+        setRecipient(null);
       } else {
         setRecipient(data as RecipientProfile);
-        toast({
-          title: 'User found',
-          description: `Sending to ${data.display_name || `@${data.username}`}`,
-        });
+        setRecipientError(null);
       }
     } catch (err) {
       console.error('Search error:', err);
-      toast({
-        title: 'Error',
-        description: 'Failed to search for user.',
-        variant: 'destructive',
-      });
+      setRecipientError('Failed to search for user');
+      setRecipient(null);
     } finally {
       setIsSearching(false);
     }
@@ -106,111 +105,35 @@ const Send = () => {
 
     setLoading(true);
     try {
-      // Get sender's crypto wallet
-      const { data: senderWallet, error: senderWalletError } = await supabase
-        .from('wallets')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('type', 'CRYPTO')
-        .single();
+      // Call atomic transfer function
+      const { data, error } = await supabase.rpc('transfer_crypto', {
+        _sender_id: user.id,
+        _recipient_username: recipient.username,
+        _token: selectedToken,
+        _network: 'base',
+        _amount: sendAmount,
+      });
 
-      if (senderWalletError) throw senderWalletError;
-
-      // Get recipient's crypto wallet
-      const { data: recipientWallet, error: recipientWalletError } = await supabase
-        .from('wallets')
-        .select('id')
-        .eq('user_id', recipient.user_id)
-        .eq('type', 'CRYPTO')
-        .single();
-
-      if (recipientWalletError) throw recipientWalletError;
-
-      // Deduct from sender's balance
-      const { data: senderBalance } = await supabase
-        .from('crypto_balances')
-        .select('balance')
-        .eq('wallet_id', senderWallet.id)
-        .eq('token', selectedToken)
-        .eq('network', 'base')
-        .single();
-
-      const newSenderBalance = (Number(senderBalance?.balance) || 0) - sendAmount;
-
-      const { error: senderUpdateError } = await supabase
-        .from('crypto_balances')
-        .update({ balance: newSenderBalance })
-        .eq('wallet_id', senderWallet.id)
-        .eq('token', selectedToken)
-        .eq('network', 'base');
-
-      if (senderUpdateError) throw senderUpdateError;
-
-      // Credit recipient's balance
-      const { data: recipientBalance } = await supabase
-        .from('crypto_balances')
-        .select('balance')
-        .eq('wallet_id', recipientWallet.id)
-        .eq('token', selectedToken)
-        .eq('network', 'base')
-        .single();
-
-      const newRecipientBalance = (Number(recipientBalance?.balance) || 0) + sendAmount;
-
-      const { error: recipientUpdateError } = await supabase
-        .from('crypto_balances')
-        .update({ balance: newRecipientBalance })
-        .eq('wallet_id', recipientWallet.id)
-        .eq('token', selectedToken)
-        .eq('network', 'base');
-
-      if (recipientUpdateError) throw recipientUpdateError;
-
-      const reference = `LXP-SEND-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-
-      // Create sender transaction
-      const { error: senderTxError } = await supabase
-        .from('transactions')
-        .insert({
-          user_id: user.id,
-          kind: 'SEND',
-          title: 'Sent Crypto',
-          subtitle: `To @${recipient.username}`,
-          amount_display: `-${sendAmount} ${selectedToken}`,
-          status: 'SUCCESS',
-          metadata: {
-            reference,
-            recipient_user_id: recipient.user_id,
-            recipient_username: recipient.username,
-            token: selectedToken,
-            network: 'base',
-            amount: sendAmount,
-          },
+      if (error) {
+        console.error('Transfer RPC error:', error);
+        toast({
+          title: 'Transfer failed',
+          description: error.message || 'An unexpected error occurred',
+          variant: 'destructive',
         });
+        return;
+      }
 
-      if (senderTxError) throw senderTxError;
+      const result = data as { success: boolean; error?: string; reference?: string };
 
-      // Create recipient transaction
-      const { error: recipientTxError } = await supabase
-        .from('transactions')
-        .insert({
-          user_id: recipient.user_id,
-          kind: 'RECEIVE',
-          title: 'Received Crypto',
-          subtitle: `From @${profile.username}`,
-          amount_display: `+${sendAmount} ${selectedToken}`,
-          status: 'SUCCESS',
-          metadata: {
-            reference,
-            sender_user_id: user.id,
-            sender_username: profile.username,
-            token: selectedToken,
-            network: 'base',
-            amount: sendAmount,
-          },
+      if (!result.success) {
+        toast({
+          title: 'Transfer failed',
+          description: result.error || 'An unexpected error occurred',
+          variant: 'destructive',
         });
-
-      if (recipientTxError) throw recipientTxError;
+        return;
+      }
 
       toast({
         title: 'Transfer successful!',
@@ -221,6 +144,7 @@ const Send = () => {
       setAmount('');
       setRecipientUsername('');
       setRecipient(null);
+      setRecipientError(null);
       setShowConfirm(false);
       
       await refetch();
@@ -229,7 +153,7 @@ const Send = () => {
       console.error('Send error:', err);
       toast({
         title: 'Error',
-        description: 'Failed to send crypto.',
+        description: 'Failed to send crypto. Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -240,6 +164,7 @@ const Send = () => {
   const handleUsernameChange = (value: string) => {
     setRecipientUsername(value);
     setRecipient(null);
+    setRecipientError(null);
   };
 
   if (showConfirm && recipient) {
@@ -277,7 +202,7 @@ const Send = () => {
                     <User className="w-6 h-6 text-success" />
                   </div>
                   <p className="text-sm font-medium">@{recipient.username}</p>
-                  <p className="text-xs text-muted-foreground">{recipient.display_name || 'User'}</p>
+                  <p className="text-xs text-muted-foreground">{recipient.display_name || 'LexoPay User'}</p>
                 </div>
               </div>
 
@@ -393,6 +318,14 @@ const Send = () => {
                 )}
               </Button>
             </div>
+
+            {/* Error state */}
+            {recipientError && (
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+                <AlertCircle className="w-4 h-4 text-destructive" />
+                <p className="text-sm text-destructive">{recipientError}</p>
+              </div>
+            )}
 
             {/* Verified Recipient */}
             {recipient && (

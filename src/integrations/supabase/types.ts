@@ -334,6 +334,16 @@ export type Database = {
         }
         Returns: boolean
       }
+      transfer_crypto: {
+        Args: {
+          _amount: number
+          _network: string
+          _recipient_username: string
+          _sender_id: string
+          _token: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
