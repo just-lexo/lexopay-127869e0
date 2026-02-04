@@ -117,17 +117,17 @@ const TransactionDetail = () => {
     return (
       <div className="min-h-screen bg-background">
         <TestModeBanner />
-        <header className="glass-card border-b border-border/50 sticky top-[41px] z-50">
-          <div className="container px-4 py-4">
+        <header className="glass-card border-b border-border/50 sticky top-[33px] z-50">
+          <div className="container max-w-lg mx-auto px-4 py-3">
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-                <ArrowLeft className="w-5 h-5" />
+              <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => navigate(-1)}>
+                <ArrowLeft className="w-4 h-4" />
               </Button>
-              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-5 w-32" />
             </div>
           </div>
         </header>
-        <main className="container px-4 py-6 space-y-6">
+        <main className="container max-w-lg mx-auto px-4 py-4 space-y-4">
           <Skeleton className="h-48 w-full rounded-xl" />
           <Skeleton className="h-32 w-full rounded-xl" />
         </main>
@@ -139,20 +139,20 @@ const TransactionDetail = () => {
     return (
       <div className="min-h-screen bg-background">
         <TestModeBanner />
-        <header className="glass-card border-b border-border/50 sticky top-[41px] z-50">
-          <div className="container px-4 py-4">
+        <header className="glass-card border-b border-border/50 sticky top-[33px] z-50">
+          <div className="container max-w-lg mx-auto px-4 py-3">
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-                <ArrowLeft className="w-5 h-5" />
+              <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => navigate(-1)}>
+                <ArrowLeft className="w-4 h-4" />
               </Button>
-              <h1 className="font-semibold">Transaction Not Found</h1>
+              <h1 className="font-semibold text-base">Transaction Not Found</h1>
             </div>
           </div>
         </header>
-        <main className="container px-4 py-6">
+        <main className="container max-w-lg mx-auto px-4 py-4">
           <Card className="glass-card border-destructive/20">
-            <CardContent className="py-8 text-center">
-              <p className="text-destructive">Transaction not found or access denied.</p>
+            <CardContent className="py-6 text-center">
+              <p className="text-sm text-destructive">Transaction not found or access denied.</p>
             </CardContent>
           </Card>
         </main>
@@ -168,14 +168,14 @@ const TransactionDetail = () => {
       <TestModeBanner />
       
       {/* Header */}
-      <header className="glass-card border-b border-border/50 sticky top-[41px] z-50">
-        <div className="container px-4 py-4">
+      <header className="glass-card border-b border-border/50 sticky top-[33px] z-50">
+        <div className="container max-w-lg mx-auto px-4 py-3">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-              <ArrowLeft className="w-5 h-5" />
+            <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => navigate(-1)}>
+              <ArrowLeft className="w-4 h-4" />
             </Button>
-            <div>
-              <h1 className="font-semibold">Transaction Details</h1>
+            <div className="min-w-0">
+              <h1 className="font-semibold text-base">Transaction Details</h1>
               <p className="text-xs text-muted-foreground">{getTypePill(transaction.kind)}</p>
             </div>
           </div>
@@ -183,7 +183,7 @@ const TransactionDetail = () => {
       </header>
 
       {/* Main Content */}
-      <main className="container px-4 py-6 space-y-6">
+      <main className="container max-w-lg mx-auto px-4 py-4 space-y-4 pb-6">
         {/* Main Card */}
         <Card className="glass-card border-primary/20">
           <CardContent className="py-6">
@@ -196,11 +196,11 @@ const TransactionDetail = () => {
             </div>
 
             {/* Icon & Amount */}
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+            <div className="text-center mb-4">
+              <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
                 {getTransactionIcon(transaction.kind)}
               </div>
-              <p className={`text-3xl font-bold ${
+              <p className={`text-2xl sm:text-3xl font-bold break-all ${
                 transaction.amount_display.startsWith('+') ? 'text-success' : ''
               }`}>
                 {transaction.amount_display}
@@ -328,10 +328,10 @@ const TransactionDetail = () => {
         </Card>
 
         {/* Action Buttons */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2">
           <Button
             variant="outline"
-            className="glass-card-hover"
+            className="glass-card-hover min-h-[44px]"
             onClick={() => navigate(`/receipt/${transaction.id}`)}
           >
             <Receipt className="w-4 h-4 mr-2" />
@@ -339,7 +339,7 @@ const TransactionDetail = () => {
           </Button>
           <Button
             variant="outline"
-            className="glass-card-hover"
+            className="glass-card-hover min-h-[44px]"
             onClick={() => {
               // Placeholder for report
             }}

@@ -72,35 +72,35 @@ export function RecentActivity() {
 
   return (
     <Card className="glass-card border-border/50">
-      <CardHeader className="pb-3 flex flex-row items-center justify-between">
-        <CardTitle className="text-base">Recent Activity</CardTitle>
+      <CardHeader className="pb-2 flex flex-row items-center justify-between">
+        <CardTitle className="text-sm">Recent Activity</CardTitle>
         <Button
           variant="ghost"
           size="sm"
-          className="text-xs text-primary"
+          className="text-xs text-primary h-7 px-2"
           onClick={() => navigate('/transactions')}
         >
           View All
-          <ChevronRight className="w-3 h-3 ml-1" />
+          <ChevronRight className="w-3 h-3 ml-0.5" />
         </Button>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-2">
         {transactions.map((tx) => (
           <div
             key={tx.id}
-            className="flex items-start gap-3 p-3 rounded-lg bg-background/50 cursor-pointer hover:bg-background/80 transition-colors"
+            className="flex items-start gap-2.5 p-2.5 rounded-lg bg-background/50 cursor-pointer hover:bg-background/80 transition-colors"
             onClick={() => navigate(`/transactions/${tx.id}`)}
           >
-            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0 mt-0.5">
+            <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center shrink-0 mt-0.5">
               {getKindIcon(tx.kind)}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm truncate">{tx.title}</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="font-medium text-xs truncate">{tx.title}</p>
+              <p className="text-[11px] text-muted-foreground">
                 {formatDistanceToNow(new Date(tx.created_at), { addSuffix: true })}
               </p>
             </div>
-            <div className="flex flex-col items-end gap-1 shrink-0">
+            <div className="flex flex-col items-end gap-0.5 shrink-0">
               <TransactionAmount
                 kind={tx.kind}
                 amountDisplay={tx.amount_display}

@@ -173,21 +173,21 @@ const Send = () => {
       <div className="min-h-screen bg-background">
         <TestModeBanner />
         
-        <header className="glass-card border-b border-border/50 sticky top-[41px] z-50">
-          <div className="container px-4 py-4">
+        <header className="glass-card border-b border-border/50 sticky top-[33px] z-50">
+          <div className="container max-w-lg mx-auto px-4 py-3">
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" onClick={() => setShowConfirm(false)}>
-                <ArrowLeft className="w-5 h-5" />
+              <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => setShowConfirm(false)}>
+                <ArrowLeft className="w-4 h-4" />
               </Button>
-              <div>
-                <h1 className="font-semibold">Confirm Transfer</h1>
+              <div className="min-w-0">
+                <h1 className="font-semibold text-base">Confirm Transfer</h1>
                 <p className="text-xs text-muted-foreground">Review before sending</p>
               </div>
             </div>
           </div>
         </header>
 
-        <main className="container px-4 py-6 space-y-6">
+        <main className="container max-w-lg mx-auto px-4 py-4 space-y-4 pb-6">
           <Card className="glass-card border-primary/20">
             <CardContent className="py-6 space-y-6">
               {/* Transfer visualization */}
@@ -230,7 +230,7 @@ const Send = () => {
           </Card>
 
           <Button
-            className="w-full touch-target gradient-primary hover:opacity-90"
+            className="w-full min-h-[48px] gradient-primary hover:opacity-90"
             onClick={handleSend}
             disabled={loading}
           >
@@ -253,14 +253,14 @@ const Send = () => {
       <TestModeBanner />
       
       {/* Header */}
-      <header className="glass-card border-b border-border/50 sticky top-[41px] z-50">
-        <div className="container px-4 py-4">
+      <header className="glass-card border-b border-border/50 sticky top-[33px] z-50">
+        <div className="container max-w-lg mx-auto px-4 py-3">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')}>
-              <ArrowLeft className="w-5 h-5" />
+            <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => navigate('/dashboard')}>
+              <ArrowLeft className="w-4 h-4" />
             </Button>
-            <div>
-              <h1 className="font-semibold">Send Crypto</h1>
+            <div className="min-w-0">
+              <h1 className="font-semibold text-base">Send Crypto</h1>
               <p className="text-xs text-muted-foreground">Transfer to another LexoPay user</p>
             </div>
           </div>
@@ -268,7 +268,7 @@ const Send = () => {
       </header>
 
       {/* Main Content */}
-      <main className="container px-4 py-6 space-y-6">
+      <main className="container max-w-lg mx-auto px-4 py-4 space-y-4 pb-6">
         {/* Token Selection */}
         <Card className="glass-card border-border/50">
           <CardHeader className="pb-3">
@@ -380,7 +380,7 @@ const Send = () => {
 
         {/* Continue Button */}
         <Button
-          className="w-full touch-target gradient-primary hover:opacity-90"
+          className="w-full min-h-[48px] gradient-primary hover:opacity-90"
           onClick={() => setShowConfirm(true)}
           disabled={!canSend}
         >

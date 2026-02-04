@@ -92,17 +92,17 @@ const Receipt = () => {
     return (
       <div className="min-h-screen bg-background">
         <TestModeBanner />
-        <header className="glass-card border-b border-border/50 sticky top-[41px] z-50">
-          <div className="container px-4 py-4">
+        <header className="glass-card border-b border-border/50 sticky top-[33px] z-50">
+          <div className="container max-w-lg mx-auto px-4 py-3">
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-                <ArrowLeft className="w-5 h-5" />
+              <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => navigate(-1)}>
+                <ArrowLeft className="w-4 h-4" />
               </Button>
-              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-5 w-24" />
             </div>
           </div>
         </header>
-        <main className="container px-4 py-6">
+        <main className="container max-w-lg mx-auto px-4 py-4">
           <Skeleton className="h-96 w-full rounded-xl" />
         </main>
       </div>
@@ -113,20 +113,20 @@ const Receipt = () => {
     return (
       <div className="min-h-screen bg-background">
         <TestModeBanner />
-        <header className="glass-card border-b border-border/50 sticky top-[41px] z-50">
-          <div className="container px-4 py-4">
+        <header className="glass-card border-b border-border/50 sticky top-[33px] z-50">
+          <div className="container max-w-lg mx-auto px-4 py-3">
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-                <ArrowLeft className="w-5 h-5" />
+              <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => navigate(-1)}>
+                <ArrowLeft className="w-4 h-4" />
               </Button>
-              <h1 className="font-semibold">Receipt Not Found</h1>
+              <h1 className="font-semibold text-base">Receipt Not Found</h1>
             </div>
           </div>
         </header>
-        <main className="container px-4 py-6">
+        <main className="container max-w-lg mx-auto px-4 py-4">
           <Card className="glass-card border-destructive/20">
-            <CardContent className="py-8 text-center">
-              <p className="text-destructive">Receipt not found or access denied.</p>
+            <CardContent className="py-6 text-center">
+              <p className="text-sm text-destructive">Receipt not found or access denied.</p>
             </CardContent>
           </Card>
         </main>
@@ -161,19 +161,19 @@ const Receipt = () => {
       <TestModeBanner />
       
       {/* Header */}
-      <header className="glass-card border-b border-border/50 sticky top-[41px] z-50">
-        <div className="container px-4 py-4">
+      <header className="glass-card border-b border-border/50 sticky top-[33px] z-50">
+        <div className="container max-w-lg mx-auto px-4 py-3">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-              <ArrowLeft className="w-5 h-5" />
+            <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => navigate(-1)}>
+              <ArrowLeft className="w-4 h-4" />
             </Button>
-            <h1 className="font-semibold">Receipt</h1>
+            <h1 className="font-semibold text-base">Receipt</h1>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="container px-4 py-6 space-y-6">
+      <main className="container max-w-lg mx-auto px-4 py-4 space-y-4 pb-6">
         {/* Receipt Card */}
         <Card className="glass-card border-border/50 overflow-hidden">
           {/* Header with gradient */}
@@ -200,7 +200,7 @@ const Receipt = () => {
                 )}
               </div>
               <Badge variant="outline" className="mb-2">{getTypePill(transaction.kind)}</Badge>
-              <p className={`text-3xl font-bold ${
+              <p className={`text-2xl sm:text-3xl font-bold break-all ${
                 transaction.amount_display.startsWith('+') ? 'text-success' : ''
               }`}>
                 {transaction.amount_display}
@@ -293,10 +293,10 @@ const Receipt = () => {
         </Card>
 
         {/* Action Buttons */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2">
           <Button
             variant="outline"
-            className="glass-card-hover"
+            className="glass-card-hover min-h-[44px]"
             onClick={handleShare}
           >
             <Share2 className="w-4 h-4 mr-2" />
@@ -304,7 +304,7 @@ const Receipt = () => {
           </Button>
           <Button
             variant="outline"
-            className="glass-card-hover"
+            className="glass-card-hover min-h-[44px]"
             onClick={handleDownload}
           >
             <Download className="w-4 h-4 mr-2" />

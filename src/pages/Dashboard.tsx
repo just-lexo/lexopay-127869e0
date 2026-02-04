@@ -60,35 +60,35 @@ const Dashboard = () => {
       
       {/* Header */}
       <header className="glass-card border-b border-border/50 sticky top-[41px] z-50">
-        <div className="container px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold">L</span>
+        <div className="container max-w-lg mx-auto px-4 py-3">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center shrink-0">
+                <span className="text-primary-foreground font-bold text-sm">L</span>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Welcome back,</p>
-                <p className="font-semibold">{profile?.display_name || 'User'}</p>
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground">Welcome back,</p>
+                <p className="font-semibold text-sm truncate">{profile?.display_name || 'User'}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 shrink-0 flex-wrap justify-end">
               {profile?.is_admin && (
-                <Badge variant="default" className="gap-1 bg-primary text-primary-foreground">
-                  <Shield className="w-3 h-3" />
+                <Badge variant="default" className="gap-1 bg-primary text-primary-foreground text-[10px] px-1.5 py-0.5">
+                  <Shield className="w-2.5 h-2.5" />
                   ADMIN
                 </Badge>
               )}
-              <Badge variant={kycBadge.variant} className="gap-1">
-                <Shield className="w-3 h-3" />
+              <Badge variant={kycBadge.variant} className="gap-1 text-[10px] px-1.5 py-0.5 hidden sm:inline-flex">
+                <Shield className="w-2.5 h-2.5" />
                 {kycBadge.label}
               </Badge>
               {profile?.is_admin && (
-                <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
-                  <Settings className="w-5 h-5" />
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate('/admin')}>
+                  <Settings className="w-4 h-4" />
                 </Button>
               )}
-              <Button variant="ghost" size="icon" onClick={handleSignOut}>
-                <LogOut className="w-5 h-5" />
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSignOut}>
+                <LogOut className="w-4 h-4" />
               </Button>
             </div>
           </div>
@@ -96,7 +96,7 @@ const Dashboard = () => {
       </header>
 
       {/* Main Content */}
-      <main className="container px-4 py-6 space-y-6">
+      <main className="container max-w-lg mx-auto px-4 py-4 space-y-4 pb-6">
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -170,7 +170,7 @@ const Dashboard = () => {
                 <CardContent>
                   <div className="p-4 rounded-lg bg-background/50">
                     <p className="text-sm text-muted-foreground mb-1">Available Balance</p>
-                    <p className="text-2xl font-bold font-mono">
+                    <p className="text-xl sm:text-2xl font-bold font-mono break-all">
                       {formatCurrency(ngnBalance?.balance ?? 0)}
                     </p>
                   </div>
@@ -179,60 +179,60 @@ const Dashboard = () => {
             </div>
 
             {/* Quick Actions */}
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-2">
               <Button
                 variant="outline"
-                className="h-auto py-4 flex-col gap-2 glass-card-hover border-border/50"
+                className="h-auto py-3 flex-col gap-1.5 glass-card-hover border-border/50 min-h-[72px]"
                 onClick={() => navigate('/deposit')}
               >
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <ArrowDownToLine className="w-5 h-5 text-primary" />
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <ArrowDownToLine className="w-4 h-4 text-primary" />
                 </div>
-                <span className="font-medium text-sm">Deposit</span>
+                <span className="font-medium text-xs">Deposit</span>
               </Button>
 
               <Button
                 variant="outline"
-                className="h-auto py-4 flex-col gap-2 glass-card-hover border-border/50"
+                className="h-auto py-3 flex-col gap-1.5 glass-card-hover border-border/50 min-h-[72px]"
                 onClick={() => navigate('/send')}
               >
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <Send className="w-5 h-5 text-primary" />
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Send className="w-4 h-4 text-primary" />
                 </div>
-                <span className="font-medium text-sm">Send</span>
+                <span className="font-medium text-xs">Send</span>
               </Button>
 
               <Button
                 variant="outline"
-                className="h-auto py-4 flex-col gap-2 glass-card-hover border-border/50"
+                className="h-auto py-3 flex-col gap-1.5 glass-card-hover border-border/50 min-h-[72px]"
                 onClick={() => navigate('/convert')}
               >
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <RefreshCw className="w-5 h-5 text-primary" />
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <RefreshCw className="w-4 h-4 text-primary" />
                 </div>
-                <span className="font-medium text-sm">Convert</span>
+                <span className="font-medium text-xs">Convert</span>
               </Button>
 
               <Button
                 variant="outline"
-                className="h-auto py-4 flex-col gap-2 glass-card-hover border-border/50"
+                className="h-auto py-3 flex-col gap-1.5 glass-card-hover border-border/50 min-h-[72px]"
                 onClick={() => navigate('/withdraw')}
               >
-                <div className="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center">
-                  <ArrowUpFromLine className="w-5 h-5 text-success" />
+                <div className="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center">
+                  <ArrowUpFromLine className="w-4 h-4 text-success" />
                 </div>
-                <span className="font-medium text-sm">Withdraw</span>
+                <span className="font-medium text-xs">Withdraw</span>
               </Button>
 
               <Button
                 variant="outline"
-                className="h-auto py-4 flex-col gap-2 glass-card-hover border-border/50 col-span-2"
+                className="h-auto py-3 flex-col gap-1.5 glass-card-hover border-border/50 col-span-2 min-h-[72px]"
                 onClick={() => navigate('/transactions')}
               >
-                <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
-                  <History className="w-5 h-5 text-muted-foreground" />
+                <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+                  <History className="w-4 h-4 text-muted-foreground" />
                 </div>
-                <span className="font-medium text-sm">Transaction History</span>
+                <span className="font-medium text-xs">Transaction History</span>
               </Button>
             </div>
 

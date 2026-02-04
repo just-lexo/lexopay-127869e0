@@ -226,14 +226,14 @@ const Deposit = () => {
       <TestModeBanner />
       
       {/* Header */}
-      <header className="glass-card border-b border-border/50 sticky top-[41px] z-50">
-        <div className="container px-4 py-4">
+      <header className="glass-card border-b border-border/50 sticky top-[33px] z-50">
+        <div className="container max-w-lg mx-auto px-4 py-3">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')}>
-              <ArrowLeft className="w-5 h-5" />
+            <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => navigate('/dashboard')}>
+              <ArrowLeft className="w-4 h-4" />
             </Button>
-            <div>
-              <h1 className="font-semibold">Deposit Crypto</h1>
+            <div className="min-w-0">
+              <h1 className="font-semibold text-base">Deposit Crypto</h1>
               <p className="text-xs text-muted-foreground">Add funds to your wallet</p>
             </div>
           </div>
@@ -241,18 +241,18 @@ const Deposit = () => {
       </header>
 
       {/* Main Content */}
-      <main className="container px-4 py-6 space-y-6">
+      <main className="container max-w-lg mx-auto px-4 py-4 space-y-4 pb-6">
         {/* Token Selection */}
         <Card className="glass-card border-border/50">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Select Token</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Select Token</CardTitle>
           </CardHeader>
-          <CardContent className="flex gap-2">
+          <CardContent className="flex gap-2 flex-wrap">
             {SUPPORTED_TOKENS.map((token) => (
               <Button
                 key={token}
                 variant={selectedToken === token ? 'default' : 'outline'}
-                className={selectedToken === token ? 'gradient-primary' : 'glass-card-hover'}
+                className={`min-h-[44px] ${selectedToken === token ? 'gradient-primary' : 'glass-card-hover'}`}
                 onClick={() => setSelectedToken(token)}
               >
                 {token}

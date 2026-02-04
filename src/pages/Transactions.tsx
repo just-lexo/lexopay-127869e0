@@ -56,14 +56,14 @@ const Transactions = () => {
       <TestModeBanner />
       
       {/* Header */}
-      <header className="glass-card border-b border-border/50 sticky top-[41px] z-50">
-        <div className="container px-4 py-4">
+      <header className="glass-card border-b border-border/50 sticky top-[33px] z-50">
+        <div className="container max-w-lg mx-auto px-4 py-3">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')}>
-              <ArrowLeft className="w-5 h-5" />
+            <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => navigate('/dashboard')}>
+              <ArrowLeft className="w-4 h-4" />
             </Button>
-            <div>
-              <h1 className="font-semibold">Transaction History</h1>
+            <div className="min-w-0">
+              <h1 className="font-semibold text-base">Transaction History</h1>
               <p className="text-xs text-muted-foreground">
                 {transactions.length} transaction{transactions.length !== 1 ? 's' : ''}
               </p>
@@ -73,7 +73,7 @@ const Transactions = () => {
       </header>
 
       {/* Main Content */}
-      <main className="container px-4 py-6">
+      <main className="container max-w-lg mx-auto px-4 py-4 pb-6">
         {loading ? (
           <div className="space-y-3">
             {[1, 2, 3, 4, 5].map((i) => (
@@ -97,40 +97,40 @@ const Transactions = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {transactions.map((tx) => (
               <Card 
                 key={tx.id} 
                 className="glass-card border-border/50 cursor-pointer hover:border-primary/30 transition-colors"
                 onClick={() => navigate(`/transactions/${tx.id}`)}
               >
-                <CardContent className="py-4 px-4">
-                  <div className="flex items-start gap-3">
+                <CardContent className="py-3 px-3">
+                  <div className="flex items-start gap-2.5">
                     {/* Icon */}
-                    <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center shrink-0 mt-0.5">
+                    <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
                       {getTransactionIcon(tx.kind)}
                     </div>
 
                     {/* Details */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <p className="font-medium truncate">{tx.title}</p>
+                      <div className="flex items-start justify-between gap-2 mb-0.5">
+                        <p className="font-medium text-sm truncate flex-1">{tx.title}</p>
                         {getStatusBadge(tx.status)}
                       </div>
                       <p className="text-xs text-muted-foreground truncate">{tx.subtitle}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {formatDistanceToNow(new Date(tx.created_at), { addSuffix: true })}
-                      </p>
-                    </div>
-
-                    {/* Amount & Arrow */}
-                    <div className="shrink-0 flex items-start gap-2">
-                      <TransactionAmount
-                        kind={tx.kind}
-                        amountDisplay={tx.amount_display}
-                        metadata={tx.metadata as Record<string, unknown> | null}
-                      />
-                      <ChevronRight className="w-4 h-4 text-muted-foreground mt-1" />
+                      <div className="flex items-center justify-between mt-1.5 gap-2">
+                        <p className="text-[11px] text-muted-foreground">
+                          {formatDistanceToNow(new Date(tx.created_at), { addSuffix: true })}
+                        </p>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <TransactionAmount
+                            kind={tx.kind}
+                            amountDisplay={tx.amount_display}
+                            metadata={tx.metadata as Record<string, unknown> | null}
+                          />
+                          <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </CardContent>

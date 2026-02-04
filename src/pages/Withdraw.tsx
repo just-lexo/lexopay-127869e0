@@ -295,32 +295,32 @@ const Withdraw = () => {
       <TestModeBanner />
       
       {/* Header */}
-      <header className="glass-card border-b border-border/50 sticky top-[41px] z-50">
-        <div className="container px-4 py-4">
+      <header className="glass-card border-b border-border/50 sticky top-[33px] z-50">
+        <div className="container max-w-lg mx-auto px-4 py-3">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')}>
-              <ArrowLeft className="w-5 h-5" />
+            <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => navigate('/dashboard')}>
+              <ArrowLeft className="w-4 h-4" />
             </Button>
-            <div>
-              <h1 className="font-semibold">Withdraw to Bank</h1>
-              <p className="text-xs text-muted-foreground">Send NGN to your bank account</p>
+            <div className="min-w-0">
+              <h1 className="font-semibold text-base">Withdraw to Bank</h1>
+              <p className="text-xs text-muted-foreground">Send NGN to your bank</p>
             </div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="container px-4 py-6 space-y-6">
+      <main className="container max-w-lg mx-auto px-4 py-4 space-y-4 pb-6">
         {/* Available Balance */}
         <Card className="glass-card border-success/20">
-          <CardContent className="py-4">
+          <CardContent className="py-3">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Available Balance</p>
-                <p className="text-2xl font-bold font-mono">{formatCurrency(availableBalance)}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs text-muted-foreground">Available Balance</p>
+                <p className="text-xl sm:text-2xl font-bold font-mono truncate">{formatCurrency(availableBalance)}</p>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-success/20 flex items-center justify-center">
-                <span className="text-xl text-success">₦</span>
+              <div className="w-9 h-9 rounded-lg bg-success/20 flex items-center justify-center shrink-0">
+                <span className="text-lg text-success">₦</span>
               </div>
             </div>
           </CardContent>
