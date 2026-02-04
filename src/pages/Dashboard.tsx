@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWallets } from '@/hooks/useWallets';
 import { RecentActivity } from '@/components/dashboard/RecentActivity';
+import { TestModeBanner } from '@/components/TestModeBanner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,7 +15,8 @@ import {
   LogOut,
   Shield,
   Loader2,
-  Send
+  Send,
+  Settings
 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -54,8 +56,10 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <TestModeBanner />
+      
       {/* Header */}
-      <header className="glass-card border-b border-border/50 sticky top-0 z-50">
+      <header className="glass-card border-b border-border/50 sticky top-[41px] z-50">
         <div className="container px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -68,10 +72,21 @@ const Dashboard = () => {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              {profile?.is_admin && (
+                <Badge variant="default" className="gap-1 bg-primary text-primary-foreground">
+                  <Shield className="w-3 h-3" />
+                  ADMIN
+                </Badge>
+              )}
               <Badge variant={kycBadge.variant} className="gap-1">
                 <Shield className="w-3 h-3" />
                 {kycBadge.label}
               </Badge>
+              {profile?.is_admin && (
+                <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
+                  <Settings className="w-5 h-5" />
+                </Button>
+              )}
               <Button variant="ghost" size="icon" onClick={handleSignOut}>
                 <LogOut className="w-5 h-5" />
               </Button>

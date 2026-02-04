@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useWallets } from '@/hooks/useWallets';
 import { supabase } from '@/integrations/supabase/client';
 import { mockRateProvider, CONVERSION_FEE_PERCENTAGE, type ConversionQuote } from '@/adapters';
+import { TestModeBanner } from '@/components/TestModeBanner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -240,8 +241,10 @@ const Convert = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <TestModeBanner />
+      
       {/* Header */}
-      <header className="glass-card border-b border-border/50 sticky top-0 z-50">
+      <header className="glass-card border-b border-border/50 sticky top-[41px] z-50">
         <div className="container px-4 py-4">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')}>
