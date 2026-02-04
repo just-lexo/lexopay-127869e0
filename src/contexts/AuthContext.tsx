@@ -8,6 +8,7 @@ interface Profile {
   username: string | null;
   display_name: string | null;
   kyc_tier: number;
+  is_admin: boolean;
 }
 
 interface AuthContextType {

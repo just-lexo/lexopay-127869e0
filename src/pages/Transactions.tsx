@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useTransactions } from '@/hooks/useTransactions';
+import { TestModeBanner } from '@/components/TestModeBanner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -52,8 +53,10 @@ const Transactions = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <TestModeBanner />
+      
       {/* Header */}
-      <header className="glass-card border-b border-border/50 sticky top-0 z-50">
+      <header className="glass-card border-b border-border/50 sticky top-[41px] z-50">
         <div className="container px-4 py-4">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')}>

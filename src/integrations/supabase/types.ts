@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      allowlist: {
+        Row: {
+          created_at: string
+          id: string
+          identifier: string
+          is_active: boolean
+          type: Database["public"]["Enums"]["allowlist_type"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          identifier: string
+          is_active?: boolean
+          type: Database["public"]["Enums"]["allowlist_type"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          identifier?: string
+          is_active?: boolean
+          type?: Database["public"]["Enums"]["allowlist_type"]
+        }
+        Relationships: []
+      }
       conversions: {
         Row: {
           created_at: string
@@ -133,6 +157,33 @@ export type Database = {
         }
         Relationships: []
       }
+      feedback: {
+        Row: {
+          category: Database["public"]["Enums"]["feedback_category"]
+          created_at: string
+          id: string
+          message: string
+          page: string | null
+          user_id: string
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["feedback_category"]
+          created_at?: string
+          id?: string
+          message: string
+          page?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["feedback_category"]
+          created_at?: string
+          id?: string
+          message?: string
+          page?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       ngn_balances: {
         Row: {
           balance: number
@@ -170,6 +221,7 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          is_admin: boolean
           kyc_tier: number
           updated_at: string
           user_id: string
@@ -179,6 +231,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          is_admin?: boolean
           kyc_tier?: number
           updated_at?: string
           user_id: string
@@ -188,6 +241,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          is_admin?: boolean
           kyc_tier?: number
           updated_at?: string
           user_id?: string
@@ -334,6 +388,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      reset_demo_data: { Args: { _seed_balance?: boolean }; Returns: Json }
       transfer_crypto: {
         Args: {
           _amount: number
@@ -346,9 +401,11 @@ export type Database = {
       }
     }
     Enums: {
+      allowlist_type: "EMAIL" | "USERNAME"
       app_role: "admin" | "moderator" | "user"
       conversion_status: "PROCESSING" | "SUCCESS" | "FAILED"
       deposit_status: "PENDING" | "CONFIRMED" | "FAILED"
+      feedback_category: "BUG" | "IDEA" | "OTHER"
       transaction_kind: "DEPOSIT" | "CONVERT" | "WITHDRAW" | "SEND" | "RECEIVE"
       wallet_type: "CRYPTO" | "NGN"
       withdrawal_status: "PROCESSING" | "SUCCESS" | "FAILED"
@@ -479,9 +536,11 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      allowlist_type: ["EMAIL", "USERNAME"],
       app_role: ["admin", "moderator", "user"],
       conversion_status: ["PROCESSING", "SUCCESS", "FAILED"],
       deposit_status: ["PENDING", "CONFIRMED", "FAILED"],
+      feedback_category: ["BUG", "IDEA", "OTHER"],
       transaction_kind: ["DEPOSIT", "CONVERT", "WITHDRAW", "SEND", "RECEIVE"],
       wallet_type: ["CRYPTO", "NGN"],
       withdrawal_status: ["PROCESSING", "SUCCESS", "FAILED"],

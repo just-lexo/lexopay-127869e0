@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useWallets } from '@/hooks/useWallets';
 import { supabase } from '@/integrations/supabase/client';
 import { baseAdapter, SUPPORTED_TOKENS, SUPPORTED_NETWORKS, type SupportedToken, type NetworkId } from '@/adapters';
+import { TestModeBanner } from '@/components/TestModeBanner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -29,7 +30,7 @@ interface PendingDeposit {
 
 const Deposit = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { refetch } = useWallets();
   const { toast } = useToast();
 
@@ -41,9 +42,6 @@ const Deposit = () => {
   const [copied, setCopied] = useState(false);
   const [showDevTools, setShowDevTools] = useState(false);
   const [testAmount, setTestAmount] = useState<number>(100);
-
-  // Check if we're in dev mode
-  const isDev = import.meta.env.DEV;
 
   const fetchPendingDeposits = async () => {
     if (!user) return;
@@ -225,8 +223,10 @@ const Deposit = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <TestModeBanner />
+      
       {/* Header */}
-      <header className="glass-card border-b border-border/50 sticky top-0 z-50">
+      <header className="glass-card border-b border-border/50 sticky top-[41px] z-50">
         <div className="container px-4 py-4">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')}>
@@ -376,14 +376,14 @@ const Deposit = () => {
           </Card>
         )}
 
-        {/* Dev Tools */}
-        {isDev && (
+        {/* Admin Tools */}
+        {profile?.is_admin && (
           <Card className="glass-card border-warning/30 bg-warning/5">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base flex items-center gap-2">
                   <Wrench className="w-4 h-4" />
-                  Dev Tools
+                  Admin Tools
                 </CardTitle>
                 <Button
                   variant="ghost"
