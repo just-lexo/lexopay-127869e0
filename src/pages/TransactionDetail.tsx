@@ -116,7 +116,8 @@ const TransactionDetail = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <header className="glass-card border-b border-border/50 sticky top-0 z-50">
+        <TestModeBanner />
+        <header className="glass-card border-b border-border/50 sticky top-[41px] z-50">
           <div className="container px-4 py-4">
             <div className="flex items-center gap-3">
               <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
@@ -137,7 +138,8 @@ const TransactionDetail = () => {
   if (!transaction) {
     return (
       <div className="min-h-screen bg-background">
-        <header className="glass-card border-b border-border/50 sticky top-0 z-50">
+        <TestModeBanner />
+        <header className="glass-card border-b border-border/50 sticky top-[41px] z-50">
           <div className="container px-4 py-4">
             <div className="flex items-center gap-3">
               <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
