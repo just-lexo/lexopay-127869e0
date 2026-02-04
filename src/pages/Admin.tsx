@@ -251,25 +251,25 @@ const Admin = () => {
       <TestModeBanner />
       
       {/* Header */}
-      <header className="glass-card border-b border-border/50 sticky top-[41px] z-50">
-        <div className="container px-4 py-4">
+      <header className="glass-card border-b border-border/50 sticky top-[33px] z-50">
+        <div className="container max-w-lg mx-auto px-4 py-3">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')}>
-              <ArrowLeft className="w-5 h-5" />
+            <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => navigate('/dashboard')}>
+              <ArrowLeft className="w-4 h-4" />
             </Button>
-            <div className="flex-1">
-              <h1 className="font-semibold flex items-center gap-2">
-                <Shield className="w-5 h-5 text-primary" />
+            <div className="flex-1 min-w-0">
+              <h1 className="font-semibold text-base flex items-center gap-2">
+                <Shield className="w-4 h-4 text-primary" />
                 Admin Panel
               </h1>
-              <p className="text-xs text-muted-foreground">Manage allowlist and demo settings</p>
+              <p className="text-xs text-muted-foreground truncate">Manage allowlist & settings</p>
             </div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="container px-4 py-6 space-y-6">
+      <main className="container max-w-lg mx-auto px-4 py-4 space-y-4 pb-6">
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -284,20 +284,21 @@ const Admin = () => {
                   Add to Allowlist
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex gap-2">
+              <CardContent className="space-y-3">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <div className="flex-1 space-y-2">
-                    <Label>Identifier</Label>
+                    <Label className="text-xs">Identifier</Label>
                     <Input
                       placeholder="email@example.com or username"
                       value={newIdentifier}
                       onChange={(e) => setNewIdentifier(e.target.value)}
+                      className="min-h-[44px]"
                     />
                   </div>
-                  <div className="w-32 space-y-2">
-                    <Label>Type</Label>
+                  <div className="w-full sm:w-28 space-y-2">
+                    <Label className="text-xs">Type</Label>
                     <Select value={newType} onValueChange={(v) => setNewType(v as AllowlistType)}>
-                      <SelectTrigger>
+                      <SelectTrigger className="min-h-[44px]">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -310,7 +311,7 @@ const Admin = () => {
                 <Button
                   onClick={handleAddEntry}
                   disabled={addingEntry || !newIdentifier.trim()}
-                  className="gradient-primary"
+                  className="w-full min-h-[44px] gradient-primary"
                 >
                   {addingEntry ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -342,15 +343,15 @@ const Admin = () => {
                     {allowlist.map((entry) => (
                       <div
                         key={entry.id}
-                        className="flex items-center justify-between p-3 rounded-lg bg-background/50"
+                        className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-background/50"
                       >
-                        <div className="flex items-center gap-3">
-                          <Badge variant={entry.type === 'EMAIL' ? 'default' : 'secondary'} className="text-xs">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <Badge variant={entry.type === 'EMAIL' ? 'default' : 'secondary'} className="text-[10px] shrink-0">
                             {entry.type}
                           </Badge>
-                          <span className="text-sm font-mono">{entry.identifier}</span>
+                          <span className="text-xs font-mono truncate">{entry.identifier}</span>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5 shrink-0">
                           <Switch
                             checked={entry.is_active}
                             onCheckedChange={() => handleToggleActive(entry)}
@@ -358,10 +359,10 @@ const Admin = () => {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="text-destructive hover:text-destructive"
+                            className="h-8 w-8 text-destructive hover:text-destructive"
                             onClick={() => handleDeleteEntry(entry)}
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-3.5 h-3.5" />
                           </Button>
                         </div>
                       </div>

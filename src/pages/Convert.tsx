@@ -244,14 +244,14 @@ const Convert = () => {
       <TestModeBanner />
       
       {/* Header */}
-      <header className="glass-card border-b border-border/50 sticky top-[41px] z-50">
-        <div className="container px-4 py-4">
+      <header className="glass-card border-b border-border/50 sticky top-[33px] z-50">
+        <div className="container max-w-lg mx-auto px-4 py-3">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')}>
-              <ArrowLeft className="w-5 h-5" />
+            <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => navigate('/dashboard')}>
+              <ArrowLeft className="w-4 h-4" />
             </Button>
-            <div>
-              <h1 className="font-semibold">Convert to NGN</h1>
+            <div className="min-w-0">
+              <h1 className="font-semibold text-base">Convert to NGN</h1>
               <p className="text-xs text-muted-foreground">Exchange crypto for Naira</p>
             </div>
           </div>
@@ -259,7 +259,7 @@ const Convert = () => {
       </header>
 
       {/* Main Content */}
-      <main className="container px-4 py-6 space-y-6">
+      <main className="container max-w-lg mx-auto px-4 py-4 space-y-4 pb-6">
         {/* From Token */}
         <Card className="glass-card border-border/50">
           <CardHeader className="pb-3">
@@ -407,7 +407,7 @@ const Convert = () => {
 
           return (
             <Button
-              className={`w-full touch-target gradient-primary hover:opacity-90 transition-opacity ${
+              className={`w-full min-h-[48px] gradient-primary hover:opacity-90 transition-opacity ${
                 isDisabled && !converting ? 'opacity-50 cursor-not-allowed' : ''
               }`}
               onClick={handleConvert}

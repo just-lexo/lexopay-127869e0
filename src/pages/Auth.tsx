@@ -167,12 +167,12 @@ const Auth = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="p-4">
+      <header className="p-3">
         <Button
           variant="ghost"
           size="sm"
           onClick={() => step === 'profile-setup' ? null : navigate('/')}
-          className="gap-2"
+          className="gap-2 min-h-[44px]"
           disabled={step === 'profile-setup'}
         >
           <ArrowLeft className="w-4 h-4" />
@@ -182,17 +182,17 @@ const Auth = () => {
 
       {/* Main Content */}
       <main className="flex-1 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md glass-card border-border/50">
+        <Card className="w-full max-w-sm glass-card border-border/50">
           {step === 'auth' ? (
             <>
-              <CardHeader className="text-center">
-                <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center mx-auto mb-4">
-                  <span className="text-primary-foreground font-bold text-xl">L</span>
+              <CardHeader className="text-center pb-4">
+                <div className="w-11 h-11 rounded-xl gradient-primary flex items-center justify-center mx-auto mb-3">
+                  <span className="text-primary-foreground font-bold text-lg">L</span>
                 </div>
-                <CardTitle className="text-2xl">
+                <CardTitle className="text-xl">
                   {isLogin ? 'Welcome back' : 'Create account'}
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-xs">
                   {isLogin 
                     ? 'Sign in to your LexoPay account' 
                     : 'Get started with LexoPay today'}
@@ -234,7 +234,7 @@ const Auth = () => {
 
                   <Button 
                     type="submit" 
-                    className="w-full touch-target gradient-primary hover:opacity-90"
+                    className="w-full min-h-[48px] gradient-primary hover:opacity-90"
                     disabled={loading}
                   >
                     {loading ? (
@@ -245,12 +245,12 @@ const Auth = () => {
                   </Button>
                 </form>
 
-                <div className="mt-6 text-center">
-                  <p className="text-sm text-muted-foreground">
+                <div className="mt-4 text-center">
+                  <p className="text-xs text-muted-foreground">
                     {isLogin ? "Don't have an account?" : "Already have an account?"}
                     <Button
                       variant="link"
-                      className="pl-1 text-primary"
+                      className="pl-1 text-primary text-xs h-auto py-0"
                       onClick={() => setIsLogin(!isLogin)}
                     >
                       {isLogin ? 'Sign up' : 'Sign in'}
@@ -261,12 +261,12 @@ const Auth = () => {
             </>
           ) : (
             <>
-              <CardHeader className="text-center">
-                <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center mx-auto mb-4">
-                  <User className="w-6 h-6 text-primary-foreground" />
+              <CardHeader className="text-center pb-4">
+                <div className="w-11 h-11 rounded-xl gradient-primary flex items-center justify-center mx-auto mb-3">
+                  <User className="w-5 h-5 text-primary-foreground" />
                 </div>
-                <CardTitle className="text-2xl">Set up your profile</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-xl">Set up your profile</CardTitle>
+                <CardDescription className="text-xs">
                   Choose your username and display name
                 </CardDescription>
               </CardHeader>
@@ -309,7 +309,7 @@ const Auth = () => {
 
                   <Button 
                     type="submit" 
-                    className="w-full touch-target gradient-primary hover:opacity-90"
+                    className="w-full min-h-[48px] gradient-primary hover:opacity-90"
                     disabled={loading}
                   >
                     {loading ? (
