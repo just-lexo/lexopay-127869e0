@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useWallets } from '@/hooks/useWallets';
 import { RecentActivity } from '@/components/dashboard/RecentActivity';
 import { TestModeBanner } from '@/components/TestModeBanner';
+ import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,22 +13,15 @@ import {
   RefreshCw, 
   ArrowUpFromLine, 
   History,
-  LogOut,
   Shield,
   Loader2,
   Send,
-  Settings
 } from 'lucide-react';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { profile, signOut } = useAuth();
+  const { profile } = useAuth();
   const { cryptoBalances, ngnBalance, loading } = useWallets();
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/');
-  };
 
   const getKYCBadge = (tier: number) => {
     const tiers = [
@@ -55,7 +49,7 @@ const Dashboard = () => {
   const totalCryptoUSD = cryptoBalances.reduce((sum, b) => sum + b.balance, 0);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20">
       <TestModeBanner />
       
       {/* Header */}
@@ -71,7 +65,7 @@ const Dashboard = () => {
                 <p className="font-semibold text-sm truncate">{profile?.display_name || 'User'}</p>
               </div>
             </div>
-            <div className="flex items-center gap-1 shrink-0 flex-wrap justify-end">
+            <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
               {profile?.is_admin && (
                 <Badge variant="default" className="gap-1 bg-primary text-primary-foreground text-[10px] px-1.5 py-0.5">
                   <Shield className="w-2.5 h-2.5" />
@@ -82,14 +76,6 @@ const Dashboard = () => {
                 <Shield className="w-2.5 h-2.5" />
                 {kycBadge.label}
               </Badge>
-              {profile?.is_admin && (
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate('/admin')}>
-                  <Settings className="w-4 h-4" />
-                </Button>
-              )}
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSignOut}>
-                <LogOut className="w-4 h-4" />
-              </Button>
             </div>
           </div>
         </div>
@@ -239,23 +225,11 @@ const Dashboard = () => {
             {/* Recent Activity */}
             <RecentActivity />
 
-            {/* Username Display */}
-            <Card className="glass-card border-border/50">
-              <CardContent className="py-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Your LexoPay ID</p>
-                    <p className="font-mono text-primary">@{profile?.username}</p>
-                  </div>
-                  <Badge variant="outline" className="text-xs">
-                    Share for P2P
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
           </>
         )}
       </main>
+
+      <BottomNav />
     </div>
   );
 };

@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { TestModeBanner } from '@/components/TestModeBanner';
+ import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -115,7 +116,7 @@ const TransactionDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background pb-20">
         <TestModeBanner />
         <header className="glass-card border-b border-border/50 sticky top-[33px] z-50">
           <div className="container max-w-lg mx-auto px-4 py-3">
@@ -131,13 +132,14 @@ const TransactionDetail = () => {
           <Skeleton className="h-48 w-full rounded-xl" />
           <Skeleton className="h-32 w-full rounded-xl" />
         </main>
+        <BottomNav />
       </div>
     );
   }
 
   if (!transaction) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background pb-20">
         <TestModeBanner />
         <header className="glass-card border-b border-border/50 sticky top-[33px] z-50">
           <div className="container max-w-lg mx-auto px-4 py-3">
@@ -156,6 +158,7 @@ const TransactionDetail = () => {
             </CardContent>
           </Card>
         </main>
+        <BottomNav />
       </div>
     );
   }
@@ -164,7 +167,7 @@ const TransactionDetail = () => {
   const reference = (metadata.reference as string) || transaction.id.slice(0, 8).toUpperCase();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20">
       <TestModeBanner />
       
       {/* Header */}
@@ -182,8 +185,7 @@ const TransactionDetail = () => {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="container max-w-lg mx-auto px-4 py-4 space-y-4 pb-6">
+      <main className="container max-w-lg mx-auto px-4 py-4 space-y-4">
         {/* Main Card */}
         <Card className="glass-card border-primary/20">
           <CardContent className="py-6">
@@ -349,6 +351,8 @@ const TransactionDetail = () => {
           </Button>
         </div>
       </main>
+
+      <BottomNav />
     </div>
   );
 };
