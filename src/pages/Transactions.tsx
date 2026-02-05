@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useTransactions } from '@/hooks/useTransactions';
 import { TestModeBanner } from '@/components/TestModeBanner';
+ import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -52,7 +53,7 @@ const Transactions = () => {
   const { transactions, loading, error } = useTransactions();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20">
       <TestModeBanner />
       
       {/* Header */}
@@ -72,8 +73,7 @@ const Transactions = () => {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="container max-w-lg mx-auto px-4 py-4 pb-6">
+      <main className="container max-w-lg mx-auto px-4 py-4">
         {loading ? (
           <div className="space-y-3">
             {[1, 2, 3, 4, 5].map((i) => (
@@ -139,6 +139,8 @@ const Transactions = () => {
           </div>
         )}
       </main>
+
+      <BottomNav />
     </div>
   );
 };

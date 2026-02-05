@@ -5,6 +5,7 @@ import { useWallets } from '@/hooks/useWallets';
 import { supabase } from '@/integrations/supabase/client';
 import { baseAdapter, SUPPORTED_TOKENS, SUPPORTED_NETWORKS, type SupportedToken, type NetworkId } from '@/adapters';
 import { TestModeBanner } from '@/components/TestModeBanner';
+ import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -222,7 +223,7 @@ const Deposit = () => {
   const activeNetwork = SUPPORTED_NETWORKS.find(n => n.id === selectedNetwork);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20">
       <TestModeBanner />
       
       {/* Header */}
@@ -240,8 +241,7 @@ const Deposit = () => {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="container max-w-lg mx-auto px-4 py-4 space-y-4 pb-6">
+      <main className="container max-w-lg mx-auto px-4 py-4 space-y-4">
         {/* Token Selection */}
         <Card className="glass-card border-border/50">
           <CardHeader className="pb-2">
@@ -429,6 +429,8 @@ const Deposit = () => {
           </Card>
         )}
       </main>
+
+      <BottomNav />
     </div>
   );
 };

@@ -5,6 +5,7 @@ import { useWallets } from '@/hooks/useWallets';
 import { supabase } from '@/integrations/supabase/client';
 import { mockPayoutAdapter, NIGERIAN_BANKS, type Bank } from '@/adapters';
 import { TestModeBanner } from '@/components/TestModeBanner';
+ import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -291,7 +292,7 @@ const Withdraw = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20">
       <TestModeBanner />
       
       {/* Header */}
@@ -309,8 +310,7 @@ const Withdraw = () => {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="container max-w-lg mx-auto px-4 py-4 space-y-4 pb-6">
+      <main className="container max-w-lg mx-auto px-4 py-4 space-y-4">
         {/* Available Balance */}
         <Card className="glass-card border-success/20">
           <CardContent className="py-3">
@@ -523,6 +523,8 @@ const Withdraw = () => {
           </Card>
         )}
       </main>
+
+      <BottomNav />
     </div>
   );
 };

@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { TestModeBanner } from '@/components/TestModeBanner';
+ import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -90,7 +91,7 @@ const Receipt = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background pb-20">
         <TestModeBanner />
         <header className="glass-card border-b border-border/50 sticky top-[33px] z-50">
           <div className="container max-w-lg mx-auto px-4 py-3">
@@ -105,13 +106,14 @@ const Receipt = () => {
         <main className="container max-w-lg mx-auto px-4 py-4">
           <Skeleton className="h-96 w-full rounded-xl" />
         </main>
+        <BottomNav />
       </div>
     );
   }
 
   if (!transaction) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background pb-20">
         <TestModeBanner />
         <header className="glass-card border-b border-border/50 sticky top-[33px] z-50">
           <div className="container max-w-lg mx-auto px-4 py-3">
@@ -130,6 +132,7 @@ const Receipt = () => {
             </CardContent>
           </Card>
         </main>
+        <BottomNav />
       </div>
     );
   }
@@ -157,7 +160,7 @@ const Receipt = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20">
       <TestModeBanner />
       
       {/* Header */}
@@ -172,8 +175,7 @@ const Receipt = () => {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="container max-w-lg mx-auto px-4 py-4 space-y-4 pb-6">
+      <main className="container max-w-lg mx-auto px-4 py-4 space-y-4">
         {/* Receipt Card */}
         <Card className="glass-card border-border/50 overflow-hidden">
           {/* Header with gradient */}
@@ -312,6 +314,8 @@ const Receipt = () => {
           </Button>
         </div>
       </main>
+
+      <BottomNav />
     </div>
   );
 };

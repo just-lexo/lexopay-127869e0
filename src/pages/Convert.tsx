@@ -5,6 +5,7 @@ import { useWallets } from '@/hooks/useWallets';
 import { supabase } from '@/integrations/supabase/client';
 import { mockRateProvider, CONVERSION_FEE_PERCENTAGE, type ConversionQuote } from '@/adapters';
 import { TestModeBanner } from '@/components/TestModeBanner';
+ import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -240,7 +241,7 @@ const Convert = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20">
       <TestModeBanner />
       
       {/* Header */}
@@ -258,8 +259,7 @@ const Convert = () => {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="container max-w-lg mx-auto px-4 py-4 space-y-4 pb-6">
+      <main className="container max-w-lg mx-auto px-4 py-4 space-y-4">
         {/* From Token */}
         <Card className="glass-card border-border/50">
           <CardHeader className="pb-3">
@@ -430,6 +430,8 @@ const Convert = () => {
           Conversion is instant. NGN will be added to your wallet immediately.
         </p>
       </main>
+
+      <BottomNav />
     </div>
   );
 };

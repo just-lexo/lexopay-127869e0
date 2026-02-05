@@ -5,6 +5,7 @@ import { useWallets } from '@/hooks/useWallets';
 import { supabase } from '@/integrations/supabase/client';
 import { SUPPORTED_TOKENS, type SupportedToken } from '@/adapters';
 import { TestModeBanner } from '@/components/TestModeBanner';
+ import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -170,7 +171,7 @@ const Send = () => {
 
   if (showConfirm && recipient) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background pb-20">
         <TestModeBanner />
         
         <header className="glass-card border-b border-border/50 sticky top-[33px] z-50">
@@ -187,7 +188,7 @@ const Send = () => {
           </div>
         </header>
 
-        <main className="container max-w-lg mx-auto px-4 py-4 space-y-4 pb-6">
+        <main className="container max-w-lg mx-auto px-4 py-4 space-y-4">
           <Card className="glass-card border-primary/20">
             <CardContent className="py-6 space-y-6">
               {/* Transfer visualization */}
@@ -244,12 +245,14 @@ const Send = () => {
             )}
           </Button>
         </main>
+
+        <BottomNav />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20">
       <TestModeBanner />
       
       {/* Header */}
@@ -267,8 +270,7 @@ const Send = () => {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="container max-w-lg mx-auto px-4 py-4 space-y-4 pb-6">
+      <main className="container max-w-lg mx-auto px-4 py-4 space-y-4">
         {/* Token Selection */}
         <Card className="glass-card border-border/50">
           <CardHeader className="pb-3">
@@ -388,6 +390,8 @@ const Send = () => {
           Continue
         </Button>
       </main>
+
+      <BottomNav />
     </div>
   );
 };

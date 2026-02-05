@@ -7,7 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DevToolsButton } from "@/components/DevToolsButton";
 import { FeedbackButton } from "@/components/FeedbackButton";
-import Landing from "./pages/Landing";
+ import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Deposit from "./pages/Deposit";
@@ -19,6 +19,7 @@ import TransactionDetail from "./pages/TransactionDetail";
 import Receipt from "./pages/Receipt";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
+ import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
@@ -104,10 +105,17 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
+             <Route 
+               path="/profile" 
+               element={
+                 <ProtectedRoute>
+                   <Profile />
+                 </ProtectedRoute>
+               } 
+             />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-          <FeedbackButton />
           <DevToolsButton />
         </BrowserRouter>
       </TooltipProvider>
