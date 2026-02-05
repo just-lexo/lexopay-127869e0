@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DevToolsButton } from "@/components/DevToolsButton";
-import { FeedbackButton } from "@/components/FeedbackButton";
+import { HideLovableBadge } from "@/components/HideLovableBadge";
  import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -117,6 +117,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
           <DevToolsButton />
+          <HideLovableBadge />
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
