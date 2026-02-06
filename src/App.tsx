@@ -18,8 +18,9 @@ import Transactions from "./pages/Transactions";
 import TransactionDetail from "./pages/TransactionDetail";
 import Receipt from "./pages/Receipt";
 import Admin from "./pages/Admin";
+import AdminFeedback from "./pages/AdminFeedback";
 import NotFound from "./pages/NotFound";
- import Profile from "./pages/Profile";
+import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
@@ -102,6 +103,14 @@ const App = () => (
               element={
                 <ProtectedRoute requireAdmin>
                   <Admin />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/feedback" 
+              element={
+                <ProtectedRoute requireAdmin>
+                  <AdminFeedback />
                 </ProtectedRoute>
               } 
             />

@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Wrench, X, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import { useWallets } from '@/hooks/useWallets';
@@ -25,6 +25,9 @@ interface PendingWithdrawal {
   status: string;
 }
 
+const STORAGE_KEY = 'devtools-position';
+const DEFAULT_POSITION = { x: -1, y: -1 }; // -1 means use default
+
 export function DevToolsButton() {
   const { user } = useAuth();
   const { refetch } = useWallets();
@@ -37,6 +40,32 @@ export function DevToolsButton() {
   const [pendingWithdrawals, setPendingWithdrawals] = useState<PendingWithdrawal[]>([]);
   const [showDeposits, setShowDeposits] = useState(true);
   const [showWithdrawals, setShowWithdrawals] = useState(true);
+  
+  // Draggable state
+  const [position, setPosition] = useState(DEFAULT_POSITION);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragRef = useRef<{ startX: number; startY: number; startPosX: number; startPosY: number } | null>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  // Load position from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setPosition(parsed);
+      } catch {
+        // Ignore invalid JSON
+      }
+    }
+  }, []);
+
+  // Save position to localStorage
+  useEffect(() => {
+    if (position.x !== -1 && position.y !== -1) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(position));
+    }
+  }, [position]);
 
   const fetchPending = async () => {
     if (!user) return;
@@ -64,12 +93,75 @@ export function DevToolsButton() {
     }
   }, [isOpen, user]);
 
+  // Handle drag start
+  const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
+    if (isOpen) return; // Don't drag when panel is open
+    
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    
+    const currentX = position.x === -1 ? window.innerWidth - 64 : position.x;
+    const currentY = position.y === -1 ? window.innerHeight - 140 : position.y;
+    
+    dragRef.current = {
+      startX: clientX,
+      startY: clientY,
+      startPosX: currentX,
+      startPosY: currentY,
+    };
+    setIsDragging(true);
+  };
+
+  // Handle drag move
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMove = (e: MouseEvent | TouchEvent) => {
+      if (!dragRef.current) return;
+      
+      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+      
+      const deltaX = clientX - dragRef.current.startX;
+      const deltaY = clientY - dragRef.current.startY;
+      
+      // Constrain within viewport
+      const buttonSize = 48;
+      const bottomNavHeight = 80; // Ensure it stays above bottom nav
+      const maxX = window.innerWidth - buttonSize - 16;
+      const maxY = window.innerHeight - buttonSize - bottomNavHeight;
+      const minX = 16;
+      const minY = 80; // Below header/banner
+      
+      const newX = Math.min(maxX, Math.max(minX, dragRef.current.startPosX + deltaX));
+      const newY = Math.min(maxY, Math.max(minY, dragRef.current.startPosY + deltaY));
+      
+      setPosition({ x: newX, y: newY });
+    };
+
+    const handleEnd = () => {
+      setIsDragging(false);
+      dragRef.current = null;
+    };
+
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleEnd);
+    window.addEventListener('touchmove', handleMove);
+    window.addEventListener('touchend', handleEnd);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('mouseup', handleEnd);
+      window.removeEventListener('touchmove', handleMove);
+      window.removeEventListener('touchend', handleEnd);
+    };
+  }, [isDragging]);
+
   const handleSimulateDeposit = async (deposit: PendingDeposit) => {
     if (!user) return;
     setLoading(true);
 
     try {
-      // Verify still pending
       const { data: current } = await supabase
         .from('deposits')
         .select('status')
@@ -82,7 +174,6 @@ export function DevToolsButton() {
         return;
       }
 
-      // Update deposit
       await supabase
         .from('deposits')
         .update({
@@ -93,7 +184,6 @@ export function DevToolsButton() {
         .eq('id', deposit.id)
         .eq('status', 'PENDING');
 
-      // Get wallet
       const { data: wallet } = await supabase
         .from('wallets')
         .select('id')
@@ -103,7 +193,6 @@ export function DevToolsButton() {
 
       if (!wallet) throw new Error('No wallet found');
 
-      // Update balance
       const { data: existing } = await supabase
         .from('crypto_balances')
         .select('balance')
@@ -121,7 +210,6 @@ export function DevToolsButton() {
         .eq('token', deposit.token)
         .eq('network', deposit.network);
 
-      // Create transaction
       await supabase.from('transactions').insert({
         user_id: user.id,
         kind: 'DEPOSIT',
@@ -169,12 +257,21 @@ export function DevToolsButton() {
 
   if (!user) return null;
 
+  // Calculate button position
+  const buttonStyle: React.CSSProperties = position.x === -1
+    ? { right: 16, bottom: 96 } // Default: above bottom nav
+    : { left: position.x, top: position.y };
+
   return (
     <>
-      {/* Floating Button */}
+      {/* Floating Draggable Button */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-4 right-4 z-50 w-12 h-12 rounded-full bg-warning text-warning-foreground shadow-lg flex items-center justify-center hover:bg-warning/90 transition-colors"
+        ref={buttonRef}
+        onMouseDown={handleDragStart}
+        onTouchStart={handleDragStart}
+        onClick={() => !isDragging && setIsOpen(!isOpen)}
+        className="fixed z-50 w-12 h-12 rounded-full bg-warning text-warning-foreground shadow-lg flex items-center justify-center hover:bg-warning/90 transition-colors touch-none select-none"
+        style={buttonStyle}
         aria-label="Dev Tools"
       >
         {isOpen ? <X className="w-5 h-5" /> : <Wrench className="w-5 h-5" />}
@@ -182,7 +279,13 @@ export function DevToolsButton() {
 
       {/* Panel */}
       {isOpen && (
-        <div className="fixed bottom-20 right-4 z-50 w-80 max-h-[70vh] overflow-y-auto rounded-xl shadow-2xl">
+        <div 
+          className="fixed z-50 w-80 max-h-[60vh] overflow-y-auto rounded-xl shadow-2xl"
+          style={{
+            bottom: 160, // Above bottom nav + button
+            right: 16,
+          }}
+        >
           <Card className="border-warning/30 bg-card">
             <CardHeader className="pb-2 bg-warning/10">
               <CardTitle className="text-sm flex items-center gap-2">
@@ -278,7 +381,7 @@ export function DevToolsButton() {
               )}
 
               <p className="text-xs text-muted-foreground text-center">
-                Use this panel to simulate backend events for testing
+                Drag the icon to reposition it
               </p>
             </CardContent>
           </Card>
