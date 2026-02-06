@@ -270,27 +270,44 @@ export function DevToolsButton() {
         onMouseDown={handleDragStart}
         onTouchStart={handleDragStart}
         onClick={() => !isDragging && setIsOpen(!isOpen)}
-        className="fixed z-50 w-12 h-12 rounded-full bg-warning text-warning-foreground shadow-lg flex items-center justify-center hover:bg-warning/90 transition-colors touch-none select-none"
+        className="fixed z-[53] w-12 h-12 rounded-full bg-warning text-warning-foreground shadow-lg flex items-center justify-center hover:bg-warning/90 transition-colors touch-none select-none"
         style={buttonStyle}
         aria-label="Dev Tools"
       >
         {isOpen ? <X className="w-5 h-5" /> : <Wrench className="w-5 h-5" />}
       </button>
 
+      {/* Backdrop to close */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 z-[51] bg-black/20"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
       {/* Panel */}
       {isOpen && (
         <div 
-          className="fixed z-50 w-80 max-h-[60vh] overflow-y-auto rounded-xl shadow-2xl"
+          className="fixed z-[52] w-80 max-h-[60vh] overflow-y-auto rounded-xl shadow-2xl"
           style={{
-            bottom: 160, // Above bottom nav + button
+            bottom: 160,
             right: 16,
           }}
         >
           <Card className="border-warning/30 bg-card">
             <CardHeader className="pb-2 bg-warning/10">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Wrench className="w-4 h-4" />
-                Dev Tools (Tester Mode)
+              <CardTitle className="text-sm flex items-center gap-2 justify-between">
+                <span className="flex items-center gap-2">
+                  <Wrench className="w-4 h-4" />
+                  Dev Tools (Tester Mode)
+                </span>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="rounded-sm opacity-70 hover:opacity-100 transition-opacity"
+                  aria-label="Close Dev Tools"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 pt-4">
