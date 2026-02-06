@@ -162,6 +162,7 @@ export type Database = {
           category: Database["public"]["Enums"]["feedback_category"]
           created_at: string
           id: string
+          is_read: boolean
           message: string
           page: string | null
           user_id: string
@@ -170,6 +171,7 @@ export type Database = {
           category: Database["public"]["Enums"]["feedback_category"]
           created_at?: string
           id?: string
+          is_read?: boolean
           message: string
           page?: string | null
           user_id: string
@@ -178,9 +180,46 @@ export type Database = {
           category?: Database["public"]["Enums"]["feedback_category"]
           created_at?: string
           id?: string
+          is_read?: boolean
           message?: string
           page?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      invite_requests: {
+        Row: {
+          admin_note: string | null
+          created_at: string
+          email: string
+          id: string
+          message: string | null
+          status: Database["public"]["Enums"]["invite_request_status"]
+          updated_at: string
+          user_id: string
+          username: string | null
+        }
+        Insert: {
+          admin_note?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          message?: string | null
+          status?: Database["public"]["Enums"]["invite_request_status"]
+          updated_at?: string
+          user_id: string
+          username?: string | null
+        }
+        Update: {
+          admin_note?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string | null
+          status?: Database["public"]["Enums"]["invite_request_status"]
+          updated_at?: string
+          user_id?: string
+          username?: string | null
         }
         Relationships: []
       }
@@ -388,6 +427,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      reset_all_users_data: { Args: { _seed_balance?: boolean }; Returns: Json }
       reset_demo_data: { Args: { _seed_balance?: boolean }; Returns: Json }
       transfer_crypto: {
         Args: {
@@ -406,6 +446,7 @@ export type Database = {
       conversion_status: "PROCESSING" | "SUCCESS" | "FAILED"
       deposit_status: "PENDING" | "CONFIRMED" | "FAILED"
       feedback_category: "BUG" | "IDEA" | "OTHER"
+      invite_request_status: "PENDING" | "APPROVED" | "DECLINED"
       transaction_kind: "DEPOSIT" | "CONVERT" | "WITHDRAW" | "SEND" | "RECEIVE"
       wallet_type: "CRYPTO" | "NGN"
       withdrawal_status: "PROCESSING" | "SUCCESS" | "FAILED"
@@ -541,6 +582,7 @@ export const Constants = {
       conversion_status: ["PROCESSING", "SUCCESS", "FAILED"],
       deposit_status: ["PENDING", "CONFIRMED", "FAILED"],
       feedback_category: ["BUG", "IDEA", "OTHER"],
+      invite_request_status: ["PENDING", "APPROVED", "DECLINED"],
       transaction_kind: ["DEPOSIT", "CONVERT", "WITHDRAW", "SEND", "RECEIVE"],
       wallet_type: ["CRYPTO", "NGN"],
       withdrawal_status: ["PROCESSING", "SUCCESS", "FAILED"],

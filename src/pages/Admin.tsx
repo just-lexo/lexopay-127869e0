@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { TestModeBanner } from '@/components/TestModeBanner';
- import { BottomNav } from '@/components/BottomNav';
+import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -37,7 +37,10 @@ import {
   Trash2,
   RefreshCw,
   Users,
-  MessageSquare
+  MessageSquare,
+  Inbox,
+  UserPlus,
+  Lock
 } from 'lucide-react';
 
 type AllowlistType = 'EMAIL' | 'USERNAME';
@@ -50,64 +53,69 @@ interface AllowlistEntry {
   created_at: string;
 }
 
-interface FeedbackEntry {
+interface InviteRequest {
   id: string;
   user_id: string;
-  category: string;
-  message: string;
-  page: string | null;
+  email: string;
+  username: string | null;
+  message: string | null;
+  status: 'PENDING' | 'APPROVED' | 'DECLINED';
+  admin_note: string | null;
   created_at: string;
 }
 
 const Admin = () => {
   const navigate = useNavigate();
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const { toast } = useToast();
 
   const [allowlist, setAllowlist] = useState<AllowlistEntry[]>([]);
-  const [feedback, setFeedback] = useState<FeedbackEntry[]>([]);
+  const [inviteRequests, setInviteRequests] = useState<InviteRequest[]>([]);
+  const [feedbackCount, setFeedbackCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [addingEntry, setAddingEntry] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [seedBalance, setSeedBalance] = useState(false);
+  const [resetScope, setResetScope] = useState<'self' | 'all'>('self');
+  const [processingRequest, setProcessingRequest] = useState<string | null>(null);
 
   // New entry form
   const [newIdentifier, setNewIdentifier] = useState('');
   const [newType, setNewType] = useState<AllowlistType>('EMAIL');
 
-  // Check if user is admin
   const isAdmin = profile?.is_admin === true;
+  const currentUserEmail = user?.email?.toLowerCase();
+  const currentUsername = profile?.username?.toLowerCase();
 
   useEffect(() => {
     if (!isAdmin) {
       navigate('/dashboard');
       return;
     }
-    
     fetchData();
   }, [isAdmin, navigate]);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Fetch allowlist
-      const { data: allowlistData, error: allowlistError } = await supabase
-        .from('allowlist')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const [allowlistRes, inviteRes, feedbackRes] = await Promise.all([
+        supabase
+          .from('allowlist')
+          .select('*')
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('invite_requests')
+          .select('*')
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('feedback')
+          .select('id', { count: 'exact' })
+          .eq('is_read', false),
+      ]);
 
-      if (allowlistError) throw allowlistError;
-      setAllowlist(allowlistData || []);
-
-      // Fetch feedback
-      const { data: feedbackData, error: feedbackError } = await supabase
-        .from('feedback')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(50);
-
-      if (feedbackError) throw feedbackError;
-      setFeedback(feedbackData || []);
+      if (!allowlistRes.error) setAllowlist(allowlistRes.data || []);
+      if (!inviteRes.error) setInviteRequests((inviteRes.data as InviteRequest[]) || []);
+      if (!feedbackRes.error) setFeedbackCount(feedbackRes.count || 0);
     } catch (err) {
       console.error('Error fetching admin data:', err);
       toast({
@@ -118,6 +126,14 @@ const Admin = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Check if entry belongs to current admin
+  const isAdminEntry = (entry: AllowlistEntry): boolean => {
+    const id = entry.identifier.toLowerCase();
+    if (entry.type === 'EMAIL' && currentUserEmail === id) return true;
+    if (entry.type === 'USERNAME' && currentUsername === id) return true;
+    return false;
   };
 
   const handleAddEntry = async () => {
@@ -164,6 +180,15 @@ const Admin = () => {
   };
 
   const handleToggleActive = async (entry: AllowlistEntry) => {
+    if (isAdminEntry(entry)) {
+      toast({
+        title: 'Cannot modify',
+        description: 'You cannot disable your own allowlist entry.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('allowlist')
@@ -188,6 +213,15 @@ const Admin = () => {
   };
 
   const handleDeleteEntry = async (entry: AllowlistEntry) => {
+    if (isAdminEntry(entry)) {
+      toast({
+        title: 'Cannot delete',
+        description: 'You cannot delete your own allowlist entry.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('allowlist')
@@ -196,10 +230,7 @@ const Admin = () => {
 
       if (error) throw error;
 
-      toast({
-        title: 'Entry deleted',
-      });
-
+      toast({ title: 'Entry deleted' });
       await fetchData();
     } catch (err) {
       console.error('Error deleting entry:', err);
@@ -214,23 +245,37 @@ const Admin = () => {
   const handleResetDemoData = async () => {
     setResetting(true);
     try {
-      const { data, error } = await supabase.rpc('reset_demo_data', {
-        _seed_balance: seedBalance,
-      });
+      if (resetScope === 'all') {
+        const { data, error } = await supabase.rpc('reset_all_users_data', {
+          _seed_balance: seedBalance,
+        });
 
-      if (error) throw error;
+        if (error) throw error;
+        const result = data as { success: boolean; error?: string };
+        if (!result.success) throw new Error(result.error || 'Reset failed');
 
-      const result = data as { success: boolean; error?: string };
-      if (!result.success) {
-        throw new Error(result.error || 'Reset failed');
+        toast({
+          title: 'All users reset',
+          description: seedBalance 
+            ? 'All balances reset and 100 USDT seeded for everyone.' 
+            : 'All user data cleared.',
+        });
+      } else {
+        const { data, error } = await supabase.rpc('reset_demo_data', {
+          _seed_balance: seedBalance,
+        });
+
+        if (error) throw error;
+        const result = data as { success: boolean; error?: string };
+        if (!result.success) throw new Error(result.error || 'Reset failed');
+
+        toast({
+          title: 'Your demo data reset',
+          description: seedBalance 
+            ? 'Your balances reset and 100 USDT seeded.' 
+            : 'Your balances and transactions cleared.',
+        });
       }
-
-      toast({
-        title: 'Demo data reset',
-        description: seedBalance 
-          ? 'Balances reset and 100 USDT seeded.' 
-          : 'All balances and transactions cleared.',
-      });
     } catch (err: any) {
       console.error('Error resetting demo data:', err);
       toast({
@@ -243,9 +288,69 @@ const Admin = () => {
     }
   };
 
-  if (!isAdmin) {
-    return null;
-  }
+  const handleApproveRequest = async (request: InviteRequest) => {
+    setProcessingRequest(request.id);
+    try {
+      // Add to allowlist
+      await supabase.from('allowlist').insert({
+        identifier: request.email.toLowerCase(),
+        type: 'EMAIL',
+        is_active: true,
+      });
+
+      if (request.username) {
+        await supabase.from('allowlist').insert({
+          identifier: request.username.toLowerCase(),
+          type: 'USERNAME',
+          is_active: true,
+        });
+      }
+
+      // Update request status
+      await supabase
+        .from('invite_requests')
+        .update({ status: 'APPROVED' })
+        .eq('id', request.id);
+
+      toast({ title: 'Request approved', description: `${request.email} added to allowlist.` });
+      await fetchData();
+    } catch (err) {
+      console.error('Error approving request:', err);
+      toast({
+        title: 'Error',
+        description: 'Failed to approve request.',
+        variant: 'destructive',
+      });
+    } finally {
+      setProcessingRequest(null);
+    }
+  };
+
+  const handleDeclineRequest = async (request: InviteRequest) => {
+    setProcessingRequest(request.id);
+    try {
+      await supabase
+        .from('invite_requests')
+        .update({ status: 'DECLINED' })
+        .eq('id', request.id);
+
+      toast({ title: 'Request declined' });
+      await fetchData();
+    } catch (err) {
+      console.error('Error declining request:', err);
+      toast({
+        title: 'Error',
+        description: 'Failed to decline request.',
+        variant: 'destructive',
+      });
+    } finally {
+      setProcessingRequest(null);
+    }
+  };
+
+  const pendingRequests = inviteRequests.filter(r => r.status === 'PENDING');
+
+  if (!isAdmin) return null;
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -265,6 +370,20 @@ const Admin = () => {
               </h1>
               <p className="text-xs text-muted-foreground truncate">Manage allowlist & settings</p>
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 relative"
+              onClick={() => navigate('/admin/feedback')}
+            >
+              <Inbox className="w-4 h-4" />
+              <span className="hidden sm:inline">Feedback</span>
+              {feedbackCount > 0 && (
+                <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 p-0 text-[10px] flex items-center justify-center">
+                  {feedbackCount}
+                </Badge>
+              )}
+            </Button>
           </div>
         </div>
       </header>
@@ -276,6 +395,57 @@ const Admin = () => {
           </div>
         ) : (
           <>
+            {/* Invite Requests */}
+            {pendingRequests.length > 0 && (
+              <Card className="glass-card border-primary/30 bg-primary/5">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <UserPlus className="w-4 h-4" />
+                    Invite Requests ({pendingRequests.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {pendingRequests.map((req) => (
+                    <div key={req.id} className="p-3 rounded-lg bg-background/50 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-mono truncate">{req.email}</span>
+                        <Badge variant="outline" className="text-[10px]">PENDING</Badge>
+                      </div>
+                      {req.username && (
+                        <p className="text-xs text-primary">@{req.username}</p>
+                      )}
+                      {req.message && (
+                        <p className="text-xs text-muted-foreground line-clamp-2">{req.message}</p>
+                      )}
+                      <div className="flex gap-2 pt-1">
+                        <Button
+                          size="sm"
+                          className="flex-1 h-8 text-xs"
+                          onClick={() => handleApproveRequest(req)}
+                          disabled={processingRequest === req.id}
+                        >
+                          {processingRequest === req.id ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            'Approve'
+                          )}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 h-8 text-xs"
+                          onClick={() => handleDeclineRequest(req)}
+                          disabled={processingRequest === req.id}
+                        >
+                          Decline
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+
             {/* Add to Allowlist */}
             <Card className="glass-card border-border/50">
               <CardHeader className="pb-3">
@@ -340,33 +510,47 @@ const Admin = () => {
                   </p>
                 ) : (
                   <div className="space-y-2">
-                    {allowlist.map((entry) => (
-                      <div
-                        key={entry.id}
-                        className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-background/50"
-                      >
-                        <div className="flex items-center gap-2 min-w-0 flex-1">
-                          <Badge variant={entry.type === 'EMAIL' ? 'default' : 'secondary'} className="text-[10px] shrink-0">
-                            {entry.type}
-                          </Badge>
-                          <span className="text-xs font-mono truncate">{entry.identifier}</span>
+                    {allowlist.map((entry) => {
+                      const locked = isAdminEntry(entry);
+                      return (
+                        <div
+                          key={entry.id}
+                          className={`flex items-center justify-between gap-2 p-2.5 rounded-lg ${
+                            locked ? 'bg-primary/10 border border-primary/30' : 'bg-background/50'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 min-w-0 flex-1">
+                            <Badge variant={entry.type === 'EMAIL' ? 'default' : 'secondary'} className="text-[10px] shrink-0">
+                              {entry.type}
+                            </Badge>
+                            <span className="text-xs font-mono truncate">{entry.identifier}</span>
+                            {locked && (
+                              <Badge variant="outline" className="text-[10px] gap-1 shrink-0">
+                                <Lock className="w-2.5 h-2.5" />
+                                ADMIN
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <Switch
+                              checked={entry.is_active}
+                              onCheckedChange={() => handleToggleActive(entry)}
+                              disabled={locked}
+                            />
+                            {!locked && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-destructive hover:text-destructive"
+                                onClick={() => handleDeleteEntry(entry)}
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          <Switch
-                            checked={entry.is_active}
-                            onCheckedChange={() => handleToggleActive(entry)}
-                          />
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-destructive hover:text-destructive"
-                            onClick={() => handleDeleteEntry(entry)}
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </CardContent>
@@ -380,90 +564,93 @@ const Admin = () => {
                   Reset Demo Data
                 </CardTitle>
                 <CardDescription>
-                  Clear your balances, transactions, deposits, conversions, and withdrawals.
+                  Clear balances, transactions, deposits, conversions, and withdrawals.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Scope Selection */}
+                <div className="space-y-2">
+                  <Label className="text-xs">Reset Scope</Label>
+                  <Select value={resetScope} onValueChange={(v) => setResetScope(v as 'self' | 'all')}>
+                    <SelectTrigger className="min-h-[44px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="self">My data only</SelectItem>
+                      <SelectItem value="all">All users (global)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div className="flex items-center justify-between p-3 rounded-lg bg-background/50">
                   <div>
                     <p className="text-sm font-medium">Seed demo balance</p>
-                    <p className="text-xs text-muted-foreground">Credit 100 USDT after reset</p>
+                    <p className="text-xs text-muted-foreground">
+                      Credit 100 USDT after reset {resetScope === 'all' ? '(to all users)' : ''}
+                    </p>
                   </div>
                   <Switch checked={seedBalance} onCheckedChange={setSeedBalance} />
                 </div>
 
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="outline" className="w-full border-warning text-warning hover:bg-warning/10">
-                      Reset Demo Data
+                    <Button 
+                      variant="outline" 
+                      className={`w-full ${
+                        resetScope === 'all' 
+                          ? 'border-destructive text-destructive hover:bg-destructive/10' 
+                          : 'border-warning text-warning hover:bg-warning/10'
+                      }`}
+                    >
+                      {resetScope === 'all' ? 'Reset ALL Users' : 'Reset My Data'}
                     </Button>
                   </AlertDialogTrigger>
-                  <AlertDialogContent className="glass-card">
+                  <AlertDialogContent className="glass-card max-w-[90vw] sm:max-w-md">
                     <AlertDialogHeader>
-                      <AlertDialogTitle>Reset Demo Data?</AlertDialogTitle>
+                      <AlertDialogTitle>
+                        {resetScope === 'all' ? '⚠️ Reset ALL Users?' : 'Reset Demo Data?'}
+                      </AlertDialogTitle>
                       <AlertDialogDescription>
-                        This will clear all your balances, transactions, deposits, conversions, and withdrawals.
-                        {seedBalance && ' 100 USDT will be credited after reset.'}
-                        This action cannot be undone.
+                        {resetScope === 'all' ? (
+                          <>
+                            <strong className="text-destructive">This will reset ALL users' demo data:</strong>
+                            <ul className="list-disc list-inside mt-2 space-y-1 text-sm">
+                              <li>All crypto and NGN balances set to 0</li>
+                              <li>All transactions deleted</li>
+                              <li>All deposits, conversions, withdrawals cleared</li>
+                              {seedBalance && <li>100 USDT will be credited to everyone</li>}
+                            </ul>
+                            <p className="mt-3 font-medium">This action cannot be undone.</p>
+                          </>
+                        ) : (
+                          <>
+                            This will clear your balances, transactions, deposits, conversions, and withdrawals.
+                            {seedBalance && ' 100 USDT will be credited after reset.'}
+                            {' '}This action cannot be undone.
+                          </>
+                        )}
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
                       <AlertDialogAction
                         onClick={handleResetDemoData}
-                        className="bg-warning text-warning-foreground hover:bg-warning/90"
+                        className={
+                          resetScope === 'all'
+                            ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
+                            : 'bg-warning text-warning-foreground hover:bg-warning/90'
+                        }
                         disabled={resetting}
                       >
                         {resetting ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
-                          'Reset'
+                          resetScope === 'all' ? 'Reset All Users' : 'Reset'
                         )}
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
-              </CardContent>
-            </Card>
-
-            {/* Feedback */}
-            <Card className="glass-card border-border/50">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <MessageSquare className="w-4 h-4" />
-                  Recent Feedback ({feedback.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {feedback.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    No feedback yet.
-                  </p>
-                ) : (
-                  <div className="space-y-3">
-                    {feedback.map((entry) => (
-                      <div
-                        key={entry.id}
-                        className="p-3 rounded-lg bg-background/50 space-y-2"
-                      >
-                        <div className="flex items-center justify-between">
-                          <Badge variant="outline" className="text-xs">
-                            {entry.category}
-                          </Badge>
-                          <span className="text-xs text-muted-foreground">
-                            {new Date(entry.created_at).toLocaleDateString()}
-                          </span>
-                        </div>
-                        <p className="text-sm">{entry.message}</p>
-                        {entry.page && (
-                          <p className="text-xs text-muted-foreground">
-                            Page: {entry.page}
-                          </p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
               </CardContent>
             </Card>
           </>

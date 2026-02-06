@@ -1,27 +1,147 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Lock, Mail, AtSign, LogOut } from 'lucide-react';
-import { FeedbackModal } from './FeedbackModal';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
+import { Lock, Mail, AtSign, LogOut, Loader2, CheckCircle, XCircle, Clock } from 'lucide-react';
+
+interface InviteRequest {
+  id: string;
+  status: 'PENDING' | 'APPROVED' | 'DECLINED';
+  admin_note: string | null;
+  created_at: string;
+}
 
 export function AllowlistBlockScreen() {
   const { user, profile, signOut } = useAuth();
-  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const { toast } = useToast();
+  
+  const [existingRequest, setExistingRequest] = useState<InviteRequest | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    checkExistingRequest();
+  }, [user]);
+
+  const checkExistingRequest = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('invite_requests')
+        .select('id, status, admin_note, created_at')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!error && data) {
+        setExistingRequest(data as InviteRequest);
+      }
+    } catch (err) {
+      console.error('Error checking request:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSignOut = async () => {
     await signOut();
   };
 
-  const requestMessage = `Hi LexoPay team,
+  const handleRequestAccess = async () => {
+    if (!user) return;
+    
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.from('invite_requests').insert({
+        user_id: user.id,
+        email: user.email || '',
+        username: profile?.username || null,
+        message: message.trim() || null,
+        status: 'PENDING',
+      });
 
-I'd like to request access to the Private Alpha.
+      if (error) throw error;
 
-Email: ${user?.email}
-Username: @${profile?.username || 'not set'}
+      toast({
+        title: 'Request sent!',
+        description: 'We\'ll review your request and get back to you.',
+      });
 
-Thank you!`;
+      await checkExistingRequest();
+    } catch (err: any) {
+      console.error('Error submitting request:', err);
+      toast({
+        title: 'Error',
+        description: err.message?.includes('duplicate') 
+          ? 'You already have a pending request.' 
+          : 'Failed to submit request.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const getStatusUI = () => {
+    if (!existingRequest) return null;
+
+    switch (existingRequest.status) {
+      case 'PENDING':
+        return (
+          <div className="space-y-3">
+            <div className="flex items-center justify-center gap-2 p-3 rounded-lg bg-warning/10 border border-warning/30">
+              <Clock className="w-4 h-4 text-warning" />
+              <span className="text-sm text-warning">Request pending</span>
+            </div>
+            <p className="text-xs text-muted-foreground text-center">
+              Your access request is being reviewed. We'll notify you once it's processed.
+            </p>
+          </div>
+        );
+      case 'APPROVED':
+        return (
+          <div className="space-y-3">
+            <div className="flex items-center justify-center gap-2 p-3 rounded-lg bg-success/10 border border-success/30">
+              <CheckCircle className="w-4 h-4 text-success" />
+              <span className="text-sm text-success">Approved!</span>
+            </div>
+            <p className="text-xs text-muted-foreground text-center">
+              Your access has been approved. Please log out and log back in to continue.
+            </p>
+            <Button
+              className="w-full min-h-[44px] gradient-primary"
+              onClick={handleSignOut}
+            >
+              Log out to continue
+            </Button>
+          </div>
+        );
+      case 'DECLINED':
+        return (
+          <div className="space-y-3">
+            <div className="flex items-center justify-center gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/30">
+              <XCircle className="w-4 h-4 text-destructive" />
+              <span className="text-sm text-destructive">Request declined</span>
+            </div>
+            {existingRequest.admin_note && (
+              <p className="text-xs text-muted-foreground text-center p-2 rounded bg-muted/50">
+                "{existingRequest.admin_note}"
+              </p>
+            )}
+            <p className="text-xs text-muted-foreground text-center">
+              Unfortunately, your request was not approved at this time.
+            </p>
+          </div>
+        );
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -69,30 +189,43 @@ Thank you!`;
               )}
             </div>
 
-            <Badge variant="outline" className="text-[10px]">
-              Not on the allowlist
-            </Badge>
+            {loading ? (
+              <div className="py-4">
+                <Loader2 className="w-6 h-6 animate-spin mx-auto text-muted-foreground" />
+              </div>
+            ) : existingRequest ? (
+              getStatusUI()
+            ) : (
+              <>
+                <Badge variant="outline" className="text-[10px]">
+                  Not on the allowlist
+                </Badge>
 
-            <p className="text-xs text-muted-foreground">
-              If you believe you should have access, please request it below.
-            </p>
+                <div className="space-y-2">
+                  <Textarea
+                    placeholder="Why would you like to join LexoPay? (optional)"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    className="min-h-[80px] text-sm resize-none"
+                  />
+                </div>
 
-            <Button
-              className="w-full min-h-[44px] gradient-primary hover:opacity-90"
-              onClick={() => setFeedbackOpen(true)}
-            >
-              Request Access
-            </Button>
+                <Button
+                  className="w-full min-h-[44px] gradient-primary hover:opacity-90"
+                  onClick={handleRequestAccess}
+                  disabled={submitting}
+                >
+                  {submitting ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    'Request Access'
+                  )}
+                </Button>
+              </>
+            )}
           </CardContent>
         </Card>
       </main>
-
-      <FeedbackModal
-        open={feedbackOpen}
-        onOpenChange={setFeedbackOpen}
-        defaultCategory="OTHER"
-        defaultMessage={requestMessage}
-      />
     </div>
   );
 }
