@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWallets } from '@/hooks/useWallets';
+import { useHideBalances } from '@/hooks/useHideBalances';
 import { RecentActivity } from '@/components/dashboard/RecentActivity';
 import { TestModeBanner } from '@/components/TestModeBanner';
  import { BottomNav } from '@/components/BottomNav';
@@ -16,12 +17,15 @@ import {
   Shield,
   Loader2,
   Send,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const { cryptoBalances, ngnBalance, loading } = useWallets();
+  const { hidden, toggle, mask } = useHideBalances();
 
   const getKYCBadge = (tier: number) => {
     const tiers = [
@@ -104,9 +108,14 @@ const Dashboard = () => {
                         <p className="text-xs text-muted-foreground">Your raw holdings</p>
                       </div>
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      ≈ ${formatCurrency(totalCryptoUSD, 'USD')} USD
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm text-muted-foreground">
+                        ≈ {mask(`$${formatCurrency(totalCryptoUSD, 'USD')}`)} USD
+                      </p>
+                      <button onClick={toggle} className="p-1 rounded-md hover:bg-muted/50 transition-colors" aria-label={hidden ? 'Show balances' : 'Hide balances'}>
+                        {hidden ? <EyeOff className="w-4 h-4 text-muted-foreground" /> : <Eye className="w-4 h-4 text-muted-foreground" />}
+                      </button>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-2">
@@ -126,7 +135,7 @@ const Dashboard = () => {
                           </div>
                         </div>
                         <p className="font-mono font-medium">
-                          {formatCurrency(balance.balance, 'USD')}
+                          {mask(formatCurrency(balance.balance, 'USD'))}
                         </p>
                       </div>
                     ))
@@ -141,23 +150,28 @@ const Dashboard = () => {
               {/* NGN Wallet */}
               <Card className="glass-card border-success/20">
                 <CardHeader className="pb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-success/20 flex items-center justify-center">
-                      <span className="text-xl text-success">₦</span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-success/20 flex items-center justify-center">
+                        <span className="text-xl text-success">₦</span>
+                      </div>
+                      <div>
+                        <CardTitle className="text-base">NGN Wallet</CardTitle>
+                        <p className="text-xs text-muted-foreground">
+                          {(ngnBalance?.balance ?? 0) > 0 ? 'Ready to withdraw' : 'No funds yet'}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <CardTitle className="text-base">NGN Wallet</CardTitle>
-                      <p className="text-xs text-muted-foreground">
-                        {(ngnBalance?.balance ?? 0) > 0 ? 'Ready to withdraw' : 'No funds yet'}
-                      </p>
-                    </div>
+                    <button onClick={toggle} className="p-1 rounded-md hover:bg-muted/50 transition-colors" aria-label={hidden ? 'Show balances' : 'Hide balances'}>
+                      {hidden ? <EyeOff className="w-4 h-4 text-muted-foreground" /> : <Eye className="w-4 h-4 text-muted-foreground" />}
+                    </button>
                   </div>
                 </CardHeader>
                 <CardContent>
                   <div className="p-4 rounded-lg bg-background/50">
                     <p className="text-sm text-muted-foreground mb-1">Available Balance</p>
                     <p className="text-xl sm:text-2xl font-bold font-mono break-all">
-                      {formatCurrency(ngnBalance?.balance ?? 0)}
+                      {mask(formatCurrency(ngnBalance?.balance ?? 0))}
                     </p>
                   </div>
                 </CardContent>

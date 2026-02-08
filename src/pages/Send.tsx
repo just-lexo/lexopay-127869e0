@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useHideBalances } from '@/hooks/useHideBalances';
 import { useWallets } from '@/hooks/useWallets';
 import { supabase } from '@/integrations/supabase/client';
 import { SUPPORTED_TOKENS, type SupportedToken } from '@/adapters';
@@ -31,6 +32,7 @@ const Send = () => {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const { cryptoBalances, refetch } = useWallets();
+  const { mask } = useHideBalances();
   const { toast } = useToast();
 
   const [selectedToken, setSelectedToken] = useState<SupportedToken>('USDT');
@@ -289,7 +291,7 @@ const Send = () => {
                   onClick={() => setSelectedToken(token)}
                 >
                   <span className="font-medium">{token}</span>
-                  <span className="text-xs opacity-80">{(balance?.balance ?? 0).toFixed(2)}</span>
+                  <span className="text-xs opacity-80">{mask((balance?.balance ?? 0).toFixed(2))}</span>
                 </Button>
               );
             })}
@@ -353,7 +355,7 @@ const Send = () => {
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Amount</CardTitle>
             <CardDescription>
-              Available: {availableBalance.toFixed(2)} {selectedToken}
+              Available: {mask(availableBalance.toFixed(2))} {selectedToken}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

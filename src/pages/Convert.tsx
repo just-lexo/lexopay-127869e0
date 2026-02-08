@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useHideBalances } from '@/hooks/useHideBalances';
 import { useWallets } from '@/hooks/useWallets';
 import { supabase } from '@/integrations/supabase/client';
 import { mockRateProvider, CONVERSION_FEE_PERCENTAGE, type ConversionQuote } from '@/adapters';
@@ -26,6 +27,7 @@ const Convert = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { cryptoBalances, ngnBalance, refetch, cryptoWalletId, ngnWalletId } = useWallets();
+  const { mask } = useHideBalances();
   const { toast } = useToast();
 
   const [selectedToken, setSelectedToken] = useState<string>('USDT');
@@ -295,7 +297,7 @@ const Convert = () => {
               <div className="flex items-center justify-between">
                 <Label htmlFor="amount">Amount</Label>
                 <span className="text-xs text-muted-foreground">
-                  Balance: {availableBalance.toFixed(2)} {selectedToken}
+                  Balance: {mask(availableBalance.toFixed(2))} {selectedToken}
                 </span>
               </div>
               <Input

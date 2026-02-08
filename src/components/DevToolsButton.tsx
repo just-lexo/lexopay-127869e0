@@ -236,10 +236,30 @@ export function DevToolsButton() {
     setLoading(true);
 
     try {
+      // Update withdrawal status
       await supabase
         .from('withdrawals')
         .update({ status: 'SUCCESS' })
         .eq('id', withdrawal.id);
+
+      // Also update the related transaction status
+      const { data: transactions } = await supabase
+        .from('transactions')
+        .select('id, metadata')
+        .eq('user_id', user.id)
+        .eq('kind', 'WITHDRAW');
+
+      const relatedTx = transactions?.find(tx => {
+        const meta = tx.metadata as { withdrawal_id?: string } | null;
+        return meta?.withdrawal_id === withdrawal.id;
+      });
+
+      if (relatedTx) {
+        await supabase
+          .from('transactions')
+          .update({ status: 'SUCCESS' })
+          .eq('id', relatedTx.id);
+      }
 
       toast({
         title: 'Withdrawal paid!',
