@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,7 +8,6 @@ import { FeedbackModal } from '@/components/FeedbackModal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -36,8 +35,6 @@ import {
   Check,
   LogOut,
   MessageSquarePlus,
-  Eye,
-  EyeOff,
   Settings,
   Edit,
   History,
@@ -45,7 +42,7 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 
-const HIDE_BALANCES_KEY = 'lexopay-hide-balances';
+
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -53,9 +50,6 @@ const Profile = () => {
   const { toast } = useToast();
   
   const [copied, setCopied] = useState(false);
-  const [hideBalances, setHideBalances] = useState(() => {
-    return localStorage.getItem(HIDE_BALANCES_KEY) === 'true';
-  });
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   
   // Edit profile state
@@ -66,13 +60,6 @@ const Profile = () => {
   const [saving, setSaving] = useState(false);
   const [checkingUsername, setCheckingUsername] = useState(false);
   const [usernameError, setUsernameError] = useState('');
-
-  // Persist hide balances
-  useEffect(() => {
-    localStorage.setItem(HIDE_BALANCES_KEY, hideBalances.toString());
-    // Dispatch event for other components to react
-    window.dispatchEvent(new CustomEvent('hideBalancesChanged', { detail: hideBalances }));
-  }, [hideBalances]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -332,27 +319,6 @@ const Profile = () => {
                 </p>
               </div>
             </button>
-
-            {/* Hide Balances Toggle */}
-            <div className="flex items-center justify-between py-3">
-              <div className="flex items-center gap-3">
-                {hideBalances ? (
-                  <EyeOff className="w-5 h-5 text-muted-foreground" />
-                ) : (
-                  <Eye className="w-5 h-5 text-muted-foreground" />
-                )}
-                <div>
-                  <p className="text-sm font-medium">Hide balances</p>
-                  <p className="text-xs text-muted-foreground">
-                    Mask wallet amounts
-                  </p>
-                </div>
-              </div>
-              <Switch
-                checked={hideBalances}
-                onCheckedChange={setHideBalances}
-              />
-            </div>
 
             {/* Feedback Button */}
             <button

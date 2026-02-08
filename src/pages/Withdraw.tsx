@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWallets } from '@/hooks/useWallets';
+import { useHideBalances } from '@/hooks/useHideBalances';
 import { supabase } from '@/integrations/supabase/client';
 import { mockPayoutAdapter, NIGERIAN_BANKS, type Bank } from '@/adapters';
 import { TestModeBanner } from '@/components/TestModeBanner';
@@ -45,6 +46,7 @@ const Withdraw = () => {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const { ngnBalance, refetch } = useWallets();
+  const { mask } = useHideBalances();
   const { toast } = useToast();
 
   const [selectedBank, setSelectedBank] = useState<Bank | null>(null);
@@ -247,8 +249,10 @@ const Withdraw = () => {
       });
 
       if (relatedTx) {
-        // Note: transactions table doesn't allow UPDATE per RLS, so we'll skip this
-        // In a real app, this would be handled by a backend function
+        await supabase
+          .from('transactions')
+          .update({ status: 'SUCCESS' })
+          .eq('id', relatedTx.id);
       }
 
       toast({
@@ -317,7 +321,7 @@ const Withdraw = () => {
             <div className="flex items-center justify-between">
               <div className="min-w-0 flex-1">
                 <p className="text-xs text-muted-foreground">Available Balance</p>
-                <p className="text-xl sm:text-2xl font-bold font-mono truncate">{formatCurrency(availableBalance)}</p>
+                <p className="text-xl sm:text-2xl font-bold font-mono truncate">{mask(formatCurrency(availableBalance))}</p>
               </div>
               <div className="w-9 h-9 rounded-lg bg-success/20 flex items-center justify-center shrink-0">
                 <span className="text-lg text-success">₦</span>
