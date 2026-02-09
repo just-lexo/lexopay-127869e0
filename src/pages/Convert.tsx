@@ -86,64 +86,26 @@ const Convert = () => {
 
     setConverting(true);
     try {
-      // 1. Deduct from crypto balance
-      const newCryptoBalance = availableBalance - numAmount;
-      const { error: cryptoError } = await supabase
-        .from('crypto_balances')
-        .update({ balance: newCryptoBalance })
-        .eq('wallet_id', cryptoWalletId)
-        .eq('token', selectedToken)
-        .eq('network', 'base');
+      const { data, error } = await supabase.rpc('convert_crypto_to_ngn', {
+        _token: selectedToken,
+        _network: 'base',
+        _amount: numAmount,
+        _rate: quote.rate,
+        _fee: quote.fee,
+        _net_ngn: quote.netAmount,
+      });
 
-      if (cryptoError) throw cryptoError;
+      if (error) throw error;
 
-      // 2. Add to NGN balance
-      const currentNgnBalance = ngnBalance?.balance ?? 0;
-      const newNgnBalance = currentNgnBalance + quote.netAmount;
-      const { error: ngnError } = await supabase
-        .from('ngn_balances')
-        .update({ balance: newNgnBalance })
-        .eq('wallet_id', ngnWalletId);
-
-      if (ngnError) throw ngnError;
-
-      // 3. Create conversion record
-      const { error: conversionError } = await supabase
-        .from('conversions')
-        .insert({
-          user_id: user.id,
-          from_token: selectedToken,
-          from_network: 'base',
-          from_amount: numAmount,
-          rate: quote.rate,
-          fee: quote.fee,
-          ngn_amount: quote.netAmount,
-          status: 'SUCCESS',
+      const result = data as { success: boolean; error?: string };
+      if (!result.success) {
+        toast({
+          title: 'Conversion failed',
+          description: result.error || 'An unexpected error occurred',
+          variant: 'destructive',
         });
-
-      if (conversionError) throw conversionError;
-
-      // 4. Create transaction record with correct format
-      const { error: txError } = await supabase
-        .from('transactions')
-        .insert({
-          user_id: user.id,
-          kind: 'CONVERT',
-          title: 'Crypto Conversion',
-          subtitle: `${selectedToken} to NGN`,
-          amount_display: `-${numAmount} ${selectedToken} → +₦${quote.netAmount.toLocaleString()} (fee: ₦${quote.fee.toLocaleString()})`,
-          status: 'SUCCESS',
-          metadata: {
-            from_amount: numAmount,
-            from_token: selectedToken,
-            from_network: 'base',
-            rate: quote.rate,
-            fee: quote.fee,
-            ngn_amount: quote.netAmount,
-          },
-        });
-
-      if (txError) throw txError;
+        return;
+      }
 
       setShowSuccess(true);
       await refetch();

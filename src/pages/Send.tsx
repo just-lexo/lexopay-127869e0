@@ -75,11 +75,9 @@ const Send = () => {
     setRecipientError(null);
     
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('user_id, username, display_name')
-        .ilike('username', cleanUsername)
-        .maybeSingle();
+      const { data, error } = await supabase.rpc('lookup_username', {
+        _username: cleanUsername,
+      });
 
       if (error) {
         console.error('Search error:', error);
@@ -88,11 +86,12 @@ const Send = () => {
         return;
       }
 
-      if (!data) {
+      const results = data as RecipientProfile[] | null;
+      if (!results || results.length === 0) {
         setRecipientError(`User @${cleanUsername} not found`);
         setRecipient(null);
       } else {
-        setRecipient(data as RecipientProfile);
+        setRecipient(results[0]);
         setRecipientError(null);
       }
     } catch (err) {
