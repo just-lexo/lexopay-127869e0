@@ -8,17 +8,17 @@ import { Loader2, ArrowDownToLine, RefreshCw, ArrowUpFromLine, Clock, Send, Down
 import { formatDistanceToNow } from 'date-fns';
 
 const getStatusBadge = (status: string) => {
-  const statusLower = status.toLowerCase();
-  if (statusLower === 'success' || statusLower === 'confirmed') {
-    return <Badge className="status-success border text-xs">Success</Badge>;
+  switch (status.toUpperCase()) {
+    case 'SUCCESS':
+    case 'CONFIRMED':
+      return <Badge className="status-success border text-xs">Success</Badge>;
+    case 'PROCESSING':
+      return <Badge className="status-pending border text-xs">Processing</Badge>;
+    case 'FAILED':
+      return <Badge className="status-failed border text-xs">Failed</Badge>;
+    default:
+      return <Badge variant="outline" className="text-xs">{status}</Badge>;
   }
-  if (statusLower === 'pending' || statusLower === 'processing') {
-    return <Badge className="status-pending border text-xs">Pending</Badge>;
-  }
-  if (statusLower === 'failed') {
-    return <Badge className="status-failed border text-xs">Failed</Badge>;
-  }
-  return <Badge variant="outline" className="text-xs">{status}</Badge>;
 };
 
 const getKindIcon = (kind: string) => {
