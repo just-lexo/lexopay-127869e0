@@ -178,7 +178,7 @@ const Withdraw = () => {
     }
   };
 
-  // DEV TOOL: Simulate withdrawal paid
+  // ADMIN TOOL: Simulate withdrawal paid
   const handleSimulatePaid = async (withdrawal: PendingWithdrawal) => {
     if (!user) return;
 
@@ -192,12 +192,13 @@ const Withdraw = () => {
 
       if (withdrawalError) throw withdrawalError;
 
-      // Find and update the related transaction
+      // Find and update the related transaction by matching withdrawal_id in metadata
       const { data: transactions, error: txFindError } = await supabase
         .from('transactions')
         .select('id, metadata')
         .eq('user_id', user.id)
-        .eq('kind', 'WITHDRAW');
+        .eq('kind', 'WITHDRAW')
+        .eq('status', 'PROCESSING');
 
       if (txFindError) throw txFindError;
 
@@ -207,10 +208,12 @@ const Withdraw = () => {
       });
 
       if (relatedTx) {
-        await supabase
+        const { error: txUpdateError } = await supabase
           .from('transactions')
           .update({ status: 'SUCCESS' })
           .eq('id', relatedTx.id);
+
+        if (txUpdateError) throw txUpdateError;
       }
 
       toast({
@@ -218,7 +221,8 @@ const Withdraw = () => {
         description: `₦${withdrawal.amount.toLocaleString()} sent to ${withdrawal.account_name}.`,
       });
 
-      await fetchPendingWithdrawals();
+      // Refresh both pending withdrawals and wallet balances
+      await Promise.all([fetchPendingWithdrawals(), refetch()]);
     } catch (err) {
       console.error('Error simulating paid:', err);
       toast({
