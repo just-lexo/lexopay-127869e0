@@ -131,68 +131,26 @@ const Withdraw = () => {
 
     setLoading(true);
     try {
-      const reference = `LXP-WD-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+      const { data, error } = await supabase.rpc('withdraw_ngn', {
+        _amount: withdrawAmount,
+        _fee: WITHDRAWAL_FEE,
+        _bank_code: selectedBank.code,
+        _bank_name: selectedBank.name,
+        _account_number: accountNumber,
+        _account_name: accountName,
+      });
 
-      // Create withdrawal record
-      const { data: withdrawal, error: withdrawalError } = await supabase
-        .from('withdrawals')
-        .insert({
-          user_id: user.id,
-          amount: withdrawAmount,
-          bank_code: selectedBank.code,
-          bank_name: selectedBank.name,
-          account_number: accountNumber,
-          account_name: accountName,
-          reference,
-          status: 'PROCESSING',
-        })
-        .select()
-        .single();
+      if (error) throw error;
 
-      if (withdrawalError) throw withdrawalError;
-
-      // Get user's NGN wallet
-      const { data: wallet, error: walletError } = await supabase
-        .from('wallets')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('type', 'NGN')
-        .single();
-
-      if (walletError) throw walletError;
-
-      // Deduct from NGN balance
-      const newBalance = availableBalance - totalDeduction;
-      const { error: balanceError } = await supabase
-        .from('ngn_balances')
-        .update({ balance: newBalance })
-        .eq('wallet_id', wallet.id);
-
-      if (balanceError) throw balanceError;
-
-      // Create transaction record
-      const { error: txError } = await supabase
-        .from('transactions')
-        .insert({
-          user_id: user.id,
-          kind: 'WITHDRAW',
-          title: 'Bank Transfer',
-          subtitle: `${selectedBank.name} • ${accountName}`,
-          amount_display: `-₦${totalDeduction.toLocaleString()} (sent ₦${withdrawAmount.toLocaleString()}, fee ₦${WITHDRAWAL_FEE})`,
-          status: 'PROCESSING',
-          metadata: {
-            withdrawal_id: withdrawal.id,
-            bank_code: selectedBank.code,
-            bank_name: selectedBank.name,
-            account_number: accountNumber,
-            account_name: accountName,
-            amount: withdrawAmount,
-            fee: WITHDRAWAL_FEE,
-            reference,
-          },
+      const result = data as { success: boolean; error?: string; reference?: string };
+      if (!result.success) {
+        toast({
+          title: 'Withdrawal failed',
+          description: result.error || 'An unexpected error occurred',
+          variant: 'destructive',
         });
-
-      if (txError) throw txError;
+        return;
+      }
 
       toast({
         title: 'Withdrawal initiated',

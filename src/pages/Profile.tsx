@@ -127,14 +127,13 @@ const Profile = () => {
     
     setCheckingUsername(true);
     try {
-      const { data } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('username', username.toLowerCase())
-        .neq('user_id', user?.id || '')
-        .maybeSingle();
+      const { data, error } = await supabase.rpc('check_username_available' as any, {
+        _username: username,
+        _exclude_user_id: user?.id || null,
+      });
       
-      return !data;
+      if (error) return false;
+      return data as boolean;
     } catch {
       return false;
     } finally {
