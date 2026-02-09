@@ -413,6 +413,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      convert_crypto_to_ngn: {
+        Args: {
+          _amount: number
+          _fee: number
+          _net_ngn: number
+          _network: string
+          _rate: number
+          _token: string
+        }
+        Returns: Json
+      }
       get_user_wallet_id: {
         Args: {
           _type: Database["public"]["Enums"]["wallet_type"]
@@ -427,6 +438,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      lookup_username: {
+        Args: { _username: string }
+        Returns: {
+          display_name: string
+          user_id: string
+          username: string
+        }[]
+      }
       reset_all_users_data: { Args: { _seed_balance?: boolean }; Returns: Json }
       reset_demo_data: { Args: { _seed_balance?: boolean }; Returns: Json }
       transfer_crypto: {
@@ -436,6 +455,17 @@ export type Database = {
           _recipient_username: string
           _sender_id: string
           _token: string
+        }
+        Returns: Json
+      }
+      withdraw_ngn: {
+        Args: {
+          _account_name: string
+          _account_number: string
+          _amount: number
+          _bank_code: string
+          _bank_name: string
+          _fee: number
         }
         Returns: Json
       }
