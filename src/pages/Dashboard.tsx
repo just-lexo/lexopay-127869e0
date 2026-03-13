@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useWallets } from '@/hooks/useWallets';
 import { useHideBalances } from '@/hooks/useHideBalances';
 import { RecentActivity } from '@/components/dashboard/RecentActivity';
+import { TipCard } from '@/components/dashboard/TipCard';
 import { TestModeBanner } from '@/components/TestModeBanner';
  import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
