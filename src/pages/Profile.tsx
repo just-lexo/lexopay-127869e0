@@ -303,6 +303,26 @@ const Profile = () => {
           </CardContent>
         </Card>
 
+        {/* Wallet Section */}
+        <Card className="glass-card border-border/50">
+          <CardContent className="py-4">
+            <div className="flex items-center gap-3 mb-3">
+              <Wallet className="w-5 h-5 text-muted-foreground" />
+              <p className="text-sm font-medium">Wallet</p>
+            </div>
+            <Button
+              variant="outline"
+              className="w-full min-h-[44px] gap-2"
+              disabled
+            >
+              Connect Wallet (Coming Soon)
+            </Button>
+            <p className="text-xs text-muted-foreground mt-2">
+              Wallet login will be supported for Base Mini App later.
+            </p>
+          </CardContent>
+        </Card>
+
         {/* Quick Links */}
         <Card className="glass-card border-border/50">
           <CardContent className="py-2 divide-y divide-border/50">

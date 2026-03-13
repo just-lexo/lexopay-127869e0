@@ -252,6 +252,9 @@ const Dashboard = () => {
               </Button>
             </div>
 
+            {/* Tip Card */}
+            <TipCard />
+
             {/* Recent Activity */}
             <RecentActivity />
 

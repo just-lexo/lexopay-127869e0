@@ -95,8 +95,11 @@ export function RecentActivity() {
               {getKindIcon(tx.kind)}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-medium text-xs truncate">{tx.title}</p>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="font-semibold text-xs truncate">{tx.title}</p>
+              {tx.subtitle && (
+                <p className="text-[11px] text-muted-foreground truncate">{tx.subtitle}</p>
+              )}
+              <p className="text-[10px] text-muted-foreground/60 mt-0.5">
                 {formatDistanceToNow(new Date(tx.created_at), { addSuffix: true })}
               </p>
             </div>
