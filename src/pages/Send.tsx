@@ -110,7 +110,6 @@ const Send = () => {
     try {
       // Call atomic transfer function
       const { data, error } = await supabase.rpc('transfer_crypto', {
-        _sender_id: user.id,
         _recipient_username: recipient.username,
         _token: selectedToken,
         _network: 'base',

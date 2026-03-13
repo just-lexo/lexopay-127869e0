@@ -448,16 +448,26 @@ export type Database = {
       }
       reset_all_users_data: { Args: { _seed_balance?: boolean }; Returns: Json }
       reset_demo_data: { Args: { _seed_balance?: boolean }; Returns: Json }
-      transfer_crypto: {
-        Args: {
-          _amount: number
-          _network: string
-          _recipient_username: string
-          _sender_id: string
-          _token: string
-        }
-        Returns: Json
-      }
+      transfer_crypto:
+        | {
+            Args: {
+              _amount: number
+              _network: string
+              _recipient_username: string
+              _token: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              _amount: number
+              _network: string
+              _recipient_username: string
+              _sender_id: string
+              _token: string
+            }
+            Returns: Json
+          }
       withdraw_ngn: {
         Args: {
           _account_name: string
