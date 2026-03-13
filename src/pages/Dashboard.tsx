@@ -184,6 +184,12 @@ const Dashboard = () => {
                       {mask(formatCurrency(ngnBalance?.balance ?? 0))}
                     </p>
                   </div>
+                  {(ngnBalance?.balance ?? 0) === 0 && (
+                    <div className="text-center py-2 mt-2 space-y-0.5">
+                      <p className="text-sm font-medium text-muted-foreground">No NGN balance</p>
+                      <p className="text-xs text-muted-foreground/70">Convert crypto to get started.</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
