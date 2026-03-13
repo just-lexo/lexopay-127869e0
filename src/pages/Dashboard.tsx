@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useWallets } from '@/hooks/useWallets';
 import { useHideBalances } from '@/hooks/useHideBalances';
 import { RecentActivity } from '@/components/dashboard/RecentActivity';
+import { TipCard } from '@/components/dashboard/TipCard';
 import { TestModeBanner } from '@/components/TestModeBanner';
  import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
@@ -120,28 +121,37 @@ const Dashboard = () => {
                 </CardHeader>
                 <CardContent className="space-y-2">
                   {cryptoBalances.length > 0 ? (
-                    cryptoBalances.map((balance) => (
-                      <div
-                        key={balance.id}
-                        className="flex items-center justify-between p-3 rounded-lg bg-background/50"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-success/20 flex items-center justify-center">
-                            <span className="text-xs font-bold text-success">$</span>
+                    cryptoBalances.map((balance) => {
+                      const isZero = balance.balance === 0;
+                      return (
+                        <div
+                          key={balance.id}
+                          className="flex items-center justify-between p-3 rounded-lg bg-background/50"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-success/20 flex items-center justify-center">
+                              <span className="text-xs font-bold text-success">$</span>
+                            </div>
+                            <div>
+                              <p className="font-medium">{balance.token}</p>
+                              <p className="text-xs text-muted-foreground capitalize">{balance.network}</p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-medium">{balance.token}</p>
-                            <p className="text-xs text-muted-foreground capitalize">{balance.network}</p>
-                          </div>
+                          <p className={`font-mono font-medium ${isZero ? 'text-muted-foreground' : ''}`}>
+                            {mask(formatCurrency(balance.balance, 'USD'))}
+                          </p>
                         </div>
-                        <p className="font-mono font-medium">
-                          {mask(formatCurrency(balance.balance, 'USD'))}
-                        </p>
-                      </div>
-                    ))
+                      );
+                    })
                   ) : (
                     <div className="text-center py-4 text-muted-foreground text-sm">
                       No crypto balances yet. Deposit to get started!
+                    </div>
+                  )}
+                  {cryptoBalances.length > 0 && cryptoBalances.every(b => b.balance === 0) && (
+                    <div className="text-center py-2 space-y-0.5">
+                      <p className="text-sm font-medium text-muted-foreground">No crypto yet</p>
+                      <p className="text-xs text-muted-foreground/70">Deposit or receive from another user.</p>
                     </div>
                   )}
                 </CardContent>
@@ -174,6 +184,12 @@ const Dashboard = () => {
                       {mask(formatCurrency(ngnBalance?.balance ?? 0))}
                     </p>
                   </div>
+                  {(ngnBalance?.balance ?? 0) === 0 && (
+                    <div className="text-center py-2 mt-2 space-y-0.5">
+                      <p className="text-sm font-medium text-muted-foreground">No NGN balance</p>
+                      <p className="text-xs text-muted-foreground/70">Convert crypto to get started.</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -235,6 +251,9 @@ const Dashboard = () => {
                 <span className="font-medium text-xs">Transaction History</span>
               </Button>
             </div>
+
+            {/* Tip Card */}
+            <TipCard />
 
             {/* Recent Activity */}
             <RecentActivity />
