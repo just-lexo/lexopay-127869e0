@@ -264,7 +264,9 @@ export type Database = {
           id: string
           note: string | null
           recipient_id: string
+          recipient_username: string | null
           requester_id: string
+          requester_username: string | null
           status: Database["public"]["Enums"]["payment_request_status"]
           updated_at: string
         }
@@ -276,7 +278,9 @@ export type Database = {
           id?: string
           note?: string | null
           recipient_id: string
+          recipient_username?: string | null
           requester_id: string
+          requester_username?: string | null
           status?: Database["public"]["Enums"]["payment_request_status"]
           updated_at?: string
         }
@@ -288,7 +292,9 @@ export type Database = {
           id?: string
           note?: string | null
           recipient_id?: string
+          recipient_username?: string | null
           requester_id?: string
+          requester_username?: string | null
           status?: Database["public"]["Enums"]["payment_request_status"]
           updated_at?: string
         }
