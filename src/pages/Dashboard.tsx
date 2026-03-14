@@ -244,6 +244,17 @@ const Dashboard = () => {
 
               <Button
                 variant="outline"
+                className="h-auto py-3 flex-col gap-1.5 glass-card-hover border-border/50 min-h-[72px]"
+                onClick={() => navigate('/request')}
+              >
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <HandCoins className="w-4 h-4 text-primary" />
+                </div>
+                <span className="font-medium text-xs">Request</span>
+              </Button>
+
+              <Button
+                variant="outline"
                 className="h-auto py-3 flex-col gap-1.5 glass-card-hover border-border/50 col-span-2 min-h-[72px]"
                 onClick={() => navigate('/transactions')}
               >
