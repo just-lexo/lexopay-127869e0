@@ -21,6 +21,7 @@ import {
   Send,
   Eye,
   EyeOff,
+  HandCoins,
 } from 'lucide-react';
 
 const Dashboard = () => {
