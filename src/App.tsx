@@ -21,6 +21,7 @@ import Admin from "./pages/Admin";
 import AdminFeedback from "./pages/AdminFeedback";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
+import Request from "./pages/Request";
 
 const queryClient = new QueryClient();
 
@@ -122,6 +123,14 @@ const App = () => (
                  </ProtectedRoute>
                } 
              />
+            <Route 
+              path="/request" 
+              element={
+                <ProtectedRoute>
+                  <Request />
+                </ProtectedRoute>
+              } 
+            />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

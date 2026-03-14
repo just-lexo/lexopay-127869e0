@@ -255,6 +255,51 @@ export type Database = {
           },
         ]
       }
+      payment_requests: {
+        Row: {
+          amount: number
+          asset: string
+          created_at: string
+          expires_at: string
+          id: string
+          note: string | null
+          recipient_id: string
+          recipient_username: string | null
+          requester_id: string
+          requester_username: string | null
+          status: Database["public"]["Enums"]["payment_request_status"]
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          asset: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          note?: string | null
+          recipient_id: string
+          recipient_username?: string | null
+          requester_id: string
+          requester_username?: string | null
+          status?: Database["public"]["Enums"]["payment_request_status"]
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          asset?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          note?: string | null
+          recipient_id?: string
+          recipient_username?: string | null
+          requester_id?: string
+          requester_username?: string | null
+          status?: Database["public"]["Enums"]["payment_request_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -449,6 +494,7 @@ export type Database = {
           username: string
         }[]
       }
+      pay_payment_request: { Args: { _request_id: string }; Returns: Json }
       reset_all_users_data: { Args: { _seed_balance?: boolean }; Returns: Json }
       reset_demo_data: { Args: { _seed_balance?: boolean }; Returns: Json }
       transfer_crypto:
@@ -490,6 +536,7 @@ export type Database = {
       deposit_status: "PENDING" | "CONFIRMED" | "FAILED"
       feedback_category: "BUG" | "IDEA" | "OTHER"
       invite_request_status: "PENDING" | "APPROVED" | "DECLINED"
+      payment_request_status: "PENDING" | "PAID" | "DECLINED" | "EXPIRED"
       transaction_kind: "DEPOSIT" | "CONVERT" | "WITHDRAW" | "SEND" | "RECEIVE"
       wallet_type: "CRYPTO" | "NGN"
       withdrawal_status: "PROCESSING" | "SUCCESS" | "FAILED"
@@ -626,6 +673,7 @@ export const Constants = {
       deposit_status: ["PENDING", "CONFIRMED", "FAILED"],
       feedback_category: ["BUG", "IDEA", "OTHER"],
       invite_request_status: ["PENDING", "APPROVED", "DECLINED"],
+      payment_request_status: ["PENDING", "PAID", "DECLINED", "EXPIRED"],
       transaction_kind: ["DEPOSIT", "CONVERT", "WITHDRAW", "SEND", "RECEIVE"],
       wallet_type: ["CRYPTO", "NGN"],
       withdrawal_status: ["PROCESSING", "SUCCESS", "FAILED"],
