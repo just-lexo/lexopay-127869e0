@@ -21,6 +21,7 @@ import Admin from "./pages/Admin";
 import AdminFeedback from "./pages/AdminFeedback";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
+import Request from "./pages/Request";
 
 const queryClient = new QueryClient();
 
