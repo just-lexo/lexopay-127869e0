@@ -268,6 +268,9 @@ const Dashboard = () => {
             {/* Tip Card */}
             <TipCard />
 
+            {/* Payment Requests */}
+            <PaymentRequests />
+
             {/* Recent Activity */}
             <RecentActivity />
 
