@@ -116,7 +116,9 @@ const Request = () => {
         amount: numAmount,
         note: note.trim() || null,
         expires_at: expiresAt,
-      });
+        requester_username: profile?.username || null,
+        recipient_username: recipient.username,
+      } as any);
 
       if (error) throw error;
 
