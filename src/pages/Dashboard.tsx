@@ -4,6 +4,7 @@ import { useWallets } from '@/hooks/useWallets';
 import { useHideBalances } from '@/hooks/useHideBalances';
 import { RecentActivity } from '@/components/dashboard/RecentActivity';
 import { TipCard } from '@/components/dashboard/TipCard';
+import { PaymentRequests } from '@/components/dashboard/PaymentRequests';
 import { TestModeBanner } from '@/components/TestModeBanner';
  import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
