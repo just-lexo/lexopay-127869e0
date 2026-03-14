@@ -164,7 +164,7 @@ const TransactionDetail = () => {
   }
 
   const metadata = transaction.metadata as Record<string, unknown> || {};
-  const reference = (metadata.reference as string) || transaction.id.slice(0, 8).toUpperCase();
+  const reference = (metadata.reference as string) || ('LX-' + transaction.id.slice(0, 8).toUpperCase());
 
   return (
     <div className="min-h-screen bg-background pb-20">

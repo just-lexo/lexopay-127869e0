@@ -138,7 +138,7 @@ const Receipt = () => {
   }
 
   const metadata = transaction.metadata as Record<string, unknown> || {};
-  const reference = (metadata.reference as string) || transaction.id.slice(0, 8).toUpperCase();
+  const reference = (metadata.reference as string) || ('LX-' + transaction.id.slice(0, 8).toUpperCase());
 
   const handleShare = async () => {
     if (navigator.share) {
