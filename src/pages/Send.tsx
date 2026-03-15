@@ -53,6 +53,14 @@ const Send = () => {
   const sendAmount = parseFloat(amount) || 0;
   const canSend = recipient && sendAmount > 0 && availableBalance >= sendAmount;
 
+  // Auto-search prefilled recipient
+  useEffect(() => {
+    if (prefillTo && !recipient && !isSearching) {
+      handleSearchRecipient();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefillTo]);
+
   // Normalize username: remove @, trim, lowercase
   const normalizeUsername = (input: string): string => {
     return input.replace('@', '').trim().toLowerCase();
