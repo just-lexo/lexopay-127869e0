@@ -5,6 +5,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { TestModeBanner } from '@/components/TestModeBanner';
 import { BottomNav } from '@/components/BottomNav';
 import { FeedbackModal } from '@/components/FeedbackModal';
+import { WalletLinking } from '@/components/profile/WalletLinking';
+import { QRIdentity } from '@/components/profile/QRIdentity';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -31,8 +33,6 @@ import {
 } from '@/components/ui/alert-dialog';
 import {
   Shield,
-  Copy,
-  Check,
   LogOut,
   MessageSquarePlus,
   Settings,
@@ -40,7 +40,6 @@ import {
   History,
   Loader2,
   AlertTriangle,
-  Wallet,
 } from 'lucide-react';
 
 
