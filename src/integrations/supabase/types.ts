@@ -311,6 +311,7 @@ export type Database = {
           user_id: string
           username: string | null
           wallet_address: string | null
+          wallet_connected_at: string | null
         }
         Insert: {
           created_at?: string
@@ -322,6 +323,7 @@ export type Database = {
           user_id: string
           username?: string | null
           wallet_address?: string | null
+          wallet_connected_at?: string | null
         }
         Update: {
           created_at?: string
@@ -333,6 +335,7 @@ export type Database = {
           user_id?: string
           username?: string | null
           wallet_address?: string | null
+          wallet_connected_at?: string | null
         }
         Relationships: []
       }
@@ -485,6 +488,13 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      lookup_public_profile: {
+        Args: { _username: string }
+        Returns: {
+          display_name: string
+          username: string
+        }[]
       }
       lookup_username: {
         Args: { _username: string }
