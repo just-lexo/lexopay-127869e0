@@ -173,7 +173,7 @@ export const WalletLinking = () => {
             </div>
           ) : (
             <>
-              <p className="text-xs text-muted-foreground mb-3">
+              <p className="text-xs text-muted-foreground mb-2">
                 Link a wallet to prepare your account for future Base Mini App support.
               </p>
               <Button
@@ -191,6 +191,22 @@ export const WalletLinking = () => {
                   </>
                 )}
               </Button>
+              <p className="text-xs text-muted-foreground mt-3">
+                To connect a wallet on mobile, open LexoPay inside your wallet's built-in browser or use a desktop browser with a wallet extension.
+              </p>
+              <details className="mt-2">
+                <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground transition-colors">
+                  Learn more
+                </summary>
+                <div className="text-xs text-muted-foreground mt-2 space-y-1 pl-1">
+                  <p>Most mobile browsers (Chrome/Safari) do not allow wallet connections directly.</p>
+                  <p>You can connect by:</p>
+                  <ul className="list-disc pl-4 space-y-0.5">
+                    <li>Opening this site in your wallet app's browser (MetaMask, Trust Wallet, Coinbase Wallet)</li>
+                    <li>Or using a desktop browser with a wallet extension</li>
+                  </ul>
+                </div>
+              </details>
             </>
           )}
         </CardContent>
