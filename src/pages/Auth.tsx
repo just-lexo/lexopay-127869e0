@@ -20,6 +20,8 @@ type AuthStep = 'auth' | 'profile-setup';
 
 const Auth = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get('redirect') || '/dashboard';
   const { signUp, signIn, updateProfile, user, profile } = useAuth();
   const { toast } = useToast();
   
