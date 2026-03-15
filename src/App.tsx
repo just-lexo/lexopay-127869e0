@@ -26,6 +26,14 @@ import PublicProfile from "./pages/PublicProfile";
 
 const queryClient = new QueryClient();
 
+const CatchAllRoute = () => {
+  const location = useLocation();
+  if (location.pathname.startsWith('/@')) {
+    return <PublicProfile />;
+  }
+  return <NotFound />;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
