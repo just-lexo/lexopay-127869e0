@@ -74,24 +74,6 @@ const Profile = () => {
     return `${maskedLocal}@${domain}`;
   };
 
-  const copyUsername = async () => {
-    if (!profile?.username) return;
-    try {
-      await navigator.clipboard.writeText(`@${profile.username}`);
-      setCopied(true);
-      toast({
-        title: 'Copied!',
-        description: 'LexoPay ID copied to clipboard',
-      });
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      toast({
-        title: 'Failed to copy',
-        description: 'Please copy manually',
-        variant: 'destructive',
-      });
-    }
-  };
 
   const getInitials = (name: string | null | undefined): string => {
     if (!name) return 'U';
