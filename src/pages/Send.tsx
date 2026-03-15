@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useHideBalances } from '@/hooks/useHideBalances';
@@ -35,8 +35,12 @@ const Send = () => {
   const { mask } = useHideBalances();
   const { toast } = useToast();
 
+  // Pre-fill recipient from URL query param
+  const searchParams = new URLSearchParams(window.location.search);
+  const prefillTo = searchParams.get('to') || '';
+
   const [selectedToken, setSelectedToken] = useState<SupportedToken>('USDT');
-  const [recipientUsername, setRecipientUsername] = useState('');
+  const [recipientUsername, setRecipientUsername] = useState(prefillTo ? `@${prefillTo}` : '');
   const [recipient, setRecipient] = useState<RecipientProfile | null>(null);
   const [recipientError, setRecipientError] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
@@ -48,6 +52,14 @@ const Send = () => {
   const availableBalance = selectedBalance?.balance ?? 0;
   const sendAmount = parseFloat(amount) || 0;
   const canSend = recipient && sendAmount > 0 && availableBalance >= sendAmount;
+
+  // Auto-search prefilled recipient
+  useEffect(() => {
+    if (prefillTo && !recipient && !isSearching) {
+      handleSearchRecipient();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefillTo]);
 
   // Normalize username: remove @, trim, lowercase
   const normalizeUsername = (input: string): string => {

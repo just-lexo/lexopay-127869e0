@@ -9,6 +9,7 @@ interface Profile {
   display_name: string | null;
   kyc_tier: number;
   is_admin: boolean;
+  wallet_address: string | null;
 }
 
 interface AuthContextType {

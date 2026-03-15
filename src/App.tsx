@@ -22,6 +22,7 @@ import AdminFeedback from "./pages/AdminFeedback";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
 import Request from "./pages/Request";
+import PublicProfile from "./pages/PublicProfile";
 
 const queryClient = new QueryClient();
 
@@ -131,6 +132,7 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
+            <Route path="/@:username" element={<PublicProfile />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

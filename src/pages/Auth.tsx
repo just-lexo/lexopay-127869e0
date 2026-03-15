@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +20,8 @@ type AuthStep = 'auth' | 'profile-setup';
 
 const Auth = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get('redirect') || '/dashboard';
   const { signUp, signIn, updateProfile, user, profile } = useAuth();
   const { toast } = useToast();
   
@@ -37,7 +39,7 @@ const Auth = () => {
 
   // If user is logged in and has username, redirect to dashboard
   if (user && profile?.username) {
-    navigate('/dashboard');
+    navigate(redirectTo);
     return null;
   }
 
@@ -157,7 +159,7 @@ const Auth = () => {
           title: 'Welcome to LexoPay!',
           description: 'Your profile has been set up.',
         });
-        navigate('/dashboard');
+        navigate(redirectTo);
       }
     } finally {
       setLoading(false);
