@@ -159,7 +159,7 @@ const Auth = () => {
           title: 'Welcome to LexoPay!',
           description: 'Your profile has been set up.',
         });
-        navigate('/dashboard');
+        navigate(redirectTo);
       }
     } finally {
       setLoading(false);
