@@ -39,7 +39,7 @@ const Auth = () => {
 
   // If user is logged in and has username, redirect to dashboard
   if (user && profile?.username) {
-    navigate('/dashboard');
+    navigate(redirectTo);
     return null;
   }
 
