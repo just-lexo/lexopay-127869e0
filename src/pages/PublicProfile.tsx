@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -13,14 +13,15 @@ interface PublicProfileData {
 }
 
 const PublicProfile = () => {
-  const { username } = useParams<{ username: string }>();
+  const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [profileData, setProfileData] = useState<PublicProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
-  const cleanUsername = username?.replace('@', '').trim().toLowerCase() || '';
+  // Extract username from path like /@prosper
+  const cleanUsername = location.pathname.replace(/^\/@/, '').trim().toLowerCase();
 
   useEffect(() => {
     if (!cleanUsername) {
