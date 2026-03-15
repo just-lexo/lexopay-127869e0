@@ -49,7 +49,7 @@ const Profile = () => {
   const { profile, user, signOut, refreshProfile } = useAuth();
   const { toast } = useToast();
   
-  const [copied, setCopied] = useState(false);
+  
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   
   // Edit profile state
