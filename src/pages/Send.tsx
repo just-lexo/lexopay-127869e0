@@ -35,8 +35,12 @@ const Send = () => {
   const { mask } = useHideBalances();
   const { toast } = useToast();
 
+  // Pre-fill recipient from URL query param
+  const searchParams = new URLSearchParams(window.location.search);
+  const prefillTo = searchParams.get('to') || '';
+
   const [selectedToken, setSelectedToken] = useState<SupportedToken>('USDT');
-  const [recipientUsername, setRecipientUsername] = useState('');
+  const [recipientUsername, setRecipientUsername] = useState(prefillTo ? `@${prefillTo}` : '');
   const [recipient, setRecipient] = useState<RecipientProfile | null>(null);
   const [recipientError, setRecipientError] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);

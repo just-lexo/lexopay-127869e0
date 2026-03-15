@@ -22,6 +22,7 @@ import AdminFeedback from "./pages/AdminFeedback";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
 import Request from "./pages/Request";
+import PublicProfile from "./pages/PublicProfile";
 
 const queryClient = new QueryClient();
 
