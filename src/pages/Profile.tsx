@@ -266,6 +266,9 @@ const Profile = () => {
         {/* Wallet Linking */}
         <WalletLinking />
 
+        {/* Saved Bank Accounts */}
+        <SavedBankAccounts />
+
 
         {/* Quick Links */}
         <Card className="glass-card border-border/50">
