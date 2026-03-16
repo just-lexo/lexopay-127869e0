@@ -128,6 +128,14 @@ const Request = () => {
         description: `Payment request sent to @${recipient.username}`,
       });
 
+      // Notify the recipient
+      await createNotification({
+        userId: recipient.user_id,
+        type: 'payment_request_received',
+        title: 'Payment Request',
+        message: `@${profile?.username} requested ${asset === 'NGN' ? '₦' : ''}${numAmount.toLocaleString()}${asset !== 'NGN' ? ' ' + asset : ''} from you.`,
+      });
+
       navigate('/dashboard');
     } catch (err) {
       console.error('Error creating request:', err);
