@@ -10,6 +10,7 @@ import { TestModeBanner } from '@/components/TestModeBanner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { NotificationBell } from '@/components/NotificationBell';
 import { 
   Wallet, 
   ArrowDownToLine, 
