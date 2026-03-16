@@ -255,6 +255,42 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          related_id: string | null
+          related_kind: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          related_id?: string | null
+          related_kind?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          related_id?: string | null
+          related_kind?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       payment_requests: {
         Row: {
           amount: number
@@ -543,7 +579,7 @@ export type Database = {
       allowlist_type: "EMAIL" | "USERNAME"
       app_role: "admin" | "moderator" | "user"
       conversion_status: "PROCESSING" | "SUCCESS" | "FAILED"
-      deposit_status: "PENDING" | "CONFIRMED" | "FAILED"
+      deposit_status: "PENDING" | "CONFIRMED" | "FAILED" | "DETECTED"
       feedback_category: "BUG" | "IDEA" | "OTHER"
       invite_request_status: "PENDING" | "APPROVED" | "DECLINED"
       payment_request_status: "PENDING" | "PAID" | "DECLINED" | "EXPIRED"
@@ -680,7 +716,7 @@ export const Constants = {
       allowlist_type: ["EMAIL", "USERNAME"],
       app_role: ["admin", "moderator", "user"],
       conversion_status: ["PROCESSING", "SUCCESS", "FAILED"],
-      deposit_status: ["PENDING", "CONFIRMED", "FAILED"],
+      deposit_status: ["PENDING", "CONFIRMED", "FAILED", "DETECTED"],
       feedback_category: ["BUG", "IDEA", "OTHER"],
       invite_request_status: ["PENDING", "APPROVED", "DECLINED"],
       payment_request_status: ["PENDING", "PAID", "DECLINED", "EXPIRED"],
