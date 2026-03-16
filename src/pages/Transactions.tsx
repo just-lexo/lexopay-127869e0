@@ -1,11 +1,13 @@
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTransactions } from '@/hooks/useTransactions';
 import { TestModeBanner } from '@/components/TestModeBanner';
- import { BottomNav } from '@/components/BottomNav';
+import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
 import { TransactionAmount } from '@/components/transactions/TransactionAmount';
 import { 
   ArrowLeft, 
@@ -14,9 +16,20 @@ import {
   RefreshCw,
   Send,
   Download,
-  ChevronRight
+  ChevronRight,
+  Search,
+  X,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+
+const FILTERS = [
+  { key: 'ALL', label: 'All' },
+  { key: 'SEND', label: 'Sent' },
+  { key: 'RECEIVE', label: 'Received' },
+  { key: 'CONVERT', label: 'Convert' },
+  { key: 'WITHDRAW', label: 'Withdraw' },
+  { key: 'DEPOSIT', label: 'Deposit' },
+] as const;
 
 const getTransactionIcon = (kind: string) => {
   switch (kind) {
@@ -51,6 +64,38 @@ const getStatusBadge = (status: string) => {
 const Transactions = () => {
   const navigate = useNavigate();
   const { transactions, loading, error } = useTransactions();
+  const [activeFilter, setActiveFilter] = useState<string>('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filtered = useMemo(() => {
+    let result = transactions;
+
+    if (activeFilter !== 'ALL') {
+      result = result.filter(tx => tx.kind === activeFilter);
+    }
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(tx => {
+        const meta = tx.metadata as Record<string, unknown> | null;
+        const ref = (meta?.reference as string)?.toLowerCase() || '';
+        const recipientUsername = (meta?.recipient_username as string)?.toLowerCase() || '';
+        const senderUsername = (meta?.sender_username as string)?.toLowerCase() || '';
+        const note = (meta?.note as string)?.toLowerCase() || '';
+
+        return (
+          tx.title.toLowerCase().includes(q) ||
+          (tx.subtitle?.toLowerCase().includes(q)) ||
+          ref.includes(q) ||
+          recipientUsername.includes(q) ||
+          senderUsername.includes(q) ||
+          note.includes(q)
+        );
+      });
+    }
+
+    return result;
+  }, [transactions, activeFilter, searchQuery]);
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -66,14 +111,51 @@ const Transactions = () => {
             <div className="min-w-0">
               <h1 className="font-semibold text-base">Transaction History</h1>
               <p className="text-xs text-muted-foreground">
-                {transactions.length} transaction{transactions.length !== 1 ? 's' : ''}
+                {filtered.length} transaction{filtered.length !== 1 ? 's' : ''}
               </p>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="container max-w-lg mx-auto px-4 py-4">
+      <main className="container max-w-lg mx-auto px-4 py-4 space-y-3">
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by username, reference, note..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="pl-9 pr-9 min-h-[44px]"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+
+        {/* Filter Chips */}
+        <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
+          {FILTERS.map(f => (
+            <button
+              key={f.key}
+              onClick={() => setActiveFilter(f.key)}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+                activeFilter === f.key
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Transaction List */}
         {loading ? (
           <div className="space-y-3">
             {[1, 2, 3, 4, 5].map((i) => (
@@ -86,19 +168,23 @@ const Transactions = () => {
               <p className="text-destructive">{error}</p>
             </CardContent>
           </Card>
-        ) : transactions.length === 0 ? (
+        ) : filtered.length === 0 ? (
           <Card className="glass-card border-border/50">
             <CardContent className="py-12 text-center">
               <RefreshCw className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">No transactions yet</p>
+              <p className="text-muted-foreground">
+                {searchQuery || activeFilter !== 'ALL' ? 'No matching transactions' : 'No transactions yet'}
+              </p>
               <p className="text-sm text-muted-foreground mt-1">
-                Your transaction history will appear here
+                {searchQuery || activeFilter !== 'ALL'
+                  ? 'Try adjusting your filters or search'
+                  : 'Your transaction history will appear here'}
               </p>
             </CardContent>
           </Card>
         ) : (
           <div className="space-y-2">
-            {transactions.map((tx) => (
+            {filtered.map((tx) => (
               <Card 
                 key={tx.id} 
                 className="glass-card border-border/50 cursor-pointer hover:border-primary/30 transition-colors"
@@ -106,12 +192,9 @@ const Transactions = () => {
               >
                 <CardContent className="py-3 px-3">
                   <div className="flex items-start gap-2.5">
-                    {/* Icon */}
                     <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
                       {getTransactionIcon(tx.kind)}
                     </div>
-
-                    {/* Details */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2 mb-0.5">
                         <p className="font-medium text-sm truncate flex-1">{tx.title}</p>

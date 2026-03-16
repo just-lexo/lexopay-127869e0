@@ -9,3 +9,9 @@ export * from './banks/payout.adapter';
 
 export * from './rates/types';
 export * from './rates/rate.adapter';
+
+export * from './deposits/types';
+
+export * from './payouts/types';
+export { paystackPayoutAdapter, activePayoutProvider } from './payouts';
+
