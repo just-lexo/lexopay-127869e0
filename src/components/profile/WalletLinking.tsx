@@ -100,6 +100,14 @@ export const WalletLinking = () => {
       }
 
       toast({ title: 'Wallet linked successfully.' });
+      if (user) {
+        await createNotification({
+          userId: user.id,
+          type: 'wallet_linked',
+          title: 'Wallet Linked',
+          message: `Wallet ${address.slice(0, 6)}...${address.slice(-4)} has been linked to your account.`,
+        });
+      }
       refreshProfile?.();
     } catch (err: any) {
       console.error('Wallet connect error:', err);
