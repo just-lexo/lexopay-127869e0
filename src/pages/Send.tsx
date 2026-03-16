@@ -155,6 +155,22 @@ const Send = () => {
         description: `${sendAmount} ${selectedToken} sent to @${recipient.username}`,
       });
 
+      // Create notifications for both sender and recipient
+      await Promise.all([
+        createNotification({
+          userId: user.id,
+          type: 'send_completed',
+          title: 'Send Completed',
+          message: `You sent ${sendAmount} ${selectedToken} to @${recipient.username}.`,
+        }),
+        createNotification({
+          userId: recipient.user_id,
+          type: 'payment_received',
+          title: 'Payment Received',
+          message: `You received ${sendAmount} ${selectedToken} from @${profile?.username}.`,
+        }),
+      ]);
+
       // Reset form
       setAmount('');
       setRecipientUsername('');
