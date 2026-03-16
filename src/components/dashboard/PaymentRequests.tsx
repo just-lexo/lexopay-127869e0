@@ -94,6 +94,15 @@ export function PaymentRequests() {
         }
 
         toast({ title: 'Payment sent!', description: `Paid ₦${req.amount.toLocaleString()} to @${req.requester_username}` });
+        
+        // Notify requester that their request was paid
+        await createNotification({
+          userId: req.requester_id,
+          type: 'payment_request_paid',
+          title: 'Request Paid',
+          message: `Your request to @${req.recipient_username} for ₦${req.amount.toLocaleString()} was paid.`,
+        });
+
         await Promise.all([refetch(), refetchWallets()]);
       } catch (err) {
         console.error('Pay error:', err);
