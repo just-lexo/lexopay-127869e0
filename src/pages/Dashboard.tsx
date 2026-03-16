@@ -74,6 +74,7 @@ const Dashboard = () => {
               </div>
             </div>
             <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
+              <NotificationBell />
               {profile?.is_admin && (
                 <Badge variant="default" className="gap-1 bg-primary text-primary-foreground text-[10px] px-1.5 py-0.5">
                   <Shield className="w-2.5 h-2.5" />
