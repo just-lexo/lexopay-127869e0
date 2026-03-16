@@ -4,6 +4,7 @@ import { useWallets } from '@/hooks/useWallets';
 import { usePaymentRequests, type PaymentRequest } from '@/hooks/usePaymentRequests';
 import { supabase } from '@/integrations/supabase/client';
 import { mockRateProvider, CONVERSION_FEE_PERCENTAGE } from '@/adapters';
+import { createNotification } from '@/hooks/useNotifications';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
