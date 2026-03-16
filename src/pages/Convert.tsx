@@ -111,6 +111,16 @@ const Convert = () => {
       setShowSuccess(true);
       await refetch();
 
+      // Create notification
+      if (user) {
+        await createNotification({
+          userId: user.id,
+          type: 'conversion_completed',
+          title: 'Conversion Completed',
+          message: `You converted ${numAmount} ${selectedToken} to ₦${quote.netAmount.toLocaleString()}.`,
+        });
+      }
+
       toast({
         title: 'Conversion successful!',
         description: `${numAmount} ${selectedToken} → ₦${quote.netAmount.toLocaleString()}`,
