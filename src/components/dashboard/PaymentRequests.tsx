@@ -224,6 +224,15 @@ export function PaymentRequests() {
         .eq('id', req.id);
 
       if (error) throw error;
+      
+      // Notify requester that their request was declined
+      await createNotification({
+        userId: req.requester_id,
+        type: 'payment_request_declined',
+        title: 'Request Declined',
+        message: `@${req.recipient_username} declined your request for ${formatAsset(req.amount, req.asset)}.`,
+      });
+
       toast({ title: 'Request declined' });
       await refetch();
     } catch (err) {
