@@ -5,6 +5,7 @@ import { useHideBalances } from '@/hooks/useHideBalances';
 import { useWallets } from '@/hooks/useWallets';
 import { supabase } from '@/integrations/supabase/client';
 import { SUPPORTED_TOKENS, type SupportedToken } from '@/adapters';
+import { createNotification } from '@/hooks/useNotifications';
 import { TestModeBanner } from '@/components/TestModeBanner';
  import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
@@ -153,6 +154,22 @@ const Send = () => {
         title: 'Transfer successful!',
         description: `${sendAmount} ${selectedToken} sent to @${recipient.username}`,
       });
+
+      // Create notifications for both sender and recipient
+      await Promise.all([
+        createNotification({
+          userId: user.id,
+          type: 'send_completed',
+          title: 'Send Completed',
+          message: `You sent ${sendAmount} ${selectedToken} to @${recipient.username}.`,
+        }),
+        createNotification({
+          userId: recipient.user_id,
+          type: 'payment_received',
+          title: 'Payment Received',
+          message: `You received ${sendAmount} ${selectedToken} from @${profile?.username}.`,
+        }),
+      ]);
 
       // Reset form
       setAmount('');

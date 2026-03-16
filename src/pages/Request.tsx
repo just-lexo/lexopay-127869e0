@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { createNotification } from '@/hooks/useNotifications';
 import { TestModeBanner } from '@/components/TestModeBanner';
 import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
@@ -125,6 +126,14 @@ const Request = () => {
       toast({
         title: 'Request sent!',
         description: `Payment request sent to @${recipient.username}`,
+      });
+
+      // Notify the recipient
+      await createNotification({
+        userId: recipient.user_id,
+        type: 'payment_request_received',
+        title: 'Payment Request',
+        message: `@${profile?.username} requested ${asset === 'NGN' ? '₦' : ''}${numAmount.toLocaleString()}${asset !== 'NGN' ? ' ' + asset : ''} from you.`,
       });
 
       navigate('/dashboard');

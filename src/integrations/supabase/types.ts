@@ -375,6 +375,42 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_bank_accounts: {
+        Row: {
+          account_name: string
+          account_number: string
+          bank_code: string
+          bank_name: string
+          created_at: string
+          id: string
+          is_default: boolean
+          is_verified_owner: boolean
+          user_id: string
+        }
+        Insert: {
+          account_name: string
+          account_number: string
+          bank_code: string
+          bank_name: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          is_verified_owner?: boolean
+          user_id: string
+        }
+        Update: {
+          account_name?: string
+          account_number?: string
+          bank_code?: string
+          bank_name?: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          is_verified_owner?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       transactions: {
         Row: {
           amount_display: string

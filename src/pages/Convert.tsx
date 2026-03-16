@@ -5,6 +5,7 @@ import { useHideBalances } from '@/hooks/useHideBalances';
 import { useWallets } from '@/hooks/useWallets';
 import { supabase } from '@/integrations/supabase/client';
 import { mockRateProvider, CONVERSION_FEE_PERCENTAGE, type ConversionQuote } from '@/adapters';
+import { createNotification } from '@/hooks/useNotifications';
 import { TestModeBanner } from '@/components/TestModeBanner';
  import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
@@ -109,6 +110,16 @@ const Convert = () => {
 
       setShowSuccess(true);
       await refetch();
+
+      // Create notification
+      if (user) {
+        await createNotification({
+          userId: user.id,
+          type: 'conversion_completed',
+          title: 'Conversion Completed',
+          message: `You converted ${numAmount} ${selectedToken} to ₦${quote.netAmount.toLocaleString()}.`,
+        });
+      }
 
       toast({
         title: 'Conversion successful!',

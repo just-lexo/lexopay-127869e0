@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { createNotification } from '@/hooks/useNotifications';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -99,6 +100,14 @@ export const WalletLinking = () => {
       }
 
       toast({ title: 'Wallet linked successfully.' });
+      if (user) {
+        await createNotification({
+          userId: user.id,
+          type: 'wallet_linked',
+          title: 'Wallet Linked',
+          message: `Wallet ${address.slice(0, 6)}...${address.slice(-4)} has been linked to your account.`,
+        });
+      }
       refreshProfile?.();
     } catch (err: any) {
       console.error('Wallet connect error:', err);
@@ -131,6 +140,14 @@ export const WalletLinking = () => {
       if (error) throw error;
 
       toast({ title: 'Wallet disconnected.' });
+      if (user) {
+        await createNotification({
+          userId: user.id,
+          type: 'wallet_disconnected',
+          title: 'Wallet Disconnected',
+          message: 'Your wallet has been disconnected from your account.',
+        });
+      }
       setDisconnectOpen(false);
       refreshProfile?.();
     } catch {

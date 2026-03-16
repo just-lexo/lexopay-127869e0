@@ -4,6 +4,7 @@ import { useWallets } from '@/hooks/useWallets';
 import { usePaymentRequests, type PaymentRequest } from '@/hooks/usePaymentRequests';
 import { supabase } from '@/integrations/supabase/client';
 import { mockRateProvider, CONVERSION_FEE_PERCENTAGE } from '@/adapters';
+import { createNotification } from '@/hooks/useNotifications';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -93,6 +94,15 @@ export function PaymentRequests() {
         }
 
         toast({ title: 'Payment sent!', description: `Paid ₦${req.amount.toLocaleString()} to @${req.requester_username}` });
+        
+        // Notify requester that their request was paid
+        await createNotification({
+          userId: req.requester_id,
+          type: 'payment_request_paid',
+          title: 'Request Paid',
+          message: `Your request to @${req.recipient_username} for ₦${req.amount.toLocaleString()} was paid.`,
+        });
+
         await Promise.all([refetch(), refetchWallets()]);
       } catch (err) {
         console.error('Pay error:', err);
@@ -214,6 +224,15 @@ export function PaymentRequests() {
         .eq('id', req.id);
 
       if (error) throw error;
+      
+      // Notify requester that their request was declined
+      await createNotification({
+        userId: req.requester_id,
+        type: 'payment_request_declined',
+        title: 'Request Declined',
+        message: `@${req.recipient_username} declined your request for ${formatAsset(req.amount, req.asset)}.`,
+      });
+
       toast({ title: 'Request declined' });
       await refetch();
     } catch (err) {
