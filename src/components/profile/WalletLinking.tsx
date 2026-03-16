@@ -140,6 +140,14 @@ export const WalletLinking = () => {
       if (error) throw error;
 
       toast({ title: 'Wallet disconnected.' });
+      if (user) {
+        await createNotification({
+          userId: user.id,
+          type: 'wallet_disconnected',
+          title: 'Wallet Disconnected',
+          message: 'Your wallet has been disconnected from your account.',
+        });
+      }
       setDisconnectOpen(false);
       refreshProfile?.();
     } catch {
