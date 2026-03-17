@@ -63,6 +63,14 @@ const App = () => (
               } 
             />
             <Route 
+              path="/deposit/:id" 
+              element={
+                <ProtectedRoute>
+                  <DepositDetail />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
               path="/convert" 
               element={
                 <ProtectedRoute>
