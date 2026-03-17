@@ -35,8 +35,8 @@ export interface ChainAdapter {
   isValidAddress(address: string): boolean;
 }
 
-// Supported tokens
-export const SUPPORTED_TOKENS = ['USDT', 'USDC'] as const;
+// Supported tokens - now includes ETH
+export const SUPPORTED_TOKENS = ['USDC', 'ETH', 'USDT'] as const;
 export type SupportedToken = typeof SUPPORTED_TOKENS[number];
 
 // Supported networks

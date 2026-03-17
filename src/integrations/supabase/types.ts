@@ -122,9 +122,14 @@ export type Database = {
         Row: {
           address: string
           amount: number | null
+          confirmations_count: number | null
+          confirmed_at: string | null
           created_at: string
+          detected_at: string | null
           id: string
           network: string
+          provider_source: string | null
+          reference_id: string | null
           status: Database["public"]["Enums"]["deposit_status"]
           token: string
           tx_hash: string | null
@@ -134,9 +139,14 @@ export type Database = {
         Insert: {
           address: string
           amount?: number | null
+          confirmations_count?: number | null
+          confirmed_at?: string | null
           created_at?: string
+          detected_at?: string | null
           id?: string
           network: string
+          provider_source?: string | null
+          reference_id?: string | null
           status?: Database["public"]["Enums"]["deposit_status"]
           token: string
           tx_hash?: string | null
@@ -146,9 +156,14 @@ export type Database = {
         Update: {
           address?: string
           amount?: number | null
+          confirmations_count?: number | null
+          confirmed_at?: string | null
           created_at?: string
+          detected_at?: string | null
           id?: string
           network?: string
+          provider_source?: string | null
+          reference_id?: string | null
           status?: Database["public"]["Enums"]["deposit_status"]
           token?: string
           tx_hash?: string | null
