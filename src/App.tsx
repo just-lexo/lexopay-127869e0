@@ -24,6 +24,7 @@ import Profile from "./pages/Profile";
 import Request from "./pages/Request";
 import PublicProfile from "./pages/PublicProfile";
 import Notifications from "./pages/Notifications";
+import DepositDetail from "./pages/DepositDetail";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +59,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Deposit />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/deposit/:id" 
+              element={
+                <ProtectedRoute>
+                  <DepositDetail />
                 </ProtectedRoute>
               } 
             />
