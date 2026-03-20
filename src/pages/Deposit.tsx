@@ -91,7 +91,8 @@ const Deposit = () => {
 
     setLoading(true);
     try {
-      const result = await baseAdapter.generateDepositAddress(user.id, selectedToken);
+      // Deterministic address per user — same address every time
+      const address = generateUserDepositAddress(user.id);
       const refId = 'LXP-DEP-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
       
       const { error } = await supabase
@@ -100,14 +101,14 @@ const Deposit = () => {
           user_id: user.id,
           token: selectedToken,
           network: selectedNetwork,
-          address: result.address,
+          address: address,
           status: 'PENDING',
           reference_id: refId,
         } as any);
 
       if (error) throw error;
 
-      setDepositAddress(result.address);
+      setDepositAddress(address);
       await fetchDeposits();
 
       toast({
@@ -116,7 +117,7 @@ const Deposit = () => {
       });
     } catch (err) {
       console.error('Error generating address:', err);
-      toast({ title: 'Error', description: 'Failed to generate deposit address.', variant: 'destructive' });
+      toast({ title: 'Something went wrong', description: 'Please check your connection and try again.', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
