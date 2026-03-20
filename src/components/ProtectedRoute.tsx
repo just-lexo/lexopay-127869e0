@@ -15,13 +15,9 @@ export function ProtectedRoute({ children, requireProfile = true, requireAdmin =
   const { user, profile, loading: authLoading } = useAuth();
   const { isAllowed, loading: allowlistLoading } = useAllowlist();
 
-  // Still loading auth
+  // Auth loading is handled by SplashScreen in App.tsx — no flash
   if (authLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
+    return null;
   }
 
   // Not logged in
