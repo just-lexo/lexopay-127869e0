@@ -133,137 +133,55 @@ const Deposit = () => {
     toast({ title: 'Copied!', description: 'Address copied to clipboard.' });
   };
 
-  // DEV TOOL: Simulate deposit detection
+  // DEV TOOL: Simulate deposit detection via pipeline
   const handleSimulateDetect = async (deposit: DepositRecord) => {
     if (!user) return;
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from('deposits')
-        .update({ 
-          status: 'DETECTED',
-          detected_at: new Date().toISOString(),
-          amount: testAmount,
-          tx_hash: `0x${Math.random().toString(16).slice(2)}${Math.random().toString(16).slice(2)}`,
-          confirmations_count: 3,
-        } as any)
-        .eq('id', deposit.id)
-        .eq('status', 'PENDING');
-
-      if (error) throw error;
-
-      await createNotification({
+      const txHash = `0x${Math.random().toString(16).slice(2)}${Math.random().toString(16).slice(2)}`;
+      await handleDepositDetected({
+        depositId: deposit.id,
         userId: user.id,
-        type: 'deposit_detected',
-        title: 'Deposit Detected',
-        message: `${testAmount} ${deposit.token} deposit detected on Base. Waiting for confirmations.`,
-        relatedKind: 'deposit',
+        token: deposit.token,
+        network: deposit.network,
+        amount: testAmount,
+        txHash,
       });
 
       toast({ title: 'Deposit detected', description: `${testAmount} ${deposit.token} detected, awaiting confirmations.` });
       await fetchDeposits();
     } catch (err) {
       console.error(err);
-      toast({ title: 'Error', description: 'Failed to simulate detection.', variant: 'destructive' });
+      toast({ title: 'Something went wrong', description: 'Check your connection and try again.', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
   };
 
-  // DEV TOOL: Simulate deposit confirmation
+  // DEV TOOL: Simulate deposit confirmation via pipeline
   const handleSimulateConfirm = async (deposit: DepositRecord) => {
     if (!user) return;
     setLoading(true);
     try {
-      const { data: currentDeposit } = await supabase
-        .from('deposits')
-        .select('status, amount')
-        .eq('id', deposit.id)
-        .single();
-
-      if (!currentDeposit || (currentDeposit.status !== 'PENDING' && currentDeposit.status !== 'DETECTED')) {
-        toast({ title: 'Already processed', description: 'This deposit has already been confirmed.' });
-        await fetchDeposits();
-        return;
-      }
-
-      const depositAmount = currentDeposit.amount || testAmount;
-
       const txHash = deposit.tx_hash || `0x${Math.random().toString(16).slice(2)}${Math.random().toString(16).slice(2)}`;
-
-      const { error: depositError } = await supabase
-        .from('deposits')
-        .update({ 
-          status: 'CONFIRMED', 
-          amount: depositAmount,
-          tx_hash: txHash,
-          confirmed_at: new Date().toISOString(),
-          confirmations_count: 12,
-        } as any)
-        .eq('id', deposit.id);
-
-      if (depositError) throw depositError;
-
-      // Credit balance
-      const { data: wallet } = await supabase
-        .from('wallets')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('type', 'CRYPTO')
-        .single();
-
-      if (wallet) {
-        const { data: existingBalance } = await supabase
-          .from('crypto_balances')
-          .select('balance')
-          .eq('wallet_id', wallet.id)
-          .eq('token', deposit.token)
-          .eq('network', deposit.network)
-          .single();
-
-        if (existingBalance) {
-          await supabase
-            .from('crypto_balances')
-            .update({ balance: (Number(existingBalance.balance) || 0) + depositAmount })
-            .eq('wallet_id', wallet.id)
-            .eq('token', deposit.token)
-            .eq('network', deposit.network);
-        } else {
-          await supabase.from('crypto_balances').insert({
-            wallet_id: wallet.id,
-            token: deposit.token,
-            network: deposit.network,
-            balance: depositAmount,
-          });
-        }
-      }
-
-      const refId = (deposit as any).reference_id || 'LX-' + deposit.id.slice(0, 8).toUpperCase();
-
-      // Create transaction record
-      await supabase.from('transactions').insert({
-        user_id: user.id,
-        kind: 'DEPOSIT',
-        title: 'Crypto Deposit',
-        subtitle: `${deposit.token} on ${deposit.network.charAt(0).toUpperCase() + deposit.network.slice(1)}`,
-        amount_display: `+${depositAmount} ${deposit.token}`,
-        status: 'SUCCESS',
-        metadata: { deposit_id: deposit.id, amount: depositAmount, token: deposit.token, network: deposit.network, tx_hash: txHash, reference: refId },
-      });
-
-      await createNotification({
+      const result = await handleDepositConfirmed({
+        depositId: deposit.id,
         userId: user.id,
-        type: 'deposit_confirmed',
-        title: 'Deposit Confirmed',
-        message: `${depositAmount} ${deposit.token} has been added to your wallet.`,
-        relatedKind: 'deposit',
+        token: deposit.token,
+        network: deposit.network,
+        amount: testAmount,
+        txHash,
       });
 
-      toast({ title: 'Deposit confirmed!', description: `${depositAmount} ${deposit.token} added to your wallet.` });
+      if (result.alreadyProcessed) {
+        toast({ title: 'Already processed', description: 'This deposit has already been confirmed.' });
+      } else {
+        toast({ title: 'Deposit confirmed!', description: `${result.credited} ${deposit.token} added to your wallet.` });
+      }
       await Promise.all([fetchDeposits(), refetch()]);
     } catch (err) {
       console.error(err);
-      toast({ title: 'Error', description: 'Failed to simulate confirmation.', variant: 'destructive' });
+      toast({ title: 'Something went wrong', description: 'Check your connection and try again.', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
