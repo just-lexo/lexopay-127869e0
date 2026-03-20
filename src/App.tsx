@@ -3,11 +3,13 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DevToolsButton } from "@/components/DevToolsButton";
 import { HideLovableBadge } from "@/components/HideLovableBadge";
- import Landing from "./pages/Landing";
+import { SplashScreen } from "@/components/SplashScreen";
+import { OfflineBanner } from "@/components/OfflineBanner";
+import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Deposit from "./pages/Deposit";
@@ -36,6 +38,135 @@ const CatchAllRoute = () => {
   return <NotFound />;
 };
 
+const AppRoutes = () => {
+  const { loading } = useAuth();
+
+  if (loading) {
+    return <SplashScreen />;
+  }
+
+  return (
+    <Routes>
+      <Route path="/" element={<Landing />} />
+      <Route path="/auth" element={<Auth />} />
+      <Route 
+        path="/dashboard" 
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/deposit" 
+        element={
+          <ProtectedRoute>
+            <Deposit />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/deposit/:id" 
+        element={
+          <ProtectedRoute>
+            <DepositDetail />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/convert" 
+        element={
+          <ProtectedRoute>
+            <Convert />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/withdraw" 
+        element={
+          <ProtectedRoute>
+            <Withdraw />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/send" 
+        element={
+          <ProtectedRoute>
+            <Send />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/transactions" 
+        element={
+          <ProtectedRoute>
+            <Transactions />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/transactions/:id" 
+        element={
+          <ProtectedRoute>
+            <TransactionDetail />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/receipt/:id" 
+        element={
+          <ProtectedRoute>
+            <Receipt />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/admin" 
+        element={
+          <ProtectedRoute requireAdmin>
+            <Admin />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/admin/feedback" 
+        element={
+          <ProtectedRoute requireAdmin>
+            <AdminFeedback />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/profile" 
+        element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/request" 
+        element={
+          <ProtectedRoute>
+            <Request />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/notifications" 
+        element={
+          <ProtectedRoute>
+            <Notifications />
+          </ProtectedRoute>
+        } 
+      />
+      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+      <Route path="*" element={<CatchAllRoute />} />
+    </Routes>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
@@ -43,124 +174,8 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route 
-              path="/dashboard" 
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/deposit" 
-              element={
-                <ProtectedRoute>
-                  <Deposit />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/deposit/:id" 
-              element={
-                <ProtectedRoute>
-                  <DepositDetail />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/convert" 
-              element={
-                <ProtectedRoute>
-                  <Convert />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/withdraw" 
-              element={
-                <ProtectedRoute>
-                  <Withdraw />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/send" 
-              element={
-                <ProtectedRoute>
-                  <Send />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/transactions" 
-              element={
-                <ProtectedRoute>
-                  <Transactions />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/transactions/:id" 
-              element={
-                <ProtectedRoute>
-                  <TransactionDetail />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/receipt/:id" 
-              element={
-                <ProtectedRoute>
-                  <Receipt />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/admin" 
-              element={
-                <ProtectedRoute requireAdmin>
-                  <Admin />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/admin/feedback" 
-              element={
-                <ProtectedRoute requireAdmin>
-                  <AdminFeedback />
-                </ProtectedRoute>
-              } 
-            />
-             <Route 
-               path="/profile" 
-               element={
-                 <ProtectedRoute>
-                   <Profile />
-                 </ProtectedRoute>
-               } 
-             />
-            <Route 
-              path="/request" 
-              element={
-                <ProtectedRoute>
-                  <Request />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/notifications" 
-              element={
-                <ProtectedRoute>
-                  <Notifications />
-                </ProtectedRoute>
-              } 
-            />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<CatchAllRoute />} />
-          </Routes>
+          <OfflineBanner />
+          <AppRoutes />
           <DevToolsButton />
           <HideLovableBadge />
         </BrowserRouter>
