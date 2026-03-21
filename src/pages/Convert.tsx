@@ -54,7 +54,7 @@ const Convert = () => {
 
       setLoading(true);
       try {
-        const result = await mockRateProvider.getQuote(selectedToken, numAmount, 'NGN');
+        const result = await liveRateProvider.getQuote(selectedToken, numAmount, 'NGN');
         setQuote(result);
       } catch (err) {
         console.error('Error fetching quote:', err);
