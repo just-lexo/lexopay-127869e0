@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useHideBalances } from '@/hooks/useHideBalances';
 import { useWallets } from '@/hooks/useWallets';
 import { supabase } from '@/integrations/supabase/client';
-import { mockRateProvider, CONVERSION_FEE_PERCENTAGE, type ConversionQuote } from '@/adapters';
+import { liveRateProvider, CONVERSION_FEE_PERCENTAGE, type ConversionQuote } from '@/adapters';
 import { createNotification } from '@/hooks/useNotifications';
 import { TestModeBanner } from '@/components/TestModeBanner';
  import { BottomNav } from '@/components/BottomNav';
@@ -54,7 +54,7 @@ const Convert = () => {
 
       setLoading(true);
       try {
-        const result = await mockRateProvider.getQuote(selectedToken, numAmount, 'NGN');
+        const result = await liveRateProvider.getQuote(selectedToken, numAmount, 'NGN');
         setQuote(result);
       } catch (err) {
         console.error('Error fetching quote:', err);

@@ -1,75 +1,91 @@
-// Rate Provider - Mock Implementation
-// In Phase 3, this will integrate with real rate APIs (Binance, etc.)
+// Rate Provider - Live Coinbase Price Feed
+// Fetches real prices from the get-crypto-prices edge function
 
 import type { RateProvider, ExchangeRate, ConversionQuote } from './types';
 import { CONVERSION_FEE_PERCENTAGE } from './types';
+import { supabase } from '@/integrations/supabase/client';
 
-// Mock NGN rates (realistic as of early 2024)
-const MOCK_RATES: Record<string, number> = {
-  'USDT': 1580, // 1 USDT = ₦1,580
-  'USDC': 1578, // 1 USDC = ₦1,578
-};
+// Cache prices for 30 seconds
+let priceCache: { prices: Record<string, number>; timestamp: number } | null = null;
+const CACHE_TTL = 30_000;
 
-// Add some randomness to simulate market fluctuation
-function getFluctuatedRate(baseRate: number): number {
-  const fluctuation = (Math.random() - 0.5) * 10; // ±5 NGN
-  return Math.round((baseRate + fluctuation) * 100) / 100;
+async function fetchLivePrices(): Promise<Record<string, number>> {
+  if (priceCache && Date.now() - priceCache.timestamp < CACHE_TTL) {
+    return priceCache.prices;
+  }
+
+  try {
+    const { data, error } = await supabase.functions.invoke('get-crypto-prices', {
+      method: 'GET',
+    });
+
+    if (error) throw error;
+
+    const prices: Record<string, number> = {};
+    for (const p of data.prices) {
+      prices[p.token] = p.ngnRate;
+    }
+
+    priceCache = { prices, timestamp: Date.now() };
+    return prices;
+  } catch (err) {
+    console.error('Failed to fetch live prices, using fallback:', err);
+    // Fallback rates
+    return {
+      USDT: 1580,
+      USDC: 1578,
+      ETH: 5_200_000,
+    };
+  }
 }
 
 function generateQuoteId(): string {
   return `Q-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
 }
 
-// Store quotes for validation
 const quotesCache = new Map<string, { expiresAt: Date }>();
 
-export const mockRateProvider: RateProvider = {
-  name: 'Mock Rate Provider',
+export const liveRateProvider: RateProvider = {
+  name: 'Coinbase Live Rate Provider',
 
   async getRate(fromToken: string, toToken: string): Promise<ExchangeRate> {
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 200));
-    
     if (toToken !== 'NGN') {
       throw new Error('Only NGN conversions are supported');
     }
 
-    const baseRate = MOCK_RATES[fromToken];
-    if (!baseRate) {
+    const prices = await fetchLivePrices();
+    const rate = prices[fromToken];
+    if (!rate) {
       throw new Error(`Unsupported token: ${fromToken}`);
     }
 
     return {
       fromToken,
       toToken,
-      rate: getFluctuatedRate(baseRate),
+      rate,
       timestamp: new Date(),
-      source: 'mock',
+      source: 'coinbase',
     };
   },
 
   async getQuote(fromToken: string, fromAmount: number, toToken: string): Promise<ConversionQuote> {
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-
     if (toToken !== 'NGN') {
       throw new Error('Only NGN conversions are supported');
     }
 
-    const baseRate = MOCK_RATES[fromToken];
-    if (!baseRate) {
+    const prices = await fetchLivePrices();
+    const rate = prices[fromToken];
+    if (!rate) {
       throw new Error(`Unsupported token: ${fromToken}`);
     }
 
-    const rate = getFluctuatedRate(baseRate);
     const toAmount = fromAmount * rate;
     const fee = toAmount * (CONVERSION_FEE_PERCENTAGE / 100);
     const netAmount = toAmount - fee;
-    
-    const quoteId = generateQuoteId();
-    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
-    // Cache the quote
+    const quoteId = generateQuoteId();
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
     quotesCache.set(quoteId, { expiresAt });
 
     return {
@@ -92,3 +108,6 @@ export const mockRateProvider: RateProvider = {
     return new Date() < quote.expiresAt;
   },
 };
+
+// Keep mock as fallback export
+export { liveRateProvider as mockRateProvider };

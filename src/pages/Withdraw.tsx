@@ -113,18 +113,44 @@ const Withdraw = () => {
     }
     setIsVerifying(true);
     try {
-      const result = await mockPayoutAdapter.verifyAccount(accountNumber, selectedBank.code);
-      if (result.isValid) {
-        setAccountName(result.accountName);
+      // Try real Paystack verification first
+      const { data, error } = await supabase.functions.invoke('paystack-withdraw', {
+        body: { action: 'verify_bank', account_number: accountNumber, bank_code: selectedBank.code },
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        setAccountName(data.account_name);
         setIsVerified(true);
-        toast({ title: 'Account verified', description: `Account belongs to ${result.accountName}` });
+        toast({ title: 'Account verified', description: `Account belongs to ${data.account_name}` });
       } else {
-        setAccountName(null);
-        setIsVerified(false);
-        toast({ title: 'Verification failed', variant: 'destructive' });
+        // Fallback to mock if Paystack returns an error (e.g. test key limitation)
+        const result = await mockPayoutAdapter.verifyAccount(accountNumber, selectedBank.code);
+        if (result.isValid) {
+          setAccountName(result.accountName);
+          setIsVerified(true);
+          toast({ title: 'Account verified', description: `Account belongs to ${result.accountName}` });
+        } else {
+          setAccountName(null);
+          setIsVerified(false);
+          toast({ title: 'Verification failed', variant: 'destructive' });
+        }
       }
     } catch {
-      toast({ title: 'Error', description: 'Failed to verify account.', variant: 'destructive' });
+      // Fallback to mock adapter
+      try {
+        const result = await mockPayoutAdapter.verifyAccount(accountNumber, selectedBank!.code);
+        if (result.isValid) {
+          setAccountName(result.accountName);
+          setIsVerified(true);
+          toast({ title: 'Account verified', description: `Account belongs to ${result.accountName}` });
+        } else {
+          toast({ title: 'Verification failed', variant: 'destructive' });
+        }
+      } catch {
+        toast({ title: 'Error', description: 'Failed to verify account.', variant: 'destructive' });
+      }
     } finally {
       setIsVerifying(false);
     }

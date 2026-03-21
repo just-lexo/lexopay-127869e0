@@ -8,7 +8,7 @@ export * from './banks/types';
 export * from './banks/payout.adapter';
 
 export * from './rates/types';
-export * from './rates/rate.adapter';
+export { liveRateProvider, liveRateProvider as mockRateProvider } from './rates/rate.adapter';
 
 export * from './deposits/types';
 
