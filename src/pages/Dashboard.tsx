@@ -268,6 +268,9 @@ const Dashboard = () => {
               </Button>
             </div>
 
+            {/* On-Chain Wallet Balances */}
+            <OnChainBalances />
+
             {/* Tip Card */}
             <TipCard />
 

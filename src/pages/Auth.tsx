@@ -259,6 +259,24 @@ const Auth = () => {
                     </Button>
                   </p>
                 </div>
+
+                {/* Wallet Connect Divider */}
+                <div className="mt-5 flex items-center gap-3">
+                  <Separator className="flex-1" />
+                  <span className="text-xs text-muted-foreground">or</span>
+                  <Separator className="flex-1" />
+                </div>
+
+                <div className="mt-4">
+                  <WalletConnectButton
+                    label="Sign in with Wallet"
+                    variant="outline"
+                    className="glass-card-hover border-border/50"
+                  />
+                  <p className="text-xs text-muted-foreground text-center mt-2">
+                    Connect MetaMask or a compatible wallet on Base
+                  </p>
+                </div>
               </CardContent>
             </>
           ) : (
