@@ -156,7 +156,7 @@ const Convert = () => {
               <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')}>
                 <ArrowLeft className="w-5 h-5" />
               </Button>
-              <h1 className="font-semibold">Conversion Complete</h1>
+              <h1 className="font-semibold">Conversion Submitted</h1>
             </div>
           </div>
         </header>
