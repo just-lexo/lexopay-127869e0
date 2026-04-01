@@ -88,18 +88,16 @@ const Convert = () => {
 
     setConverting(true);
     try {
-      const { data, error } = await supabase.rpc('convert_crypto_to_ngn', {
-        _token: selectedToken,
-        _network: 'base',
-        _amount: numAmount,
-        _rate: quote.rate,
-        _fee: quote.fee,
-        _net_ngn: quote.netAmount,
+      // Use delayed conversion - locks crypto, creates PROCESSING record
+      const result = await createDelayedConversion({
+        token: selectedToken,
+        network: 'base',
+        amount: numAmount,
+        estimatedRate: quote.rate,
+        estimatedFee: quote.fee,
+        estimatedNgn: quote.netAmount,
       });
 
-      if (error) throw error;
-
-      const result = data as { success: boolean; error?: string };
       if (!result.success) {
         toast({
           title: 'Conversion failed',
@@ -116,15 +114,18 @@ const Convert = () => {
       if (user) {
         await createNotification({
           userId: user.id,
-          type: 'conversion_completed',
-          title: 'Conversion Completed',
-          message: `You converted ${numAmount} ${selectedToken} to ₦${quote.netAmount.toLocaleString()}.`,
+          type: 'conversion_processing',
+          title: 'Conversion Processing',
+          message: `Your conversion of ${numAmount} ${selectedToken} is being processed. You'll be notified when complete.`,
         });
       }
 
+      // Trigger the background processor
+      triggerConversionProcessor().catch(console.error);
+
       toast({
-        title: 'Conversion successful!',
-        description: `${numAmount} ${selectedToken} → ₦${quote.netAmount.toLocaleString()}`,
+        title: 'Conversion submitted!',
+        description: 'Your conversion is being processed. NGN will be credited shortly.',
       });
     } catch (err) {
       console.error('Error converting:', err);
