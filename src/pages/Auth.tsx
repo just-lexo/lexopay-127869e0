@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Loader2, Mail, Lock, User, AtSign } from 'lucide-react';
 import { z } from 'zod';
+import { WalletConnectButton } from '@/components/WalletConnectButton';
+import { Separator } from '@/components/ui/separator';
 
 const emailSchema = z.string().email('Please enter a valid email address');
 const passwordSchema = z.string().min(6, 'Password must be at least 6 characters');
@@ -257,6 +259,24 @@ const Auth = () => {
                     >
                       {isLogin ? 'Sign up' : 'Sign in'}
                     </Button>
+                  </p>
+                </div>
+
+                {/* Wallet Connect Divider */}
+                <div className="mt-5 flex items-center gap-3">
+                  <Separator className="flex-1" />
+                  <span className="text-xs text-muted-foreground">or</span>
+                  <Separator className="flex-1" />
+                </div>
+
+                <div className="mt-4">
+                  <WalletConnectButton
+                    label="Sign in with Wallet"
+                    variant="outline"
+                    className="glass-card-hover border-border/50"
+                  />
+                  <p className="text-xs text-muted-foreground text-center mt-2">
+                    Connect MetaMask or a compatible wallet on Base
                   </p>
                 </div>
               </CardContent>

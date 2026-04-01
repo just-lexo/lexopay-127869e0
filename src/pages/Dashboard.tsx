@@ -5,6 +5,7 @@ import { useHideBalances } from '@/hooks/useHideBalances';
 import { RecentActivity } from '@/components/dashboard/RecentActivity';
 import { TipCard } from '@/components/dashboard/TipCard';
 import { PaymentRequests } from '@/components/dashboard/PaymentRequests';
+import { OnChainBalances } from '@/components/dashboard/OnChainBalances';
 import { TestModeBanner } from '@/components/TestModeBanner';
  import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
@@ -266,6 +267,9 @@ const Dashboard = () => {
                 <span className="font-medium text-xs">Transaction History</span>
               </Button>
             </div>
+
+            {/* On-Chain Wallet Balances */}
+            <OnChainBalances />
 
             {/* Tip Card */}
             <TipCard />

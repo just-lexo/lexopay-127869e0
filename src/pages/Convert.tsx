@@ -5,6 +5,7 @@ import { useHideBalances } from '@/hooks/useHideBalances';
 import { useWallets } from '@/hooks/useWallets';
 import { supabase } from '@/integrations/supabase/client';
 import { liveRateProvider, CONVERSION_FEE_PERCENTAGE, type ConversionQuote } from '@/adapters';
+import { createDelayedConversion, triggerConversionProcessor } from '@/services/conversionProcessor';
 import { createNotification } from '@/hooks/useNotifications';
 import { TestModeBanner } from '@/components/TestModeBanner';
  import { BottomNav } from '@/components/BottomNav';
@@ -87,18 +88,16 @@ const Convert = () => {
 
     setConverting(true);
     try {
-      const { data, error } = await supabase.rpc('convert_crypto_to_ngn', {
-        _token: selectedToken,
-        _network: 'base',
-        _amount: numAmount,
-        _rate: quote.rate,
-        _fee: quote.fee,
-        _net_ngn: quote.netAmount,
+      // Use delayed conversion - locks crypto, creates PROCESSING record
+      const result = await createDelayedConversion({
+        token: selectedToken,
+        network: 'base',
+        amount: numAmount,
+        estimatedRate: quote.rate,
+        estimatedFee: quote.fee,
+        estimatedNgn: quote.netAmount,
       });
 
-      if (error) throw error;
-
-      const result = data as { success: boolean; error?: string };
       if (!result.success) {
         toast({
           title: 'Conversion failed',
@@ -115,15 +114,18 @@ const Convert = () => {
       if (user) {
         await createNotification({
           userId: user.id,
-          type: 'conversion_completed',
-          title: 'Conversion Completed',
-          message: `You converted ${numAmount} ${selectedToken} to ₦${quote.netAmount.toLocaleString()}.`,
+          type: 'conversion_processing',
+          title: 'Conversion Processing',
+          message: `Your conversion of ${numAmount} ${selectedToken} is being processed. You'll be notified when complete.`,
         });
       }
 
+      // Trigger the background processor
+      triggerConversionProcessor().catch(console.error);
+
       toast({
-        title: 'Conversion successful!',
-        description: `${numAmount} ${selectedToken} → ₦${quote.netAmount.toLocaleString()}`,
+        title: 'Conversion submitted!',
+        description: 'Your conversion is being processed. NGN will be credited shortly.',
       });
     } catch (err) {
       console.error('Error converting:', err);
@@ -154,7 +156,7 @@ const Convert = () => {
               <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')}>
                 <ArrowLeft className="w-5 h-5" />
               </Button>
-              <h1 className="font-semibold">Conversion Complete</h1>
+              <h1 className="font-semibold">Conversion Submitted</h1>
             </div>
           </div>
         </header>
@@ -167,15 +169,18 @@ const Convert = () => {
               </div>
               
               <div>
-                <p className="text-muted-foreground mb-2">You converted</p>
+                <p className="text-muted-foreground mb-2">Converting</p>
                 <p className="text-2xl font-bold">{amount} {selectedToken}</p>
               </div>
 
               <ArrowDown className="w-6 h-6 text-muted-foreground mx-auto" />
 
               <div>
-                <p className="text-muted-foreground mb-2">You received</p>
+                <p className="text-muted-foreground mb-2">Estimated NGN</p>
                 <p className="text-3xl font-bold text-success">{formatNGN(quote.netAmount)}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Processing… this usually takes a few minutes.
+                </p>
               </div>
 
               <div className="p-4 rounded-lg bg-muted/50 text-left space-y-2">
@@ -402,7 +407,7 @@ const Convert = () => {
 
         {/* Info Note */}
         <p className="text-xs text-muted-foreground text-center">
-          Conversion is instant. NGN will be added to your wallet immediately.
+          Conversions are processed in the background. NGN will be credited once complete.
         </p>
       </main>
 
