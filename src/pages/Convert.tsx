@@ -5,6 +5,7 @@ import { useHideBalances } from '@/hooks/useHideBalances';
 import { useWallets } from '@/hooks/useWallets';
 import { supabase } from '@/integrations/supabase/client';
 import { liveRateProvider, CONVERSION_FEE_PERCENTAGE, type ConversionQuote } from '@/adapters';
+import { createDelayedConversion, triggerConversionProcessor } from '@/services/conversionProcessor';
 import { createNotification } from '@/hooks/useNotifications';
 import { TestModeBanner } from '@/components/TestModeBanner';
  import { BottomNav } from '@/components/BottomNav';
