@@ -169,15 +169,18 @@ const Convert = () => {
               </div>
               
               <div>
-                <p className="text-muted-foreground mb-2">You converted</p>
+                <p className="text-muted-foreground mb-2">Converting</p>
                 <p className="text-2xl font-bold">{amount} {selectedToken}</p>
               </div>
 
               <ArrowDown className="w-6 h-6 text-muted-foreground mx-auto" />
 
               <div>
-                <p className="text-muted-foreground mb-2">You received</p>
+                <p className="text-muted-foreground mb-2">Estimated NGN</p>
                 <p className="text-3xl font-bold text-success">{formatNGN(quote.netAmount)}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Processing… this usually takes a few minutes.
+                </p>
               </div>
 
               <div className="p-4 rounded-lg bg-muted/50 text-left space-y-2">
