@@ -407,7 +407,7 @@ const Convert = () => {
 
         {/* Info Note */}
         <p className="text-xs text-muted-foreground text-center">
-          Conversion is instant. NGN will be added to your wallet immediately.
+          Conversions are processed in the background. NGN will be credited once complete.
         </p>
       </main>
 
