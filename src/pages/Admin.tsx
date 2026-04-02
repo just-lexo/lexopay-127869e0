@@ -354,7 +354,6 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <TestModeBanner />
       
       {/* Header */}
       <header className="glass-card border-b border-border/50 sticky top-[33px] z-50">
