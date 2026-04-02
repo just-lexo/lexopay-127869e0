@@ -247,7 +247,7 @@ const Admin = () => {
     try {
       if (resetScope === 'all') {
         const { data, error } = await supabase.rpc('reset_all_users_data', {
-          _seed_balance: seedBalance,
+          _seed_balance: false,
         });
 
         if (error) throw error;
@@ -256,13 +256,11 @@ const Admin = () => {
 
         toast({
           title: 'All users reset',
-          description: seedBalance 
-            ? 'All balances reset and 100 USDT seeded for everyone.' 
-            : 'All user data cleared.',
+          description: 'All user data cleared.',
         });
       } else {
         const { data, error } = await supabase.rpc('reset_demo_data', {
-          _seed_balance: seedBalance,
+          _seed_balance: false,
         });
 
         if (error) throw error;
@@ -270,17 +268,15 @@ const Admin = () => {
         if (!result.success) throw new Error(result.error || 'Reset failed');
 
         toast({
-          title: 'Your demo data reset',
-          description: seedBalance 
-            ? 'Your balances reset and 100 USDT seeded.' 
-            : 'Your balances and transactions cleared.',
+          title: 'Data reset',
+          description: 'Your balances and transactions cleared.',
         });
       }
     } catch (err: any) {
-      console.error('Error resetting demo data:', err);
+      console.error('Error resetting data:', err);
       toast({
         title: 'Error',
-        description: err.message || 'Failed to reset demo data.',
+        description: err.message || 'Failed to reset data.',
         variant: 'destructive',
       });
     } finally {
