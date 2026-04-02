@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Wallet, Loader2 } from 'lucide-react';
@@ -10,6 +11,8 @@ interface WalletConnectButtonProps {
   variant?: 'default' | 'outline' | 'ghost';
   className?: string;
   label?: string;
+  /** If true, links wallet to current session instead of logging in */
+  linkMode?: boolean;
 }
 
 export const WalletConnectButton = ({
@@ -17,8 +20,10 @@ export const WalletConnectButton = ({
   variant = 'outline',
   className = '',
   label = 'Connect Wallet',
+  linkMode = false,
 }: WalletConnectButtonProps) => {
   const navigate = useNavigate();
+  const { user, refreshProfile } = useAuth();
   const { toast } = useToast();
   const [connecting, setConnecting] = useState(false);
 
@@ -35,7 +40,6 @@ export const WalletConnectButton = ({
 
     setConnecting(true);
     try {
-      // Request accounts
       const accounts: string[] = await ethereum.request({
         method: 'eth_requestAccounts',
       });
@@ -47,7 +51,6 @@ export const WalletConnectButton = ({
 
       const address = accounts[0];
 
-      // Request signature for authentication
       const message = `Sign in to LexoPay with wallet: ${address}\nTimestamp: ${Date.now()}`;
       const signature = await ethereum.request({
         method: 'personal_sign',
@@ -59,10 +62,16 @@ export const WalletConnectButton = ({
         return;
       }
 
-      // Call wallet-auth edge function
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
       const url = `https://${projectId}.supabase.co/functions/v1/wallet-auth`;
+
+      const body: Record<string, string> = { address, signature, message };
+      
+      // If linking to existing session, pass user_id
+      if (linkMode && user) {
+        body.linkToSession = user.id;
+      }
 
       const res = await fetch(url, {
         method: 'POST',
@@ -71,13 +80,21 @@ export const WalletConnectButton = ({
           'Authorization': `Bearer ${anonKey}`,
           'apikey': anonKey,
         },
-        body: JSON.stringify({ address, signature, message }),
+        body: JSON.stringify(body),
       });
 
       const data = await res.json();
 
       if (!res.ok || !data.success) {
         throw new Error(data.error || 'Authentication failed');
+      }
+
+      if (data.linked) {
+        // Wallet was linked to existing account
+        await refreshProfile();
+        toast({ title: 'Wallet linked!', description: 'Your wallet has been connected to your account.' });
+        onSuccess?.();
+        return;
       }
 
       // Set the session from the response
@@ -89,9 +106,7 @@ export const WalletConnectButton = ({
 
         toast({
           title: data.isNewUser ? 'Welcome to LexoPay!' : 'Welcome back!',
-          description: data.isNewUser
-            ? 'Your wallet account has been created.'
-            : 'Signed in with wallet.',
+          description: data.isNewUser ? 'Please complete your profile setup.' : 'Signed in with wallet.',
         });
 
         if (onSuccess) {

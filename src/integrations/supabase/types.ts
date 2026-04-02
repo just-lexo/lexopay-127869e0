@@ -358,6 +358,7 @@ export type Database = {
           id: string
           is_admin: boolean
           kyc_tier: number
+          onboarding_completed: boolean
           updated_at: string
           user_id: string
           username: string | null
@@ -370,6 +371,7 @@ export type Database = {
           id?: string
           is_admin?: boolean
           kyc_tier?: number
+          onboarding_completed?: boolean
           updated_at?: string
           user_id: string
           username?: string | null
@@ -382,6 +384,7 @@ export type Database = {
           id?: string
           is_admin?: boolean
           kyc_tier?: number
+          onboarding_completed?: boolean
           updated_at?: string
           user_id?: string
           username?: string | null

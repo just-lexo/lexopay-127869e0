@@ -13,7 +13,16 @@ export const OnChainBalances = () => {
   const { balances, loading, refetch } = useOnChainBalances(walletAddress);
   const [showOther, setShowOther] = useState(false);
 
-  if (!walletAddress) return null;
+  if (!walletAddress) {
+    return (
+      <Card className="glass-card border-border/30">
+        <CardContent className="py-4 text-center">
+          <Wallet className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground">Connect wallet to view balance</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const mainTokens = balances.filter((b) => CONVERTIBLE_TOKENS.includes(b.token));
   const otherTokens = balances.filter((b) => !CONVERTIBLE_TOKENS.includes(b.token));
@@ -55,11 +64,10 @@ export const OnChainBalances = () => {
           </div>
         ) : balances.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-4">
-            No tokens found in this wallet.
+            No assets found
           </p>
         ) : (
           <>
-            {/* Main convertible tokens */}
             {mainTokens.map((token) => (
               <div
                 key={token.token}
@@ -78,7 +86,7 @@ export const OnChainBalances = () => {
                 </div>
                 <div className="flex items-center gap-3">
                   <p className="font-mono font-medium">
-                    {parseFloat(token.balance).toFixed(token.token === 'ETH' ? 6 : 2)}
+                    {parseFloat(token.balance).toFixed(token.token === 'ETH' ? 4 : 2)}
                   </p>
                   <Button
                     size="sm"
@@ -92,7 +100,6 @@ export const OnChainBalances = () => {
               </div>
             ))}
 
-            {/* Other assets toggle */}
             {otherTokens.length > 0 && (
               <>
                 <button
@@ -100,11 +107,7 @@ export const OnChainBalances = () => {
                   onClick={() => setShowOther(!showOther)}
                 >
                   <span>Other Assets ({otherTokens.length})</span>
-                  {showOther ? (
-                    <ChevronUp className="w-4 h-4" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4" />
-                  )}
+                  {showOther ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 </button>
                 {showOther &&
                   otherTokens.map((token) => (
@@ -120,7 +123,7 @@ export const OnChainBalances = () => {
                         </div>
                         <div>
                           <p className="font-medium text-sm">{token.token}</p>
-                          <p className="text-xs text-muted-foreground">View only</p>
+                          <p className="text-xs text-muted-foreground">Not convertible</p>
                         </div>
                       </div>
                       <p className="font-mono text-sm text-muted-foreground">

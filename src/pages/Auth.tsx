@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -24,11 +24,12 @@ const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirectTo = searchParams.get('redirect') || '/dashboard';
+  const stepParam = searchParams.get('step');
   const { signUp, signIn, updateProfile, user, profile } = useAuth();
   const { toast } = useToast();
   
   const [isLogin, setIsLogin] = useState(true);
-  const [step, setStep] = useState<AuthStep>('auth');
+  const [step, setStep] = useState<AuthStep>(stepParam === 'setup' ? 'profile-setup' : 'auth');
   const [loading, setLoading] = useState(false);
   
   // Auth form
@@ -39,43 +40,31 @@ const Auth = () => {
   const [username, setUsername] = useState('');
   const [displayName, setDisplayName] = useState('');
 
-  // If user is logged in and has username, redirect to dashboard
-  if (user && profile?.username) {
-    navigate(redirectTo);
-    return null;
-  }
-
-  // If user is logged in but no username, show profile setup
-  if (user && !profile?.username && step === 'auth') {
-    setStep('profile-setup');
-  }
+  // Redirect if user is fully set up
+  useEffect(() => {
+    if (user && profile?.username && profile?.onboarding_completed) {
+      navigate(redirectTo, { replace: true });
+    } else if (user && (!profile?.username || !profile?.onboarding_completed)) {
+      setStep('profile-setup');
+    }
+  }, [user, profile, navigate, redirectTo]);
 
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate inputs
     const emailResult = emailSchema.safeParse(email);
     if (!emailResult.success) {
-      toast({
-        title: 'Invalid email',
-        description: emailResult.error.errors[0].message,
-        variant: 'destructive',
-      });
+      toast({ title: 'Invalid email', description: emailResult.error.errors[0].message, variant: 'destructive' });
       return;
     }
 
     const passwordResult = passwordSchema.safeParse(password);
     if (!passwordResult.success) {
-      toast({
-        title: 'Invalid password',
-        description: passwordResult.error.errors[0].message,
-        variant: 'destructive',
-      });
+      toast({ title: 'Invalid password', description: passwordResult.error.errors[0].message, variant: 'destructive' });
       return;
     }
 
     setLoading(true);
-
     try {
       if (isLogin) {
         const { error } = await signIn(email, password);
@@ -84,11 +73,7 @@ const Auth = () => {
           if (message.includes('Invalid login credentials')) {
             message = 'Invalid email or password. Please try again.';
           }
-          toast({
-            title: 'Login failed',
-            description: message,
-            variant: 'destructive',
-          });
+          toast({ title: 'Login failed', description: message, variant: 'destructive' });
         }
       } else {
         const { error } = await signUp(email, password);
@@ -97,16 +82,9 @@ const Auth = () => {
           if (message.includes('User already registered')) {
             message = 'This email is already registered. Please login instead.';
           }
-          toast({
-            title: 'Sign up failed',
-            description: message,
-            variant: 'destructive',
-          });
+          toast({ title: 'Sign up failed', description: message, variant: 'destructive' });
         } else {
-          toast({
-            title: 'Account created!',
-            description: 'Please set up your profile.',
-          });
+          toast({ title: 'Account created!', description: 'Please set up your profile.' });
           setStep('profile-setup');
         }
       }
@@ -118,32 +96,23 @@ const Auth = () => {
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate username
     const usernameResult = usernameSchema.safeParse(username);
     if (!usernameResult.success) {
-      toast({
-        title: 'Invalid username',
-        description: usernameResult.error.errors[0].message,
-        variant: 'destructive',
-      });
+      toast({ title: 'Invalid username', description: usernameResult.error.errors[0].message, variant: 'destructive' });
       return;
     }
 
     if (!displayName.trim()) {
-      toast({
-        title: 'Display name required',
-        description: 'Please enter a display name.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Display name required', description: 'Please enter a display name.', variant: 'destructive' });
       return;
     }
 
     setLoading(true);
-
     try {
       const { error } = await updateProfile({
         username: username.toLowerCase(),
         display_name: displayName.trim(),
+        onboarding_completed: true,
       });
 
       if (error) {
@@ -151,26 +120,39 @@ const Auth = () => {
         if (message.includes('duplicate key') || message.includes('unique')) {
           message = 'This username is already taken. Please choose another.';
         }
-        toast({
-          title: 'Profile update failed',
-          description: message,
-          variant: 'destructive',
-        });
+        toast({ title: 'Profile update failed', description: message, variant: 'destructive' });
       } else {
-        toast({
-          title: 'Welcome to LexoPay!',
-          description: 'Your profile has been set up.',
-        });
-        navigate(redirectTo);
+        toast({ title: 'Welcome to LexoPay!', description: 'Your profile has been set up.' });
+        navigate(redirectTo, { replace: true });
       }
     } finally {
       setLoading(false);
     }
   };
 
+  const handleSkipSetup = async () => {
+    setLoading(true);
+    try {
+      // Generate a default username if not set
+      const defaultUsername = `user_${Date.now().toString(36)}`;
+      await updateProfile({
+        username: profile?.username || defaultUsername,
+        display_name: profile?.display_name || 'LexoPay User',
+        onboarding_completed: true,
+      });
+      navigate(redirectTo, { replace: true });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Don't render auth form if already logged in and on setup step
+  if (user && step === 'auth') {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
       <header className="p-3">
         <Button
           variant="ghost"
@@ -184,7 +166,6 @@ const Auth = () => {
         </Button>
       </header>
 
-      {/* Main Content */}
       <main className="flex-1 flex items-center justify-center p-4">
         <Card className="w-full max-w-sm glass-card border-border/50">
           {step === 'auth' ? (
@@ -208,15 +189,7 @@ const Auth = () => {
                     <Label htmlFor="email">Email</Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="you@example.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="pl-10"
-                        required
-                      />
+                      <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} className="pl-10" required />
                     </div>
                   </div>
                   
@@ -224,45 +197,24 @@ const Auth = () => {
                     <Label htmlFor="password">Password</Label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="password"
-                        type="password"
-                        placeholder="••••••••"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="pl-10"
-                        required
-                      />
+                      <Input id="password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="pl-10" required />
                     </div>
                   </div>
 
-                  <Button 
-                    type="submit" 
-                    className="w-full min-h-[48px] gradient-primary hover:opacity-90"
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      isLogin ? 'Sign In' : 'Create Account'
-                    )}
+                  <Button type="submit" className="w-full min-h-[48px] gradient-primary hover:opacity-90" disabled={loading}>
+                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : isLogin ? 'Sign In' : 'Create Account'}
                   </Button>
                 </form>
 
                 <div className="mt-4 text-center">
                   <p className="text-xs text-muted-foreground">
                     {isLogin ? "Don't have an account?" : "Already have an account?"}
-                    <Button
-                      variant="link"
-                      className="pl-1 text-primary text-xs h-auto py-0"
-                      onClick={() => setIsLogin(!isLogin)}
-                    >
+                    <Button variant="link" className="pl-1 text-primary text-xs h-auto py-0" onClick={() => setIsLogin(!isLogin)}>
                       {isLogin ? 'Sign up' : 'Sign in'}
                     </Button>
                   </p>
                 </div>
 
-                {/* Wallet Connect Divider */}
                 <div className="mt-5 flex items-center gap-3">
                   <Separator className="flex-1" />
                   <span className="text-xs text-muted-foreground">or</span>
@@ -270,11 +222,7 @@ const Auth = () => {
                 </div>
 
                 <div className="mt-4">
-                  <WalletConnectButton
-                    label="Sign in with Wallet"
-                    variant="outline"
-                    className="glass-card-hover border-border/50"
-                  />
+                  <WalletConnectButton label="Sign in with Wallet" variant="outline" className="glass-card-hover border-border/50" />
                   <p className="text-xs text-muted-foreground text-center mt-2">
                     Connect MetaMask or a compatible wallet on Base
                   </p>
@@ -298,47 +246,25 @@ const Auth = () => {
                     <Label htmlFor="username">Username</Label>
                     <div className="relative">
                       <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="username"
-                        type="text"
-                        placeholder="johndoe"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value.toLowerCase())}
-                        className="pl-10"
-                        required
-                      />
+                      <Input id="username" type="text" placeholder="johndoe" value={username} onChange={(e) => setUsername(e.target.value.toLowerCase())} className="pl-10" required />
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      Letters, numbers, and underscores only
-                    </p>
+                    <p className="text-xs text-muted-foreground">Letters, numbers, and underscores only</p>
                   </div>
                   
                   <div className="space-y-2">
                     <Label htmlFor="displayName">Display Name</Label>
                     <div className="relative">
                       <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="displayName"
-                        type="text"
-                        placeholder="John Doe"
-                        value={displayName}
-                        onChange={(e) => setDisplayName(e.target.value)}
-                        className="pl-10"
-                        required
-                      />
+                      <Input id="displayName" type="text" placeholder="John Doe" value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="pl-10" required />
                     </div>
                   </div>
 
-                  <Button 
-                    type="submit" 
-                    className="w-full min-h-[48px] gradient-primary hover:opacity-90"
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      'Complete Setup'
-                    )}
+                  <Button type="submit" className="w-full min-h-[48px] gradient-primary hover:opacity-90" disabled={loading}>
+                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Complete Setup'}
+                  </Button>
+
+                  <Button type="button" variant="ghost" className="w-full text-xs text-muted-foreground" onClick={handleSkipSetup} disabled={loading}>
+                    Skip for now
                   </Button>
                 </form>
               </CardContent>

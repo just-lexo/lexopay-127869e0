@@ -13,7 +13,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { address, signature, message } = await req.json();
+    const { address, signature, message, linkToSession } = await req.json();
 
     if (!address || !signature || !message) {
       return new Response(
@@ -44,32 +44,65 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
+    const normalizedAddress = address.toLowerCase();
+
     // Check if a profile with this wallet_address already exists
     const { data: existingProfile } = await supabase
       .from("profiles")
       .select("user_id")
-      .eq("wallet_address", address.toLowerCase())
+      .eq("wallet_address", normalizedAddress)
       .maybeSingle();
 
+    // CASE B: User is already logged in, link wallet to their account
+    if (linkToSession) {
+      // linkToSession contains the user_id of the currently logged-in user
+      if (existingProfile) {
+        if (existingProfile.user_id === linkToSession) {
+          return new Response(
+            JSON.stringify({ success: true, linked: true, message: "Wallet already linked to your account" }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        return new Response(
+          JSON.stringify({ error: "This wallet is already linked to another account" }),
+          { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Link wallet to existing user
+      await supabase
+        .from("profiles")
+        .update({
+          wallet_address: normalizedAddress,
+          wallet_connected_at: new Date().toISOString(),
+        })
+        .eq("user_id", linkToSession);
+
+      return new Response(
+        JSON.stringify({ success: true, linked: true }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // CASE A: Wallet exists → log into that user
     let userId: string;
     let isNewUser = false;
 
     if (existingProfile) {
       userId = existingProfile.user_id;
     } else {
-      // Create a new user with a generated email
-      const walletEmail = `${address.toLowerCase()}@wallet.lexopay.app`;
+      // CASE C: New wallet, no session → create new user
+      const walletEmail = `${normalizedAddress}@wallet.lexopay.app`;
       const walletPassword = crypto.randomUUID() + crypto.randomUUID();
 
       const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
         email: walletEmail,
         password: walletPassword,
         email_confirm: true,
-        user_metadata: { wallet_address: address.toLowerCase() },
+        user_metadata: { wallet_address: normalizedAddress },
       });
 
       if (createError) {
-        // If user already exists with this email (edge case), find them
         if (createError.message?.includes("already been registered")) {
           const { data: { users } } = await supabase.auth.admin.listUsers();
           const found = users?.find((u: any) => u.email === walletEmail);
@@ -90,10 +123,11 @@ Deno.serve(async (req) => {
       await supabase
         .from("profiles")
         .update({
-          wallet_address: address.toLowerCase(),
+          wallet_address: normalizedAddress,
           wallet_connected_at: new Date().toISOString(),
-          username: isNewUser ? `wallet_${address.slice(2, 8).toLowerCase()}` : undefined,
+          username: isNewUser ? `wallet_${normalizedAddress.slice(2, 8)}` : undefined,
           display_name: isNewUser ? `${address.slice(0, 6)}...${address.slice(-4)}` : undefined,
+          onboarding_completed: isNewUser ? false : undefined,
         })
         .eq("user_id", userId!);
     }
@@ -101,14 +135,10 @@ Deno.serve(async (req) => {
     // Generate a magic link token for the user
     const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
       type: "magiclink",
-      email: `${address.toLowerCase()}@wallet.lexopay.app`,
+      email: `${normalizedAddress}@wallet.lexopay.app`,
     });
 
     if (linkError) throw linkError;
-
-    // Extract the token from the link
-    const url = new URL(linkData.properties.action_link);
-    const token = url.searchParams.get("token") || url.hash?.split("access_token=")[1];
 
     // Use OTP verification to get a session
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
