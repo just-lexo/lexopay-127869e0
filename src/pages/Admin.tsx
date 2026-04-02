@@ -556,19 +556,18 @@ const Admin = () => {
               </CardContent>
             </Card>
 
-            {/* Demo Reset */}
-            <Card className="glass-card border-warning/30 bg-warning/5">
+            {/* Data Management */}
+            <Card className="glass-card border-border/50">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
                   <RefreshCw className="w-4 h-4" />
-                  Reset Demo Data
+                  Data Management
                 </CardTitle>
                 <CardDescription>
-                  Clear balances, transactions, deposits, conversions, and withdrawals.
+                  Reset user balances and transaction history.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Scope Selection */}
                 <div className="space-y-2">
                   <Label className="text-xs">Reset Scope</Label>
                   <Select value={resetScope} onValueChange={(v) => setResetScope(v as 'self' | 'all')}>
@@ -580,16 +579,6 @@ const Admin = () => {
                       <SelectItem value="all">All users (global)</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
-
-                <div className="flex items-center justify-between p-3 rounded-lg bg-background/50">
-                  <div>
-                    <p className="text-sm font-medium">Seed demo balance</p>
-                    <p className="text-xs text-muted-foreground">
-                      Credit 100 USDT after reset {resetScope === 'all' ? '(to all users)' : ''}
-                    </p>
-                  </div>
-                  <Switch checked={seedBalance} onCheckedChange={setSeedBalance} />
                 </div>
 
                 <AlertDialog>
@@ -608,26 +597,21 @@ const Admin = () => {
                   <AlertDialogContent className="glass-card max-w-[90vw] sm:max-w-md">
                     <AlertDialogHeader>
                       <AlertDialogTitle>
-                        {resetScope === 'all' ? '⚠️ Reset ALL Users?' : 'Reset Demo Data?'}
+                        {resetScope === 'all' ? '⚠️ Reset ALL Users?' : 'Reset Data?'}
                       </AlertDialogTitle>
                       <AlertDialogDescription>
                         {resetScope === 'all' ? (
                           <>
-                            <strong className="text-destructive">This will reset ALL users' demo data:</strong>
+                            <strong className="text-destructive">This will reset ALL users' data:</strong>
                             <ul className="list-disc list-inside mt-2 space-y-1 text-sm">
                               <li>All crypto and NGN balances set to 0</li>
                               <li>All transactions deleted</li>
                               <li>All deposits, conversions, withdrawals cleared</li>
-                              {seedBalance && <li>100 USDT will be credited to everyone</li>}
                             </ul>
                             <p className="mt-3 font-medium">This action cannot be undone.</p>
                           </>
                         ) : (
-                          <>
-                            This will clear your balances, transactions, deposits, conversions, and withdrawals.
-                            {seedBalance && ' 100 USDT will be credited after reset.'}
-                            {' '}This action cannot be undone.
-                          </>
+                          'This will clear your balances, transactions, deposits, conversions, and withdrawals. This action cannot be undone.'
                         )}
                       </AlertDialogDescription>
                     </AlertDialogHeader>
