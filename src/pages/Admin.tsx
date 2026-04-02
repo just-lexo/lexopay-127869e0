@@ -75,7 +75,7 @@ const Admin = () => {
   const [loading, setLoading] = useState(true);
   const [addingEntry, setAddingEntry] = useState(false);
   const [resetting, setResetting] = useState(false);
-  const [seedBalance, setSeedBalance] = useState(false);
+  
   const [resetScope, setResetScope] = useState<'self' | 'all'>('self');
   const [processingRequest, setProcessingRequest] = useState<string | null>(null);
 
