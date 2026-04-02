@@ -6,8 +6,7 @@ import { RecentActivity } from '@/components/dashboard/RecentActivity';
 import { TipCard } from '@/components/dashboard/TipCard';
 import { PaymentRequests } from '@/components/dashboard/PaymentRequests';
 import { OnChainBalances } from '@/components/dashboard/OnChainBalances';
-import { TestModeBanner } from '@/components/TestModeBanner';
- import { BottomNav } from '@/components/BottomNav';
+import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -32,18 +31,6 @@ const Dashboard = () => {
   const { cryptoBalances, ngnBalance, loading } = useWallets();
   const { hidden, toggle, mask } = useHideBalances();
 
-  const getKYCBadge = (tier: number) => {
-    const tiers = [
-      { label: 'Unverified', variant: 'outline' as const },
-      { label: 'Basic', variant: 'secondary' as const },
-      { label: 'Verified', variant: 'default' as const },
-      { label: 'Premium', variant: 'default' as const },
-    ];
-    return tiers[tier] || tiers[0];
-  };
-
-  const kycBadge = getKYCBadge(profile?.kyc_tier ?? 0);
-
   const formatCurrency = (amount: number, currency: string = 'NGN') => {
     if (currency === 'NGN') {
       return new Intl.NumberFormat('en-NG', {
@@ -59,10 +46,8 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <TestModeBanner />
-      
       {/* Header */}
-      <header className="glass-card border-b border-border/50 sticky top-[41px] z-50">
+      <header className="glass-card border-b border-border/50 sticky top-0 z-50">
         <div className="container max-w-lg mx-auto px-4 py-3">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -82,10 +67,6 @@ const Dashboard = () => {
                   ADMIN
                 </Badge>
               )}
-              <Badge variant={kycBadge.variant} className="gap-1 text-[10px] px-1.5 py-0.5 hidden sm:inline-flex">
-                <Shield className="w-2.5 h-2.5" />
-                {kycBadge.label}
-              </Badge>
             </div>
           </div>
         </div>
@@ -111,7 +92,7 @@ const Dashboard = () => {
                       </div>
                       <div>
                         <CardTitle className="text-base">Crypto Wallet</CardTitle>
-                        <p className="text-xs text-muted-foreground">Your raw holdings</p>
+                        <p className="text-xs text-muted-foreground">Your holdings</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -150,7 +131,7 @@ const Dashboard = () => {
                     })
                   ) : (
                     <div className="text-center py-4 text-muted-foreground text-sm">
-                      No crypto balances yet. Deposit to get started!
+                      No assets found
                     </div>
                   )}
                   {cryptoBalances.length > 0 && cryptoBalances.every(b => b.balance === 0) && (
@@ -201,70 +182,46 @@ const Dashboard = () => {
 
             {/* Quick Actions */}
             <div className="grid grid-cols-3 gap-2">
-              <Button
-                variant="outline"
-                className="h-auto py-3 flex-col gap-1.5 glass-card-hover border-border/50 min-h-[72px]"
-                onClick={() => navigate('/deposit')}
-              >
+              <Button variant="outline" className="h-auto py-3 flex-col gap-1.5 glass-card-hover border-border/50 min-h-[72px]" onClick={() => navigate('/deposit')}>
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                   <ArrowDownToLine className="w-4 h-4 text-primary" />
                 </div>
                 <span className="font-medium text-xs">Deposit</span>
               </Button>
 
-              <Button
-                variant="outline"
-                className="h-auto py-3 flex-col gap-1.5 glass-card-hover border-border/50 min-h-[72px]"
-                onClick={() => navigate('/send')}
-              >
+              <Button variant="outline" className="h-auto py-3 flex-col gap-1.5 glass-card-hover border-border/50 min-h-[72px]" onClick={() => navigate('/send')}>
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                   <Send className="w-4 h-4 text-primary" />
                 </div>
                 <span className="font-medium text-xs">Send</span>
               </Button>
 
-              <Button
-                variant="outline"
-                className="h-auto py-3 flex-col gap-1.5 glass-card-hover border-border/50 min-h-[72px]"
-                onClick={() => navigate('/convert')}
-              >
+              <Button variant="outline" className="h-auto py-3 flex-col gap-1.5 glass-card-hover border-border/50 min-h-[72px]" onClick={() => navigate('/convert')}>
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                   <RefreshCw className="w-4 h-4 text-primary" />
                 </div>
                 <span className="font-medium text-xs">Convert</span>
               </Button>
 
-              <Button
-                variant="outline"
-                className="h-auto py-3 flex-col gap-1.5 glass-card-hover border-border/50 min-h-[72px]"
-                onClick={() => navigate('/withdraw')}
-              >
+              <Button variant="outline" className="h-auto py-3 flex-col gap-1.5 glass-card-hover border-border/50 min-h-[72px]" onClick={() => navigate('/withdraw')}>
                 <div className="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center">
                   <ArrowUpFromLine className="w-4 h-4 text-success" />
                 </div>
                 <span className="font-medium text-xs">Withdraw</span>
               </Button>
 
-              <Button
-                variant="outline"
-                className="h-auto py-3 flex-col gap-1.5 glass-card-hover border-border/50 min-h-[72px]"
-                onClick={() => navigate('/request')}
-              >
+              <Button variant="outline" className="h-auto py-3 flex-col gap-1.5 glass-card-hover border-border/50 min-h-[72px]" onClick={() => navigate('/request')}>
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                   <HandCoins className="w-4 h-4 text-primary" />
                 </div>
                 <span className="font-medium text-xs">Request</span>
               </Button>
 
-              <Button
-                variant="outline"
-                className="h-auto py-3 flex-col gap-1.5 glass-card-hover border-border/50 col-span-2 min-h-[72px]"
-                onClick={() => navigate('/transactions')}
-              >
+              <Button variant="outline" className="h-auto py-3 flex-col gap-1.5 glass-card-hover border-border/50 min-h-[72px]" onClick={() => navigate('/transactions')}>
                 <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
                   <History className="w-4 h-4 text-muted-foreground" />
                 </div>
-                <span className="font-medium text-xs">Transaction History</span>
+                <span className="font-medium text-xs">History</span>
               </Button>
             </div>
 
@@ -279,7 +236,6 @@ const Dashboard = () => {
 
             {/* Recent Activity */}
             <RecentActivity />
-
           </>
         )}
       </main>

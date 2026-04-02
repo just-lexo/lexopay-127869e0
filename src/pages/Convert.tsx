@@ -3,17 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useHideBalances } from '@/hooks/useHideBalances';
 import { useWallets } from '@/hooks/useWallets';
-import { supabase } from '@/integrations/supabase/client';
 import { liveRateProvider, CONVERSION_FEE_PERCENTAGE, type ConversionQuote } from '@/adapters';
 import { createDelayedConversion, triggerConversionProcessor } from '@/services/conversionProcessor';
 import { createNotification } from '@/hooks/useNotifications';
-import { TestModeBanner } from '@/components/TestModeBanner';
- import { BottomNav } from '@/components/BottomNav';
+import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { 
   ArrowLeft, 
@@ -21,14 +18,16 @@ import {
   RefreshCw,
   ArrowDown,
   Check,
-  AlertCircle,
-  Info
+  Info,
+  Clock,
+  CheckCircle2,
+  Wallet,
 } from 'lucide-react';
 
 const Convert = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { cryptoBalances, ngnBalance, refetch, cryptoWalletId, ngnWalletId } = useWallets();
+  const { cryptoBalances, refetch, cryptoWalletId, ngnWalletId } = useWallets();
   const { mask } = useHideBalances();
   const { toast } = useToast();
 
@@ -44,7 +43,6 @@ const Convert = () => {
   );
   const availableBalance = selectedBalance?.balance ?? 0;
 
-  // Fetch quote when amount changes
   useEffect(() => {
     const fetchQuote = async () => {
       const numAmount = parseFloat(amount);
@@ -88,7 +86,6 @@ const Convert = () => {
 
     setConverting(true);
     try {
-      // Use delayed conversion - locks crypto, creates PROCESSING record
       const result = await createDelayedConversion({
         token: selectedToken,
         network: 'base',
@@ -110,23 +107,16 @@ const Convert = () => {
       setShowSuccess(true);
       await refetch();
 
-      // Create notification
       if (user) {
         await createNotification({
           userId: user.id,
           type: 'conversion_processing',
           title: 'Conversion Processing',
-          message: `Your conversion of ${numAmount} ${selectedToken} is being processed. You'll be notified when complete.`,
+          message: `Your conversion of ${numAmount} ${selectedToken} is being processed.`,
         });
       }
 
-      // Trigger the background processor
       triggerConversionProcessor().catch(console.error);
-
-      toast({
-        title: 'Conversion submitted!',
-        description: 'Your conversion is being processed. NGN will be credited shortly.',
-      });
     } catch (err) {
       console.error('Error converting:', err);
       toast({
@@ -173,25 +163,28 @@ const Convert = () => {
                 <p className="text-2xl font-bold">{amount} {selectedToken}</p>
               </div>
 
-              <ArrowDown className="w-6 h-6 text-muted-foreground mx-auto" />
-
-              <div>
-                <p className="text-muted-foreground mb-2">Estimated NGN</p>
-                <p className="text-3xl font-bold text-success">{formatNGN(quote.netAmount)}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Processing… this usually takes a few minutes.
-                </p>
+              {/* Progress Steps */}
+              <div className="space-y-3 text-left px-4">
+                <div className="flex items-center gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-success shrink-0" />
+                  <span className="text-sm">Deposit confirmed</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Clock className="w-5 h-5 text-primary animate-pulse shrink-0" />
+                  <span className="text-sm">Converting to NGN…</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Wallet className="w-5 h-5 text-muted-foreground shrink-0" />
+                  <span className="text-sm text-muted-foreground">Crediting wallet</span>
+                </div>
               </div>
 
-              <div className="p-4 rounded-lg bg-muted/50 text-left space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Rate</span>
-                  <span>{formatNGN(quote.rate)} / {selectedToken}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Fee ({CONVERSION_FEE_PERCENTAGE}%)</span>
-                  <span>{formatNGN(quote.fee)}</span>
-                </div>
+              <div>
+                <p className="text-muted-foreground mb-1 text-sm">Estimated NGN</p>
+                <p className="text-2xl font-bold text-success">{formatNGN(quote.netAmount)}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Usually takes a few minutes
+                </p>
               </div>
 
               <div className="flex gap-3">
@@ -222,10 +215,8 @@ const Convert = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <TestModeBanner />
-      
       {/* Header */}
-      <header className="glass-card border-b border-border/50 sticky top-[33px] z-50">
+      <header className="glass-card border-b border-border/50 sticky top-0 z-50">
         <div className="container max-w-lg mx-auto px-4 py-3">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => navigate('/dashboard')}>
@@ -245,18 +236,12 @@ const Convert = () => {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-base">From</CardTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-primary h-auto py-1"
-                onClick={handleMaxClick}
-              >
+              <Button variant="ghost" size="sm" className="text-primary h-auto py-1" onClick={handleMaxClick}>
                 Max
               </Button>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Token Selector */}
             <div className="flex gap-2">
               {cryptoBalances.map((balance) => (
                 <Button
@@ -270,7 +255,6 @@ const Convert = () => {
               ))}
             </div>
 
-            {/* Amount Input */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="amount">Amount</Label>
@@ -290,7 +274,6 @@ const Convert = () => {
           </CardContent>
         </Card>
 
-        {/* Arrow */}
         <div className="flex justify-center">
           <div className="w-10 h-10 rounded-full glass-card flex items-center justify-center">
             <ArrowDown className="w-5 h-5 text-primary" />
@@ -314,9 +297,7 @@ const Convert = () => {
                 {loading ? (
                   <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
                 ) : quote ? (
-                  <p className="text-xl font-mono font-medium">
-                    {formatNGN(quote.netAmount)}
-                  </p>
+                  <p className="text-xl font-mono font-medium">{formatNGN(quote.netAmount)}</p>
                 ) : (
                   <p className="text-xl font-mono text-muted-foreground">₦0.00</p>
                 )}
@@ -330,38 +311,25 @@ const Convert = () => {
           <Card className="glass-card border-border/50">
             <CardContent className="py-4 space-y-3">
               <div className="flex items-center justify-between text-sm">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <RefreshCw className="w-3 h-3" />
-                  <span>Exchange Rate</span>
-                </div>
-                <span className="font-mono">
-                  1 {selectedToken} = {formatNGN(quote.rate)}
-                </span>
+                <span className="text-muted-foreground">Rate</span>
+                <span className="font-mono">1 {selectedToken} = {formatNGN(quote.rate)}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Info className="w-3 h-3" />
-                  <span>Fee ({CONVERSION_FEE_PERCENTAGE}%)</span>
-                </div>
+                <span className="text-muted-foreground">Fee ({CONVERSION_FEE_PERCENTAGE}%)</span>
                 <span className="font-mono">{formatNGN(quote.fee)}</span>
               </div>
               <div className="border-t border-border pt-3 flex items-center justify-between">
                 <span className="font-medium">You receive</span>
-                <span className="font-mono font-bold text-success">
-                  {formatNGN(quote.netAmount)}
-                </span>
+                <span className="font-mono font-bold text-success">{formatNGN(quote.netAmount)}</span>
               </div>
             </CardContent>
           </Card>
         )}
 
-        {/* Helper Text - show when conversion is not possible */}
         {availableBalance === 0 && (
           <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 border border-border">
             <Info className="w-4 h-4 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">
-              Deposit crypto to enable conversion.
-            </p>
+            <p className="text-sm text-muted-foreground">Deposit crypto to enable conversion.</p>
           </div>
         )}
 
@@ -405,7 +373,6 @@ const Convert = () => {
           );
         })()}
 
-        {/* Info Note */}
         <p className="text-xs text-muted-foreground text-center">
           Conversions are processed in the background. NGN will be credited once complete.
         </p>

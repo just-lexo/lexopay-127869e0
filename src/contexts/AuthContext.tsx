@@ -10,6 +10,7 @@ interface Profile {
   kyc_tier: number;
   is_admin: boolean;
   wallet_address: string | null;
+  onboarding_completed: boolean;
 }
 
 interface AuthContextType {
@@ -20,7 +21,7 @@ interface AuthContextType {
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
-  updateProfile: (updates: Partial<Pick<Profile, 'username' | 'display_name'>>) => Promise<{ error: Error | null }>;
+  updateProfile: (updates: Partial<Pick<Profile, 'username' | 'display_name' | 'onboarding_completed'>>) => Promise<{ error: Error | null }>;
   refreshProfile: () => Promise<void>;
 }
 
@@ -54,13 +55,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Defer profile fetch with setTimeout to avoid deadlock
         if (session?.user) {
           setTimeout(() => {
             fetchProfile(session.user.id).then(setProfile);
@@ -73,7 +72,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -118,7 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfile(null);
   };
 
-  const updateProfile = async (updates: Partial<Pick<Profile, 'username' | 'display_name'>>) => {
+  const updateProfile = async (updates: Partial<Pick<Profile, 'username' | 'display_name' | 'onboarding_completed'>>) => {
     if (!user) {
       return { error: new Error('Not authenticated') };
     }

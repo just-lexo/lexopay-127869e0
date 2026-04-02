@@ -15,27 +15,28 @@ export function ProtectedRoute({ children, requireProfile = true, requireAdmin =
   const { user, profile, loading: authLoading } = useAuth();
   const { isAllowed, loading: allowlistLoading } = useAllowlist();
 
-  // Auth loading is handled by SplashScreen in App.tsx — no flash
   if (authLoading) {
     return null;
   }
 
-  // Not logged in
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
 
-  // If profile with username is required but not set, redirect to auth for profile setup
-  if (requireProfile && !profile?.username) {
-    return <Navigate to="/auth" replace />;
+  // If onboarding not completed, redirect to profile setup
+  if (requireProfile && profile && !profile.onboarding_completed) {
+    return <Navigate to="/auth?step=setup" replace />;
   }
 
-  // Check admin requirement
+  // If profile with username is required but not set
+  if (requireProfile && !profile?.username) {
+    return <Navigate to="/auth?step=setup" replace />;
+  }
+
   if (requireAdmin && profile?.is_admin !== true) {
     return <Navigate to="/dashboard" replace />;
   }
 
-  // Still loading allowlist
   if (allowlistLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -44,7 +45,6 @@ export function ProtectedRoute({ children, requireProfile = true, requireAdmin =
     );
   }
 
-  // Check allowlist - admins bypass allowlist check
   if (profile?.is_admin !== true && isAllowed === false) {
     return <AllowlistBlockScreen />;
   }
