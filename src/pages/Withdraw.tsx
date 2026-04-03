@@ -183,41 +183,6 @@ const Withdraw = () => {
     }
   };
 
-  const handleSimulatePaid = async (withdrawal: PendingWithdrawal) => {
-    if (!user) return;
-    setLoading(true);
-    try {
-      const { error: withdrawalError } = await supabase
-        .from('withdrawals')
-        .update({ status: 'SUCCESS' })
-        .eq('id', withdrawal.id);
-      if (withdrawalError) throw withdrawalError;
-
-      const { data: transactions, error: txFindError } = await supabase
-        .from('transactions')
-        .select('id, metadata')
-        .eq('user_id', user.id)
-        .eq('kind', 'WITHDRAW')
-        .eq('status', 'PROCESSING');
-      if (txFindError) throw txFindError;
-
-      const relatedTx = transactions?.find(tx => {
-        const metadata = tx.metadata as { withdrawal_id?: string } | null;
-        return metadata?.withdrawal_id === withdrawal.id;
-      });
-
-      if (relatedTx) {
-        await supabase.from('transactions').update({ status: 'SUCCESS' }).eq('id', relatedTx.id);
-      }
-
-      toast({ title: 'Withdrawal completed!', description: `₦${withdrawal.amount.toLocaleString()} sent to ${withdrawal.account_name}.` });
-      await Promise.all([fetchPendingWithdrawals(), refetch()]);
-    } catch {
-      toast({ title: 'Error', description: 'Failed to simulate payment.', variant: 'destructive' });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleBankChange = (bankCode: string) => {
     const bank = NIGERIAN_BANKS.find(b => b.code === bankCode);
