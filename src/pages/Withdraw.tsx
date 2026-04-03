@@ -123,32 +123,12 @@ const Withdraw = () => {
         setIsVerified(true);
         toast({ title: 'Account verified', description: `Account belongs to ${data.account_name}` });
       } else {
-        // Fallback to mock if Paystack returns an error (e.g. test key limitation)
-        const result = await mockPayoutAdapter.verifyAccount(accountNumber, selectedBank.code);
-        if (result.isValid) {
-          setAccountName(result.accountName);
-          setIsVerified(true);
-          toast({ title: 'Account verified', description: `Account belongs to ${result.accountName}` });
-        } else {
-          setAccountName(null);
-          setIsVerified(false);
-          toast({ title: 'Verification failed', variant: 'destructive' });
-        }
+        setAccountName(null);
+        setIsVerified(false);
+        toast({ title: 'Verification limited', description: 'Bank verification may be limited for some banks. Please double-check your details.', variant: 'destructive' });
       }
     } catch {
-      // Fallback to mock adapter
-      try {
-        const result = await mockPayoutAdapter.verifyAccount(accountNumber, selectedBank!.code);
-        if (result.isValid) {
-          setAccountName(result.accountName);
-          setIsVerified(true);
-          toast({ title: 'Account verified', description: `Account belongs to ${result.accountName}` });
-        } else {
-          toast({ title: 'Verification failed', variant: 'destructive' });
-        }
-      } catch {
-        toast({ title: 'Error', description: 'Failed to verify account.', variant: 'destructive' });
-      }
+      toast({ title: 'Verification unavailable', description: 'Bank verification is temporarily unavailable. Please try again later.', variant: 'destructive' });
     } finally {
       setIsVerifying(false);
     }
