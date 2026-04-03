@@ -498,44 +498,6 @@ const Withdraw = () => {
           </Card>
         )}
 
-        {/* Dev Tools - Admin Only */}
-        {profile?.is_admin && (
-          <Card className="glass-card border-warning/30 bg-warning/5">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Wrench className="w-4 h-4" />
-                  Admin Tools
-                </CardTitle>
-                <Button variant="ghost" size="sm" onClick={() => setShowDevTools(!showDevTools)}>
-                  {showDevTools ? 'Hide' : 'Show'}
-                </Button>
-              </div>
-            </CardHeader>
-            {showDevTools && (
-              <CardContent className="space-y-3">
-                {pendingWithdrawals.length > 0 ? (
-                  pendingWithdrawals.map((withdrawal) => (
-                    <Button
-                      key={withdrawal.id}
-                      variant="outline"
-                      className="w-full justify-between"
-                      onClick={() => handleSimulatePaid(withdrawal)}
-                      disabled={loading}
-                    >
-                      <span>Simulate Paid: {formatCurrency(withdrawal.amount)}</span>
-                      <Badge variant="secondary">→ SUCCESS</Badge>
-                    </Button>
-                  ))
-                ) : (
-                  <p className="text-sm text-muted-foreground text-center py-2">
-                    No pending withdrawals to simulate
-                  </p>
-                )}
-              </CardContent>
-            )}
-          </Card>
-        )}
       </main>
 
       <BottomNav />
