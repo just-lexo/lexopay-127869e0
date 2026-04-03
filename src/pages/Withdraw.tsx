@@ -62,7 +62,6 @@ const Withdraw = () => {
   const [isVerified, setIsVerified] = useState(false);
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showDevTools, setShowDevTools] = useState(false);
   const [pendingWithdrawals, setPendingWithdrawals] = useState<PendingWithdrawal[]>([]);
   
   // Face verification
