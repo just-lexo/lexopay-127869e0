@@ -67,7 +67,7 @@ const Withdraw = () => {
   const [faceVerifyOpen, setFaceVerifyOpen] = useState(false);
   const [faceVerified, setFaceVerified] = useState(false);
 
-  const isDev = import.meta.env.DEV;
+  
   const availableBalance = ngnBalance?.balance ?? 0;
   const withdrawAmount = parseFloat(amount) || 0;
   const totalDeduction = withdrawAmount + WITHDRAWAL_FEE;
