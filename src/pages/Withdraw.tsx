@@ -5,10 +5,9 @@ import { useWallets } from '@/hooks/useWallets';
 import { useHideBalances } from '@/hooks/useHideBalances';
 import { useSavedBankAccounts, type SavedBankAccount } from '@/hooks/useSavedBankAccounts';
 import { supabase } from '@/integrations/supabase/client';
-import { mockPayoutAdapter, NIGERIAN_BANKS, type Bank } from '@/adapters';
+import { NIGERIAN_BANKS, type Bank } from '@/adapters';
 import { createNotification } from '@/hooks/useNotifications';
 import { FaceVerificationModal } from '@/components/FaceVerificationModal';
-import { TestModeBanner } from '@/components/TestModeBanner';
 import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,7 +20,6 @@ import {
   Loader2,
   Check,
   AlertCircle,
-  Wrench,
   Building2,
   User,
   Banknote,
@@ -63,14 +61,13 @@ const Withdraw = () => {
   const [isVerified, setIsVerified] = useState(false);
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showDevTools, setShowDevTools] = useState(false);
   const [pendingWithdrawals, setPendingWithdrawals] = useState<PendingWithdrawal[]>([]);
   
   // Face verification
   const [faceVerifyOpen, setFaceVerifyOpen] = useState(false);
   const [faceVerified, setFaceVerified] = useState(false);
 
-  const isDev = import.meta.env.DEV;
+  
   const availableBalance = ngnBalance?.balance ?? 0;
   const withdrawAmount = parseFloat(amount) || 0;
   const totalDeduction = withdrawAmount + WITHDRAWAL_FEE;
@@ -125,32 +122,12 @@ const Withdraw = () => {
         setIsVerified(true);
         toast({ title: 'Account verified', description: `Account belongs to ${data.account_name}` });
       } else {
-        // Fallback to mock if Paystack returns an error (e.g. test key limitation)
-        const result = await mockPayoutAdapter.verifyAccount(accountNumber, selectedBank.code);
-        if (result.isValid) {
-          setAccountName(result.accountName);
-          setIsVerified(true);
-          toast({ title: 'Account verified', description: `Account belongs to ${result.accountName}` });
-        } else {
-          setAccountName(null);
-          setIsVerified(false);
-          toast({ title: 'Verification failed', variant: 'destructive' });
-        }
+        setAccountName(null);
+        setIsVerified(false);
+        toast({ title: 'Verification limited', description: 'Bank verification may be limited for some banks. Please double-check your details.', variant: 'destructive' });
       }
     } catch {
-      // Fallback to mock adapter
-      try {
-        const result = await mockPayoutAdapter.verifyAccount(accountNumber, selectedBank!.code);
-        if (result.isValid) {
-          setAccountName(result.accountName);
-          setIsVerified(true);
-          toast({ title: 'Account verified', description: `Account belongs to ${result.accountName}` });
-        } else {
-          toast({ title: 'Verification failed', variant: 'destructive' });
-        }
-      } catch {
-        toast({ title: 'Error', description: 'Failed to verify account.', variant: 'destructive' });
-      }
+      toast({ title: 'Verification unavailable', description: 'Bank verification is temporarily unavailable. Please try again later.', variant: 'destructive' });
     } finally {
       setIsVerifying(false);
     }
@@ -205,41 +182,6 @@ const Withdraw = () => {
     }
   };
 
-  const handleSimulatePaid = async (withdrawal: PendingWithdrawal) => {
-    if (!user) return;
-    setLoading(true);
-    try {
-      const { error: withdrawalError } = await supabase
-        .from('withdrawals')
-        .update({ status: 'SUCCESS' })
-        .eq('id', withdrawal.id);
-      if (withdrawalError) throw withdrawalError;
-
-      const { data: transactions, error: txFindError } = await supabase
-        .from('transactions')
-        .select('id, metadata')
-        .eq('user_id', user.id)
-        .eq('kind', 'WITHDRAW')
-        .eq('status', 'PROCESSING');
-      if (txFindError) throw txFindError;
-
-      const relatedTx = transactions?.find(tx => {
-        const metadata = tx.metadata as { withdrawal_id?: string } | null;
-        return metadata?.withdrawal_id === withdrawal.id;
-      });
-
-      if (relatedTx) {
-        await supabase.from('transactions').update({ status: 'SUCCESS' }).eq('id', relatedTx.id);
-      }
-
-      toast({ title: 'Withdrawal completed!', description: `₦${withdrawal.amount.toLocaleString()} sent to ${withdrawal.account_name}.` });
-      await Promise.all([fetchPendingWithdrawals(), refetch()]);
-    } catch {
-      toast({ title: 'Error', description: 'Failed to simulate payment.', variant: 'destructive' });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleBankChange = (bankCode: string) => {
     const bank = NIGERIAN_BANKS.find(b => b.code === bankCode);
@@ -269,9 +211,7 @@ const Withdraw = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <TestModeBanner />
-
-      <header className="glass-card border-b border-border/50 sticky top-[33px] z-50">
+      <header className="glass-card border-b border-border/50 sticky top-0 z-50">
         <div className="container max-w-lg mx-auto px-4 py-3">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => navigate('/dashboard')}>
@@ -522,44 +462,6 @@ const Withdraw = () => {
           </Card>
         )}
 
-        {/* Dev Tools - Admin Only */}
-        {profile?.is_admin && (
-          <Card className="glass-card border-warning/30 bg-warning/5">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Wrench className="w-4 h-4" />
-                  Admin Tools
-                </CardTitle>
-                <Button variant="ghost" size="sm" onClick={() => setShowDevTools(!showDevTools)}>
-                  {showDevTools ? 'Hide' : 'Show'}
-                </Button>
-              </div>
-            </CardHeader>
-            {showDevTools && (
-              <CardContent className="space-y-3">
-                {pendingWithdrawals.length > 0 ? (
-                  pendingWithdrawals.map((withdrawal) => (
-                    <Button
-                      key={withdrawal.id}
-                      variant="outline"
-                      className="w-full justify-between"
-                      onClick={() => handleSimulatePaid(withdrawal)}
-                      disabled={loading}
-                    >
-                      <span>Simulate Paid: {formatCurrency(withdrawal.amount)}</span>
-                      <Badge variant="secondary">→ SUCCESS</Badge>
-                    </Button>
-                  ))
-                ) : (
-                  <p className="text-sm text-muted-foreground text-center py-2">
-                    No pending withdrawals to simulate
-                  </p>
-                )}
-              </CardContent>
-            )}
-          </Card>
-        )}
       </main>
 
       <BottomNav />
