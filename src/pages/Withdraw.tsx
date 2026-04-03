@@ -247,9 +247,7 @@ const Withdraw = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <TestModeBanner />
-
-      <header className="glass-card border-b border-border/50 sticky top-[33px] z-50">
+      <header className="glass-card border-b border-border/50 sticky top-0 z-50">
         <div className="container max-w-lg mx-auto px-4 py-3">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => navigate('/dashboard')}>
