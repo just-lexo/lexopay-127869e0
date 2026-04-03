@@ -1,31 +1,27 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '@/hooks/useNotifications';
-import { TestModeBanner } from '@/components/TestModeBanner';
 import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Bell, CheckCheck } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ArrowLeft, Bell, CheckCheck, ChevronDown } from 'lucide-react';
+import { formatDistanceToNow, format } from 'date-fns';
 
 const Notifications = () => {
   const navigate = useNavigate();
   const { notifications, loading, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const handleClick = (notif: typeof notifications[0]) => {
+  const handleToggle = (notif: typeof notifications[0]) => {
     if (!notif.is_read) markAsRead(notif.id);
-    if (notif.related_id && notif.related_kind === 'transaction') {
-      navigate(`/transactions/${notif.related_id}`);
-    } else if (notif.related_id && notif.related_kind === 'payment_request') {
-      navigate('/dashboard');
-    }
+    setExpandedId(expandedId === notif.id ? null : notif.id);
   };
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <TestModeBanner />
-
-      <header className="glass-card border-b border-border/50 sticky top-[33px] z-50">
+      <header className="glass-card border-b border-border/50 sticky top-0 z-50">
         <div className="container max-w-lg mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -52,9 +48,7 @@ const Notifications = () => {
       <main className="container max-w-lg mx-auto px-4 py-4">
         {loading ? (
           <div className="space-y-3">
-            {[1, 2, 3, 4].map(i => (
-              <Skeleton key={i} className="h-16 w-full rounded-xl" />
-            ))}
+            {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}
           </div>
         ) : notifications.length === 0 ? (
           <Card className="glass-card border-border/50">
@@ -65,34 +59,44 @@ const Notifications = () => {
           </Card>
         ) : (
           <div className="space-y-2">
-            {notifications.map(notif => (
-              <Card
-                key={notif.id}
-                className={`glass-card border-border/50 cursor-pointer hover:border-primary/30 transition-colors ${
-                  !notif.is_read ? 'border-l-2 border-l-primary' : ''
-                }`}
-                onClick={() => handleClick(notif)}
-              >
-                <CardContent className="py-3 px-3">
-                  <div className="flex items-start gap-2.5">
-                    <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
-                      notif.is_read ? 'bg-muted-foreground/30' : 'bg-primary'
-                    }`} />
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-sm ${!notif.is_read ? 'font-semibold' : 'font-medium'}`}>
-                        {notif.title}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-                        {notif.message}
-                      </p>
-                      <p className="text-[11px] text-muted-foreground mt-1">
-                        {formatDistanceToNow(new Date(notif.created_at), { addSuffix: true })}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+            {notifications.map(notif => {
+              const isExpanded = expandedId === notif.id;
+              return (
+                <Collapsible key={notif.id} open={isExpanded} onOpenChange={() => handleToggle(notif)}>
+                  <Card className={`glass-card border-border/50 transition-colors ${!notif.is_read ? 'border-l-2 border-l-primary' : ''}`}>
+                    <CollapsibleTrigger asChild>
+                      <CardContent className="py-3 px-3 cursor-pointer">
+                        <div className="flex items-start gap-2.5">
+                          <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${notif.is_read ? 'bg-muted-foreground/30' : 'bg-primary'}`} />
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-sm ${!notif.is_read ? 'font-semibold' : 'font-medium'}`}>
+                              {notif.title}
+                            </p>
+                            {!isExpanded && (
+                              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{notif.message}</p>
+                            )}
+                          </div>
+                          <ChevronDown className={`w-4 h-4 text-muted-foreground shrink-0 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                        </div>
+                      </CardContent>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="px-3 pb-3 pl-8">
+                        <p className="text-sm text-muted-foreground">{notif.message}</p>
+                        <p className="text-[11px] text-muted-foreground mt-2">
+                          {format(new Date(notif.created_at), 'PPp')}
+                        </p>
+                        {notif.related_id && notif.related_kind === 'transaction' && (
+                          <Button variant="link" size="sm" className="h-auto p-0 mt-1 text-xs" onClick={() => navigate(`/transactions/${notif.related_id}`)}>
+                            View transaction →
+                          </Button>
+                        )}
+                      </div>
+                    </CollapsibleContent>
+                  </Card>
+                </Collapsible>
+              );
+            })}
           </div>
         )}
       </main>
