@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { DevToolsButton } from "@/components/DevToolsButton";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { HideLovableBadge } from "@/components/HideLovableBadge";
 import { SplashScreen } from "@/components/SplashScreen";
 import { OfflineBanner } from "@/components/OfflineBanner";
@@ -27,6 +27,7 @@ import Request from "./pages/Request";
 import PublicProfile from "./pages/PublicProfile";
 import Notifications from "./pages/Notifications";
 import DepositDetail from "./pages/DepositDetail";
+import KYC from "./pages/KYC";
 
 const queryClient = new QueryClient();
 
@@ -49,139 +50,42 @@ const AppRoutes = () => {
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/auth" element={<Auth />} />
-      <Route 
-        path="/dashboard" 
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/deposit" 
-        element={
-          <ProtectedRoute>
-            <Deposit />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/deposit/:id" 
-        element={
-          <ProtectedRoute>
-            <DepositDetail />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/convert" 
-        element={
-          <ProtectedRoute>
-            <Convert />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/withdraw" 
-        element={
-          <ProtectedRoute>
-            <Withdraw />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/send" 
-        element={
-          <ProtectedRoute>
-            <Send />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/transactions" 
-        element={
-          <ProtectedRoute>
-            <Transactions />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/transactions/:id" 
-        element={
-          <ProtectedRoute>
-            <TransactionDetail />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/receipt/:id" 
-        element={
-          <ProtectedRoute>
-            <Receipt />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/admin" 
-        element={
-          <ProtectedRoute requireAdmin>
-            <Admin />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/admin/feedback" 
-        element={
-          <ProtectedRoute requireAdmin>
-            <AdminFeedback />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/profile" 
-        element={
-          <ProtectedRoute>
-            <Profile />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/request" 
-        element={
-          <ProtectedRoute>
-            <Request />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/notifications" 
-        element={
-          <ProtectedRoute>
-            <Notifications />
-          </ProtectedRoute>
-        } 
-      />
-      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/deposit" element={<ProtectedRoute><Deposit /></ProtectedRoute>} />
+      <Route path="/deposit/:id" element={<ProtectedRoute><DepositDetail /></ProtectedRoute>} />
+      <Route path="/convert" element={<ProtectedRoute><Convert /></ProtectedRoute>} />
+      <Route path="/withdraw" element={<ProtectedRoute><Withdraw /></ProtectedRoute>} />
+      <Route path="/send" element={<ProtectedRoute><Send /></ProtectedRoute>} />
+      <Route path="/transactions" element={<ProtectedRoute><Transactions /></ProtectedRoute>} />
+      <Route path="/transactions/:id" element={<ProtectedRoute><TransactionDetail /></ProtectedRoute>} />
+      <Route path="/receipt/:id" element={<ProtectedRoute><Receipt /></ProtectedRoute>} />
+      <Route path="/admin" element={<ProtectedRoute requireAdmin><Admin /></ProtectedRoute>} />
+      <Route path="/admin/feedback" element={<ProtectedRoute requireAdmin><AdminFeedback /></ProtectedRoute>} />
+      <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+      <Route path="/kyc" element={<ProtectedRoute><KYC /></ProtectedRoute>} />
+      <Route path="/request" element={<ProtectedRoute><Request /></ProtectedRoute>} />
+      <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
       <Route path="*" element={<CatchAllRoute />} />
     </Routes>
   );
 };
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <OfflineBanner />
-          <AppRoutes />
-          <DevToolsButton />
-          <HideLovableBadge />
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
-  </QueryClientProvider>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <OfflineBanner />
+            <AppRoutes />
+            <HideLovableBadge />
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;
