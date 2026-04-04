@@ -238,6 +238,42 @@ export type Database = {
         }
         Relationships: []
       }
+      kyc_submissions: {
+        Row: {
+          admin_note: string | null
+          created_at: string
+          full_name: string
+          id: string
+          phone_number: string
+          selfie_url: string | null
+          status: Database["public"]["Enums"]["kyc_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_note?: string | null
+          created_at?: string
+          full_name: string
+          id?: string
+          phone_number: string
+          selfie_url?: string | null
+          status?: Database["public"]["Enums"]["kyc_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_note?: string | null
+          created_at?: string
+          full_name?: string
+          id?: string
+          phone_number?: string
+          selfie_url?: string | null
+          status?: Database["public"]["Enums"]["kyc_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       ngn_balances: {
         Row: {
           balance: number
@@ -636,6 +672,7 @@ export type Database = {
       deposit_status: "PENDING" | "CONFIRMED" | "FAILED" | "DETECTED"
       feedback_category: "BUG" | "IDEA" | "OTHER"
       invite_request_status: "PENDING" | "APPROVED" | "DECLINED"
+      kyc_status: "not_started" | "pending" | "approved" | "rejected"
       payment_request_status: "PENDING" | "PAID" | "DECLINED" | "EXPIRED"
       transaction_kind: "DEPOSIT" | "CONVERT" | "WITHDRAW" | "SEND" | "RECEIVE"
       wallet_type: "CRYPTO" | "NGN"
@@ -773,6 +810,7 @@ export const Constants = {
       deposit_status: ["PENDING", "CONFIRMED", "FAILED", "DETECTED"],
       feedback_category: ["BUG", "IDEA", "OTHER"],
       invite_request_status: ["PENDING", "APPROVED", "DECLINED"],
+      kyc_status: ["not_started", "pending", "approved", "rejected"],
       payment_request_status: ["PENDING", "PAID", "DECLINED", "EXPIRED"],
       transaction_kind: ["DEPOSIT", "CONVERT", "WITHDRAW", "SEND", "RECEIVE"],
       wallet_type: ["CRYPTO", "NGN"],
