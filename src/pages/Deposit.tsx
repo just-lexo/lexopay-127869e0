@@ -25,6 +25,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { useMaintenanceMode } from '@/hooks/useMaintenanceMode';
 
 interface DepositRecord {
   id: string;
@@ -53,6 +54,7 @@ const Deposit = () => {
   const { user } = useAuth();
   const { refetch } = useWallets();
   const { toast } = useToast();
+  const { maintenance } = useMaintenanceMode();
 
   const [selectedToken, setSelectedToken] = useState<SupportedToken>('USDC');
   const [selectedNetwork] = useState<NetworkId>('base');
@@ -78,6 +80,10 @@ const Deposit = () => {
 
   const handleGenerateAddress = async () => {
     if (!user) return;
+    if (maintenance) {
+      toast({ title: 'Under maintenance', description: 'LexoPay is currently under maintenance. Please try again later.', variant: 'destructive' });
+      return;
+    }
     setLoading(true);
     try {
       const address = generateUserDepositAddress(user.id);
