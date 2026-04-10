@@ -9,6 +9,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { HideLovableBadge } from "@/components/HideLovableBadge";
 import { SplashScreen } from "@/components/SplashScreen";
 import { OfflineBanner } from "@/components/OfflineBanner";
+import { MaintenanceBanner } from "@/components/MaintenanceBanner";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -79,6 +80,7 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <OfflineBanner />
+            <MaintenanceBanner />
             <AppRoutes />
             <HideLovableBadge />
           </BrowserRouter>
