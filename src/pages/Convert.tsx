@@ -75,6 +75,10 @@ const Convert = () => {
 
   const handleConvert = async () => {
     if (!user || !quote || !cryptoWalletId || !ngnWalletId) return;
+    if (maintenance) {
+      toast({ title: 'Under maintenance', description: 'LexoPay is currently under maintenance.', variant: 'destructive' });
+      return;
+    }
 
     const numAmount = parseFloat(amount);
     if (numAmount > availableBalance) {

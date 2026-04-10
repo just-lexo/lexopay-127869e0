@@ -137,6 +137,10 @@ const Withdraw = () => {
 
   const handleWithdraw = async () => {
     if (!user || !effectiveBankCode || !effectiveAccountName || !canWithdraw) return;
+    if (maintenance) {
+      toast({ title: 'Under maintenance', description: 'LexoPay is currently under maintenance.', variant: 'destructive' });
+      return;
+    }
 
     setLoading(true);
     try {
