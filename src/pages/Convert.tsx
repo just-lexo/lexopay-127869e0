@@ -23,6 +23,7 @@ import {
   CheckCircle2,
   Wallet,
 } from 'lucide-react';
+import { useMaintenanceMode } from '@/hooks/useMaintenanceMode';
 
 const Convert = () => {
   const navigate = useNavigate();
@@ -30,6 +31,7 @@ const Convert = () => {
   const { cryptoBalances, refetch, cryptoWalletId, ngnWalletId } = useWallets();
   const { mask } = useHideBalances();
   const { toast } = useToast();
+  const { maintenance } = useMaintenanceMode();
 
   const [selectedToken, setSelectedToken] = useState<string>('USDT');
   const [amount, setAmount] = useState<string>('');
