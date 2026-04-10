@@ -33,6 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useMaintenanceMode } from '@/hooks/useMaintenanceMode';
 
 const WITHDRAWAL_FEE = 20;
 
@@ -48,6 +49,7 @@ interface PendingWithdrawal {
 const Withdraw = () => {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
+  const { maintenance } = useMaintenanceMode();
   const { ngnBalance, refetch } = useWallets();
   const { mask } = useHideBalances();
   const { toast } = useToast();
@@ -135,6 +137,10 @@ const Withdraw = () => {
 
   const handleWithdraw = async () => {
     if (!user || !effectiveBankCode || !effectiveAccountName || !canWithdraw) return;
+    if (maintenance) {
+      toast({ title: 'Under maintenance', description: 'LexoPay is currently under maintenance.', variant: 'destructive' });
+      return;
+    }
 
     setLoading(true);
     try {

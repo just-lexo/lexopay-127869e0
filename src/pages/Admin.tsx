@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useMaintenanceMode } from '@/hooks/useMaintenanceMode';
 import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -13,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   ArrowLeft, Loader2, Shield, Users, Inbox, BarChart3,
   ArrowDownToLine, RefreshCw, ArrowUpFromLine, Search,
-  AlertTriangle, Settings, UserX, UserCheck,
+  AlertTriangle, Settings, UserX, UserCheck, CheckCircle, XCircle,
 } from 'lucide-react';
 
 interface AdminStats {
@@ -28,6 +29,7 @@ const Admin = () => {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const { toast } = useToast();
+  const { maintenance, toggle: toggleMaintenance } = useMaintenanceMode();
 
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
@@ -38,8 +40,9 @@ const Admin = () => {
   const [deposits, setDeposits] = useState<any[]>([]);
   const [conversions, setConversions] = useState<any[]>([]);
   const [withdrawals, setWithdrawals] = useState<any[]>([]);
-  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [kycSubmissions, setKycSubmissions] = useState<any[]>([]);
   const [feedbackCount, setFeedbackCount] = useState(0);
+  const [togglingMaintenance, setTogglingMaintenance] = useState(false);
 
   const isAdmin = profile?.is_admin === true;
 
@@ -51,13 +54,14 @@ const Admin = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [profilesRes, depositsRes, conversionsRes, withdrawalsRes, txRes, feedbackRes] = await Promise.all([
+      const [profilesRes, depositsRes, conversionsRes, withdrawalsRes, txRes, feedbackRes, kycRes] = await Promise.all([
         supabase.from('profiles').select('*').order('created_at', { ascending: false }),
         supabase.from('deposits').select('*').order('created_at', { ascending: false }).limit(50),
         supabase.from('conversions').select('*').order('created_at', { ascending: false }).limit(50),
         supabase.from('withdrawals').select('*').order('created_at', { ascending: false }).limit(50),
         supabase.from('transactions').select('*').order('created_at', { ascending: false }).limit(10),
         supabase.from('feedback').select('id', { count: 'exact' }).eq('is_read', false),
+        supabase.from('kyc_submissions').select('*').order('created_at', { ascending: false }),
       ]);
 
       const users = profilesRes.data || [];
@@ -71,6 +75,7 @@ const Admin = () => {
       setWithdrawals(wds);
       setRecentTransactions(txRes.data || []);
       setFeedbackCount(feedbackRes.count || 0);
+      setKycSubmissions(kycRes.data || []);
 
       const totalVolume = wds.filter((w: any) => w.status === 'SUCCESS').reduce((s: number, w: any) => s + Number(w.amount || 0), 0);
 
@@ -96,6 +101,38 @@ const Admin = () => {
     const q = userSearch.toLowerCase();
     return u.username?.toLowerCase().includes(q) || u.display_name?.toLowerCase().includes(q) || u.wallet_address?.toLowerCase().includes(q);
   });
+
+  const handleToggleMaintenance = async (val: boolean) => {
+    setTogglingMaintenance(true);
+    const { error } = await toggleMaintenance(val);
+    if (error) {
+      toast({ title: 'Failed to update', variant: 'destructive' });
+    } else {
+      toast({ title: val ? 'Maintenance mode enabled' : 'System is back online' });
+    }
+    setTogglingMaintenance(false);
+  };
+
+  const handleKYCAction = async (submissionId: string, action: 'approved' | 'rejected') => {
+    const { error } = await supabase
+      .from('kyc_submissions')
+      .update({ status: action, updated_at: new Date().toISOString() })
+      .eq('id', submissionId);
+
+    if (error) {
+      toast({ title: 'Failed to update KYC', variant: 'destructive' });
+    } else {
+      toast({ title: `KYC ${action}` });
+      // Update the user's kyc_tier if approved
+      if (action === 'approved') {
+        const submission = kycSubmissions.find(k => k.id === submissionId);
+        if (submission) {
+          await supabase.from('profiles').update({ kyc_tier: 2 }).eq('user_id', submission.user_id);
+        }
+      }
+      fetchData();
+    }
+  };
 
   if (!isAdmin) return null;
 
@@ -125,11 +162,12 @@ const Admin = () => {
           <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="w-full grid grid-cols-4">
-              <TabsTrigger value="overview" className="text-xs">Dashboard</TabsTrigger>
-              <TabsTrigger value="users" className="text-xs">Users</TabsTrigger>
-              <TabsTrigger value="transactions" className="text-xs">Txns</TabsTrigger>
-              <TabsTrigger value="settings" className="text-xs">Settings</TabsTrigger>
+            <TabsList className="w-full grid grid-cols-5">
+              <TabsTrigger value="overview" className="text-[10px]">Dashboard</TabsTrigger>
+              <TabsTrigger value="users" className="text-[10px]">Users</TabsTrigger>
+              <TabsTrigger value="transactions" className="text-[10px]">Txns</TabsTrigger>
+              <TabsTrigger value="kyc" className="text-[10px]">KYC</TabsTrigger>
+              <TabsTrigger value="settings" className="text-[10px]">Settings</TabsTrigger>
             </TabsList>
 
             {/* DASHBOARD */}
@@ -272,24 +310,66 @@ const Admin = () => {
               </Card>
             </TabsContent>
 
+            {/* KYC */}
+            <TabsContent value="kyc" className="space-y-4 mt-4">
+              <Card className="glass-card border-border/50">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm">KYC Submissions</CardTitle>
+                  <CardDescription className="text-xs">Review and approve identity verification requests</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {kycSubmissions.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">No KYC submissions</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {kycSubmissions.map((kyc: any) => (
+                        <div key={kyc.id} className="p-3 rounded-lg bg-background/50 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-medium">{kyc.full_name}</p>
+                              <p className="text-xs text-muted-foreground">{kyc.phone_number}</p>
+                              <p className="text-[10px] text-muted-foreground">{new Date(kyc.created_at).toLocaleDateString()}</p>
+                            </div>
+                            <Badge variant={kyc.status === 'approved' ? 'default' : kyc.status === 'rejected' ? 'destructive' : 'secondary'} className="text-[10px]">
+                              {kyc.status}
+                            </Badge>
+                          </div>
+                          {kyc.status === 'pending' && (
+                            <div className="flex gap-2">
+                              <Button size="sm" variant="outline" className="flex-1 gap-1 text-xs h-8" onClick={() => handleKYCAction(kyc.id, 'approved')}>
+                                <CheckCircle className="w-3 h-3" /> Approve
+                              </Button>
+                              <Button size="sm" variant="outline" className="flex-1 gap-1 text-xs h-8 text-destructive" onClick={() => handleKYCAction(kyc.id, 'rejected')}>
+                                <XCircle className="w-3 h-3" /> Reject
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
             {/* SETTINGS */}
             <TabsContent value="settings" className="space-y-4 mt-4">
               <Card className="glass-card border-border/50">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base flex items-center gap-2"><Settings className="w-4 h-4" /> Maintenance Mode</CardTitle>
-                  <CardDescription>Block user actions when enabled.</CardDescription>
+                  <CardDescription className="text-xs">Block user financial actions. Persists across reloads.</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center justify-between p-3 rounded-lg bg-background/50">
                     <div className="flex items-center gap-2">
-                      <AlertTriangle className={`w-4 h-4 ${maintenanceMode ? 'text-warning' : 'text-muted-foreground'}`} />
-                      <span className="text-sm font-medium">{maintenanceMode ? 'Maintenance Active' : 'System Online'}</span>
+                      <AlertTriangle className={`w-4 h-4 ${maintenance ? 'text-warning' : 'text-muted-foreground'}`} />
+                      <span className="text-sm font-medium">{maintenance ? 'Maintenance Active' : 'System Online'}</span>
                     </div>
-                    <Switch checked={maintenanceMode} onCheckedChange={setMaintenanceMode} />
+                    <Switch checked={maintenance} onCheckedChange={handleToggleMaintenance} disabled={togglingMaintenance} />
                   </div>
-                  {maintenanceMode && (
+                  {maintenance && (
                     <div className="mt-3 p-3 rounded-lg bg-warning/10 border border-warning/20">
-                      <p className="text-xs text-warning">Users cannot perform financial actions.</p>
+                      <p className="text-xs text-warning">Users cannot perform deposits, conversions, or withdrawals.</p>
                     </div>
                   )}
                 </CardContent>

@@ -23,6 +23,7 @@ import {
   CheckCircle2,
   Wallet,
 } from 'lucide-react';
+import { useMaintenanceMode } from '@/hooks/useMaintenanceMode';
 
 const Convert = () => {
   const navigate = useNavigate();
@@ -30,6 +31,7 @@ const Convert = () => {
   const { cryptoBalances, refetch, cryptoWalletId, ngnWalletId } = useWallets();
   const { mask } = useHideBalances();
   const { toast } = useToast();
+  const { maintenance } = useMaintenanceMode();
 
   const [selectedToken, setSelectedToken] = useState<string>('USDT');
   const [amount, setAmount] = useState<string>('');
@@ -73,6 +75,10 @@ const Convert = () => {
 
   const handleConvert = async () => {
     if (!user || !quote || !cryptoWalletId || !ngnWalletId) return;
+    if (maintenance) {
+      toast({ title: 'Under maintenance', description: 'LexoPay is currently under maintenance.', variant: 'destructive' });
+      return;
+    }
 
     const numAmount = parseFloat(amount);
     if (numAmount > availableBalance) {
