@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Loader2, Mail, Lock, User, AtSign } from 'lucide-react';
+import { ArrowLeft, Loader2, Mail, Lock, User, AtSign, CheckCircle2 } from 'lucide-react';
 import { z } from 'zod';
 import { WalletConnectButton } from '@/components/WalletConnectButton';
 import { Separator } from '@/components/ui/separator';
@@ -18,19 +18,20 @@ const usernameSchema = z.string()
   .max(20, 'Username must be at most 20 characters')
   .regex(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores');
 
-type AuthStep = 'auth' | 'profile-setup';
+type AuthStep = 'auth' | 'verify-email' | 'profile-setup';
 
 const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirectTo = searchParams.get('redirect') || '/dashboard';
   const stepParam = searchParams.get('step');
-  const { signUp, signIn, updateProfile, user, profile } = useAuth();
+  const { signUp, signIn, updateProfile, user, profile, emailConfirmed, resendVerificationEmail } = useAuth();
   const { toast } = useToast();
   
   const [isLogin, setIsLogin] = useState(true);
   const [step, setStep] = useState<AuthStep>(stepParam === 'setup' ? 'profile-setup' : 'auth');
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
   
   // Auth form
   const [email, setEmail] = useState('');
@@ -40,14 +41,27 @@ const Auth = () => {
   const [username, setUsername] = useState('');
   const [displayName, setDisplayName] = useState('');
 
-  // Redirect if user is fully set up
+  // Determine correct step based on user state
   useEffect(() => {
-    if (user && profile?.username && profile?.onboarding_completed) {
-      navigate(redirectTo, { replace: true });
-    } else if (user && (!profile?.username || !profile?.onboarding_completed)) {
-      setStep('profile-setup');
+    if (!user) {
+      if (step !== 'auth') setStep('auth');
+      return;
     }
-  }, [user, profile, navigate, redirectTo]);
+
+    // User exists — determine step
+    if (!emailConfirmed) {
+      setStep('verify-email');
+      return;
+    }
+
+    if (!profile?.username || !profile?.onboarding_completed) {
+      setStep('profile-setup');
+      return;
+    }
+
+    // Fully set up — redirect
+    navigate(redirectTo, { replace: true });
+  }, [user, emailConfirmed, profile, navigate, redirectTo]);
 
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,6 +86,9 @@ const Auth = () => {
           let message = error.message;
           if (message.includes('Invalid login credentials')) {
             message = 'Invalid email or password. Please try again.';
+          } else if (message.includes('Email not confirmed')) {
+            message = 'Please verify your email before signing in.';
+            setStep('verify-email');
           }
           toast({ title: 'Login failed', description: message, variant: 'destructive' });
         }
@@ -84,12 +101,26 @@ const Auth = () => {
           }
           toast({ title: 'Sign up failed', description: message, variant: 'destructive' });
         } else {
-          toast({ title: 'Account created!', description: 'Please set up your profile.' });
-          setStep('profile-setup');
+          toast({ title: 'Check your email', description: 'We sent a verification link to confirm your account.' });
+          setStep('verify-email');
         }
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendEmail = async () => {
+    setResending(true);
+    try {
+      const { error } = await resendVerificationEmail();
+      if (error) {
+        toast({ title: 'Failed to resend', description: error.message, variant: 'destructive' });
+      } else {
+        toast({ title: 'Email sent', description: 'Check your inbox for the verification link.' });
+      }
+    } finally {
+      setResending(false);
     }
   };
 
@@ -130,36 +161,15 @@ const Auth = () => {
     }
   };
 
-  const handleSkipSetup = async () => {
-    setLoading(true);
-    try {
-      // Generate a default username if not set
-      const defaultUsername = `user_${Date.now().toString(36)}`;
-      await updateProfile({
-        username: profile?.username || defaultUsername,
-        display_name: profile?.display_name || 'LexoPay User',
-        onboarding_completed: true,
-      });
-      navigate(redirectTo, { replace: true });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Don't render auth form if already logged in and on setup step
-  if (user && step === 'auth') {
-    return null;
-  }
-
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <header className="p-3">
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => step === 'profile-setup' ? null : navigate('/')}
+          onClick={() => step === 'auth' ? navigate('/') : null}
           className="gap-2 min-h-[44px]"
-          disabled={step === 'profile-setup'}
+          disabled={step !== 'auth'}
         >
           <ArrowLeft className="w-4 h-4" />
           Back
@@ -168,7 +178,7 @@ const Auth = () => {
 
       <main className="flex-1 flex items-center justify-center p-4">
         <Card className="w-full max-w-sm glass-card border-border/50">
-          {step === 'auth' ? (
+          {step === 'auth' && (
             <>
               <CardHeader className="text-center pb-4">
                 <div className="w-11 h-11 rounded-xl gradient-primary flex items-center justify-center mx-auto mb-3">
@@ -229,7 +239,59 @@ const Auth = () => {
                 </div>
               </CardContent>
             </>
-          ) : (
+          )}
+
+          {step === 'verify-email' && (
+            <>
+              <CardHeader className="text-center pb-4">
+                <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                  <Mail className="w-5 h-5 text-primary" />
+                </div>
+                <CardTitle className="text-xl">Verify your email</CardTitle>
+                <CardDescription className="text-xs">
+                  Check your inbox for a verification link
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="bg-muted/50 rounded-lg p-4 text-center">
+                  <CheckCircle2 className="w-8 h-8 text-primary mx-auto mb-2" />
+                  <p className="text-sm font-medium text-foreground">
+                    We sent a verification email
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {user?.email ? `to ${user.email}` : 'to your email address'}
+                  </p>
+                </div>
+
+                <p className="text-xs text-muted-foreground text-center">
+                  Click the link in your email to verify your account. You may need to check your spam folder.
+                </p>
+
+                <Button
+                  variant="outline"
+                  className="w-full min-h-[44px]"
+                  onClick={handleResendEmail}
+                  disabled={resending}
+                >
+                  {resending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Mail className="w-4 h-4 mr-2" />}
+                  Resend Email
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  className="w-full text-xs text-muted-foreground"
+                  onClick={async () => {
+                    await supabase.auth.signOut();
+                    setStep('auth');
+                  }}
+                >
+                  Use a different email
+                </Button>
+              </CardContent>
+            </>
+          )}
+
+          {step === 'profile-setup' && (
             <>
               <CardHeader className="text-center pb-4">
                 <div className="w-11 h-11 rounded-xl gradient-primary flex items-center justify-center mx-auto mb-3">
@@ -262,10 +324,6 @@ const Auth = () => {
                   <Button type="submit" className="w-full min-h-[48px] gradient-primary hover:opacity-90" disabled={loading}>
                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Complete Setup'}
                   </Button>
-
-                  <Button type="button" variant="ghost" className="w-full text-xs text-muted-foreground" onClick={handleSkipSetup} disabled={loading}>
-                    Skip for now
-                  </Button>
                 </form>
               </CardContent>
             </>
@@ -275,5 +333,8 @@ const Auth = () => {
     </div>
   );
 };
+
+// Need supabase import for signOut in verify-email step
+import { supabase } from '@/integrations/supabase/client';
 
 export default Auth;
