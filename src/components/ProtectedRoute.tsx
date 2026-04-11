@@ -1,7 +1,6 @@
 import { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -10,13 +9,18 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, requireProfile = true, requireAdmin = false }: ProtectedRouteProps) {
-  const { user, profile, loading: authLoading } = useAuth();
+  const { user, profile, loading: authLoading, emailConfirmed } = useAuth();
 
   if (authLoading) {
     return null;
   }
 
   if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  // Email not verified — send to verify screen
+  if (!emailConfirmed) {
     return <Navigate to="/auth" replace />;
   }
 
