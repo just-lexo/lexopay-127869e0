@@ -7,7 +7,7 @@ import { ReactNode } from 'react';
 
 const projectId = '75013a4ad65b1a5ba23262d1f642c6d2';
 
-const networks = [base] as const;
+const networks = [base] as [typeof base];
 
 const wagmiAdapter = new WagmiAdapter({
   projectId,
