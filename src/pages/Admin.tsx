@@ -15,7 +15,9 @@ import {
   ArrowLeft, Loader2, Shield, Users, Inbox, BarChart3,
   ArrowDownToLine, RefreshCw, ArrowUpFromLine, Search,
   AlertTriangle, Settings, UserX, UserCheck, CheckCircle, XCircle,
+  MessageCircle, Send as SendIcon,
 } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 
 interface AdminStats {
   totalUsers: number;
@@ -43,6 +45,9 @@ const Admin = () => {
   const [kycSubmissions, setKycSubmissions] = useState<any[]>([]);
   const [feedbackCount, setFeedbackCount] = useState(0);
   const [togglingMaintenance, setTogglingMaintenance] = useState(false);
+  const [supportTickets, setSupportTickets] = useState<any[]>([]);
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState('');
 
   const isAdmin = profile?.is_admin === true;
 
@@ -54,7 +59,7 @@ const Admin = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [profilesRes, depositsRes, conversionsRes, withdrawalsRes, txRes, feedbackRes, kycRes] = await Promise.all([
+      const [profilesRes, depositsRes, conversionsRes, withdrawalsRes, txRes, feedbackRes, kycRes, ticketsRes] = await Promise.all([
         supabase.from('profiles').select('*').order('created_at', { ascending: false }),
         supabase.from('deposits').select('*').order('created_at', { ascending: false }).limit(50),
         supabase.from('conversions').select('*').order('created_at', { ascending: false }).limit(50),
@@ -62,6 +67,7 @@ const Admin = () => {
         supabase.from('transactions').select('*').order('created_at', { ascending: false }).limit(10),
         supabase.from('feedback').select('id', { count: 'exact' }).eq('is_read', false),
         supabase.from('kyc_submissions').select('*').order('created_at', { ascending: false }),
+        supabase.from('support_tickets').select('*').order('created_at', { ascending: false }),
       ]);
 
       const users = profilesRes.data || [];
@@ -76,6 +82,7 @@ const Admin = () => {
       setRecentTransactions(txRes.data || []);
       setFeedbackCount(feedbackRes.count || 0);
       setKycSubmissions(kycRes.data || []);
+      setSupportTickets((ticketsRes.data as any[]) || []);
 
       const totalVolume = wds.filter((w: any) => w.status === 'SUCCESS').reduce((s: number, w: any) => s + Number(w.amount || 0), 0);
 
@@ -134,6 +141,23 @@ const Admin = () => {
     }
   };
 
+  const handleTicketReply = async (ticketId: string, newStatus?: string) => {
+    const updates: Record<string, any> = {};
+    if (replyText.trim()) updates.admin_reply = replyText.trim();
+    if (newStatus) updates.status = newStatus;
+    updates.updated_at = new Date().toISOString();
+
+    const { error } = await supabase.from('support_tickets').update(updates).eq('id', ticketId);
+    if (error) {
+      toast({ title: 'Failed to update ticket', variant: 'destructive' });
+    } else {
+      toast({ title: 'Ticket updated' });
+      setReplyingTo(null);
+      setReplyText('');
+      fetchData();
+    }
+  };
+
   if (!isAdmin) return null;
 
   return (
@@ -162,11 +186,12 @@ const Admin = () => {
           <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="w-full grid grid-cols-5">
+            <TabsList className="w-full grid grid-cols-6">
               <TabsTrigger value="overview" className="text-[10px]">Dashboard</TabsTrigger>
               <TabsTrigger value="users" className="text-[10px]">Users</TabsTrigger>
               <TabsTrigger value="transactions" className="text-[10px]">Txns</TabsTrigger>
               <TabsTrigger value="kyc" className="text-[10px]">KYC</TabsTrigger>
+              <TabsTrigger value="support" className="text-[10px]">Support</TabsTrigger>
               <TabsTrigger value="settings" className="text-[10px]">Settings</TabsTrigger>
             </TabsList>
 
@@ -342,6 +367,67 @@ const Admin = () => {
                               <Button size="sm" variant="outline" className="flex-1 gap-1 text-xs h-8 text-destructive" onClick={() => handleKYCAction(kyc.id, 'rejected')}>
                                 <XCircle className="w-3 h-3" /> Reject
                               </Button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* SUPPORT TICKETS */}
+            <TabsContent value="support" className="space-y-4 mt-4">
+              <Card className="glass-card border-border/50">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <MessageCircle className="w-4 h-4" /> Support Tickets ({supportTickets.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {supportTickets.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">No tickets</p>
+                  ) : (
+                    <div className="space-y-3 max-h-[500px] overflow-y-auto">
+                      {supportTickets.map((t: any) => (
+                        <div key={t.id} className="p-3 rounded-lg bg-background/50 space-y-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-medium">{t.subject}</p>
+                              <p className="text-xs text-muted-foreground mt-0.5">{new Date(t.created_at).toLocaleDateString()}</p>
+                            </div>
+                            <Badge variant={t.status === 'resolved' ? 'default' : t.status === 'open' ? 'secondary' : 'outline'} className="text-[10px] shrink-0">
+                              {t.status}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-foreground">{t.message}</p>
+                          {t.admin_reply && (
+                            <div className="bg-primary/5 rounded p-2">
+                              <p className="text-[10px] uppercase text-primary font-medium mb-0.5">Your Reply</p>
+                              <p className="text-xs">{t.admin_reply}</p>
+                            </div>
+                          )}
+                          {replyingTo === t.id ? (
+                            <div className="space-y-2">
+                              <Textarea placeholder="Write a reply..." value={replyText} onChange={e => setReplyText(e.target.value)} className="text-xs min-h-[60px]" />
+                              <div className="flex gap-2">
+                                <Button size="sm" className="flex-1 text-xs h-7 gap-1" onClick={() => handleTicketReply(t.id, 'resolved')}>
+                                  <CheckCircle className="w-3 h-3" /> Reply & Resolve
+                                </Button>
+                                <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => { setReplyingTo(null); setReplyText(''); }}>Cancel</Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex gap-2">
+                              <Button size="sm" variant="outline" className="text-xs h-7 gap-1" onClick={() => { setReplyingTo(t.id); setReplyText(t.admin_reply || ''); }}>
+                                <SendIcon className="w-3 h-3" /> Reply
+                              </Button>
+                              {t.status !== 'resolved' && t.status !== 'closed' && (
+                                <Button size="sm" variant="outline" className="text-xs h-7 gap-1" onClick={() => handleTicketReply(t.id, 'resolved')}>
+                                  <CheckCircle className="w-3 h-3" /> Resolve
+                                </Button>
+                              )}
                             </div>
                           )}
                         </div>
