@@ -5,13 +5,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Wallet, Loader2 } from 'lucide-react';
+import { useAppKit, useAppKitAccount } from '@reown/appkit/react';
+import { useSignMessage } from 'wagmi';
 
 interface WalletConnectButtonProps {
   onSuccess?: () => void;
   variant?: 'default' | 'outline' | 'ghost';
   className?: string;
   label?: string;
-  /** If true, links wallet to current session instead of logging in */
   linkMode?: boolean;
 }
 
@@ -26,36 +27,15 @@ export const WalletConnectButton = ({
   const { user, refreshProfile } = useAuth();
   const { toast } = useToast();
   const [connecting, setConnecting] = useState(false);
+  const { open } = useAppKit();
+  const { address, isConnected } = useAppKitAccount();
+  const { signMessageAsync } = useSignMessage();
 
-  const connectWallet = async () => {
-    const ethereum = (window as any).ethereum;
-    if (!ethereum) {
-      toast({
-        title: 'No wallet found',
-        description: 'Please install MetaMask or a compatible wallet.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
+  const authenticateWallet = async (walletAddress: string) => {
     setConnecting(true);
     try {
-      const accounts: string[] = await ethereum.request({
-        method: 'eth_requestAccounts',
-      });
-
-      if (!accounts || accounts.length === 0) {
-        toast({ title: 'Connection cancelled', variant: 'destructive' });
-        return;
-      }
-
-      const address = accounts[0];
-
-      const message = `Sign in to LexoPay with wallet: ${address}\nTimestamp: ${Date.now()}`;
-      const signature = await ethereum.request({
-        method: 'personal_sign',
-        params: [message, address],
-      });
+      const message = `Sign in to LexoPay with wallet: ${walletAddress}\nTimestamp: ${Date.now()}`;
+      const signature = await signMessageAsync({ message });
 
       if (!signature) {
         toast({ title: 'Signature rejected', variant: 'destructive' });
@@ -66,9 +46,7 @@ export const WalletConnectButton = ({
       const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
       const url = `https://${projectId}.supabase.co/functions/v1/wallet-auth`;
 
-      const body: Record<string, string> = { address, signature, message };
-      
-      // If linking to existing session, pass user_id
+      const body: Record<string, string> = { address: walletAddress, signature, message };
       if (linkMode && user) {
         body.linkToSession = user.id;
       }
@@ -90,14 +68,12 @@ export const WalletConnectButton = ({
       }
 
       if (data.linked) {
-        // Wallet was linked to existing account
         await refreshProfile();
         toast({ title: 'Wallet linked!', description: 'Your wallet has been connected to your account.' });
         onSuccess?.();
         return;
       }
 
-      // Set the session from the response
       if (data.session) {
         await supabase.auth.setSession({
           access_token: data.session.access_token,
@@ -116,7 +92,7 @@ export const WalletConnectButton = ({
         }
       }
     } catch (err: any) {
-      console.error('Wallet connect error:', err);
+      console.error('Wallet auth error:', err);
       if (err.code === 4001) {
         toast({ title: 'Connection rejected', variant: 'destructive' });
       } else {
@@ -131,21 +107,46 @@ export const WalletConnectButton = ({
     }
   };
 
+  const handleClick = async () => {
+    if (isConnected && address) {
+      await authenticateWallet(address);
+    } else {
+      try {
+        await open();
+        // The user will connect via the modal, then we need to authenticate
+        // We'll handle this in an effect or the user clicks again
+      } catch {
+        toast({ title: 'Connection cancelled', variant: 'destructive' });
+      }
+    }
+  };
+
+  // If wallet just connected, auto-authenticate
+  const handleConnectedAuth = async () => {
+    if (isConnected && address && !connecting) {
+      await authenticateWallet(address);
+    }
+  };
+
   return (
-    <Button
-      variant={variant}
-      className={`w-full min-h-[48px] gap-2 ${className}`}
-      onClick={connectWallet}
-      disabled={connecting}
-    >
-      {connecting ? (
-        <Loader2 className="w-4 h-4 animate-spin" />
-      ) : (
-        <>
-          <Wallet className="w-4 h-4" />
-          {label}
-        </>
-      )}
-    </Button>
+    <div className="space-y-2">
+      <Button
+        variant={variant}
+        className={`w-full min-h-[48px] gap-2 ${className}`}
+        onClick={isConnected && address ? handleConnectedAuth : handleClick}
+        disabled={connecting}
+      >
+        {connecting ? (
+          <Loader2 className="w-4 h-4 animate-spin" />
+        ) : (
+          <>
+            <Wallet className="w-4 h-4" />
+            {isConnected && address
+              ? `Sign in as ${address.slice(0, 6)}...${address.slice(-4)}`
+              : label}
+          </>
+        )}
+      </Button>
+    </div>
   );
 };
