@@ -10,6 +10,7 @@ import { HideLovableBadge } from "@/components/HideLovableBadge";
 import { SplashScreen } from "@/components/SplashScreen";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { MaintenanceBanner } from "@/components/MaintenanceBanner";
+import { Web3Provider } from "@/providers/Web3Provider";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -75,20 +76,22 @@ const AppRoutes = () => {
 
 const App = () => (
   <ErrorBoundary>
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <OfflineBanner />
-            <MaintenanceBanner />
-            <AppRoutes />
-            <HideLovableBadge />
-          </BrowserRouter>
-        </TooltipProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+    <Web3Provider>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <OfflineBanner />
+              <MaintenanceBanner />
+              <AppRoutes />
+              <HideLovableBadge />
+            </BrowserRouter>
+          </TooltipProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </Web3Provider>
   </ErrorBoundary>
 );
 
