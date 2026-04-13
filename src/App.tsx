@@ -29,6 +29,7 @@ import PublicProfile from "./pages/PublicProfile";
 import Notifications from "./pages/Notifications";
 import DepositDetail from "./pages/DepositDetail";
 import KYC from "./pages/KYC";
+import Support from "./pages/Support";
 
 const queryClient = new QueryClient();
 
@@ -66,6 +67,7 @@ const AppRoutes = () => {
       <Route path="/kyc" element={<ProtectedRoute><KYC /></ProtectedRoute>} />
       <Route path="/request" element={<ProtectedRoute><Request /></ProtectedRoute>} />
       <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+      <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
       <Route path="*" element={<CatchAllRoute />} />
     </Routes>
   );
