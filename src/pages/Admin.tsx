@@ -377,6 +377,67 @@ const Admin = () => {
               </Card>
             </TabsContent>
 
+            {/* SUPPORT TICKETS */}
+            <TabsContent value="support" className="space-y-4 mt-4">
+              <Card className="glass-card border-border/50">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <MessageCircle className="w-4 h-4" /> Support Tickets ({supportTickets.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {supportTickets.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">No tickets</p>
+                  ) : (
+                    <div className="space-y-3 max-h-[500px] overflow-y-auto">
+                      {supportTickets.map((t: any) => (
+                        <div key={t.id} className="p-3 rounded-lg bg-background/50 space-y-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-medium">{t.subject}</p>
+                              <p className="text-xs text-muted-foreground mt-0.5">{new Date(t.created_at).toLocaleDateString()}</p>
+                            </div>
+                            <Badge variant={t.status === 'resolved' ? 'default' : t.status === 'open' ? 'secondary' : 'outline'} className="text-[10px] shrink-0">
+                              {t.status}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-foreground">{t.message}</p>
+                          {t.admin_reply && (
+                            <div className="bg-primary/5 rounded p-2">
+                              <p className="text-[10px] uppercase text-primary font-medium mb-0.5">Your Reply</p>
+                              <p className="text-xs">{t.admin_reply}</p>
+                            </div>
+                          )}
+                          {replyingTo === t.id ? (
+                            <div className="space-y-2">
+                              <Textarea placeholder="Write a reply..." value={replyText} onChange={e => setReplyText(e.target.value)} className="text-xs min-h-[60px]" />
+                              <div className="flex gap-2">
+                                <Button size="sm" className="flex-1 text-xs h-7 gap-1" onClick={() => handleTicketReply(t.id, 'resolved')}>
+                                  <CheckCircle className="w-3 h-3" /> Reply & Resolve
+                                </Button>
+                                <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => { setReplyingTo(null); setReplyText(''); }}>Cancel</Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex gap-2">
+                              <Button size="sm" variant="outline" className="text-xs h-7 gap-1" onClick={() => { setReplyingTo(t.id); setReplyText(t.admin_reply || ''); }}>
+                                <SendIcon className="w-3 h-3" /> Reply
+                              </Button>
+                              {t.status !== 'resolved' && t.status !== 'closed' && (
+                                <Button size="sm" variant="outline" className="text-xs h-7 gap-1" onClick={() => handleTicketReply(t.id, 'resolved')}>
+                                  <CheckCircle className="w-3 h-3" /> Resolve
+                                </Button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
             {/* SETTINGS */}
             <TabsContent value="settings" className="space-y-4 mt-4">
               <Card className="glass-card border-border/50">
