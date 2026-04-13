@@ -141,6 +141,23 @@ const Admin = () => {
     }
   };
 
+  const handleTicketReply = async (ticketId: string, newStatus?: string) => {
+    const updates: Record<string, any> = {};
+    if (replyText.trim()) updates.admin_reply = replyText.trim();
+    if (newStatus) updates.status = newStatus;
+    updates.updated_at = new Date().toISOString();
+
+    const { error } = await supabase.from('support_tickets').update(updates).eq('id', ticketId);
+    if (error) {
+      toast({ title: 'Failed to update ticket', variant: 'destructive' });
+    } else {
+      toast({ title: 'Ticket updated' });
+      setReplyingTo(null);
+      setReplyText('');
+      fetchData();
+    }
+  };
+
   if (!isAdmin) return null;
 
   return (
