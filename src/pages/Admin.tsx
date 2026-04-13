@@ -15,7 +15,9 @@ import {
   ArrowLeft, Loader2, Shield, Users, Inbox, BarChart3,
   ArrowDownToLine, RefreshCw, ArrowUpFromLine, Search,
   AlertTriangle, Settings, UserX, UserCheck, CheckCircle, XCircle,
+  MessageCircle, Send as SendIcon,
 } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 
 interface AdminStats {
   totalUsers: number;
@@ -43,6 +45,9 @@ const Admin = () => {
   const [kycSubmissions, setKycSubmissions] = useState<any[]>([]);
   const [feedbackCount, setFeedbackCount] = useState(0);
   const [togglingMaintenance, setTogglingMaintenance] = useState(false);
+  const [supportTickets, setSupportTickets] = useState<any[]>([]);
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState('');
 
   const isAdmin = profile?.is_admin === true;
 
@@ -54,7 +59,7 @@ const Admin = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [profilesRes, depositsRes, conversionsRes, withdrawalsRes, txRes, feedbackRes, kycRes] = await Promise.all([
+      const [profilesRes, depositsRes, conversionsRes, withdrawalsRes, txRes, feedbackRes, kycRes, ticketsRes] = await Promise.all([
         supabase.from('profiles').select('*').order('created_at', { ascending: false }),
         supabase.from('deposits').select('*').order('created_at', { ascending: false }).limit(50),
         supabase.from('conversions').select('*').order('created_at', { ascending: false }).limit(50),
@@ -62,6 +67,7 @@ const Admin = () => {
         supabase.from('transactions').select('*').order('created_at', { ascending: false }).limit(10),
         supabase.from('feedback').select('id', { count: 'exact' }).eq('is_read', false),
         supabase.from('kyc_submissions').select('*').order('created_at', { ascending: false }),
+        supabase.from('support_tickets').select('*').order('created_at', { ascending: false }),
       ]);
 
       const users = profilesRes.data || [];
@@ -76,6 +82,7 @@ const Admin = () => {
       setRecentTransactions(txRes.data || []);
       setFeedbackCount(feedbackRes.count || 0);
       setKycSubmissions(kycRes.data || []);
+      setSupportTickets((ticketsRes.data as any[]) || []);
 
       const totalVolume = wds.filter((w: any) => w.status === 'SUCCESS').reduce((s: number, w: any) => s + Number(w.amount || 0), 0);
 
