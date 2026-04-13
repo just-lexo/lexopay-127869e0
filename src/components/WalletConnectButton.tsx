@@ -35,7 +35,7 @@ export const WalletConnectButton = ({
     setConnecting(true);
     try {
       const message = `Sign in to LexoPay with wallet: ${walletAddress}\nTimestamp: ${Date.now()}`;
-      const signature = await signMessageAsync({ message });
+      const signature = await signMessageAsync({ message, account: walletAddress as `0x${string}` });
 
       if (!signature) {
         toast({ title: 'Signature rejected', variant: 'destructive' });
