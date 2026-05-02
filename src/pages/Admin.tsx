@@ -164,7 +164,7 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       <header className="glass-card border-b border-border/50 sticky top-0 z-50">
-        <div className="container max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
+        <div className="container max-w-6xl mx-auto px-4 py-3 flex items-center gap-3">
           <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => navigate('/dashboard')}>
             <ArrowLeft className="w-4 h-4" />
           </Button>
@@ -172,9 +172,11 @@ const Admin = () => {
             <h1 className="font-semibold text-base flex items-center gap-2">
               <Shield className="w-4 h-4 text-primary" /> Admin Panel
             </h1>
+            <p className="text-[11px] text-muted-foreground">System-wide monitoring &amp; management</p>
           </div>
           <Button variant="outline" size="sm" className="gap-1.5 relative" onClick={() => navigate('/admin/feedback')}>
             <Inbox className="w-4 h-4" />
+            <span className="hidden sm:inline">Feedback</span>
             {feedbackCount > 0 && (
               <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 p-0 text-[10px] flex items-center justify-center">{feedbackCount}</Badge>
             )}
@@ -182,18 +184,18 @@ const Admin = () => {
         </div>
       </header>
 
-      <main className="container max-w-lg mx-auto px-4 py-4 space-y-4">
+      <main className="container max-w-6xl mx-auto px-4 py-4 space-y-4">
         {loading ? (
           <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="w-full grid grid-cols-6">
-              <TabsTrigger value="overview" className="text-[10px]">Dashboard</TabsTrigger>
-              <TabsTrigger value="users" className="text-[10px]">Users</TabsTrigger>
-              <TabsTrigger value="transactions" className="text-[10px]">Txns</TabsTrigger>
-              <TabsTrigger value="kyc" className="text-[10px]">KYC</TabsTrigger>
-              <TabsTrigger value="support" className="text-[10px]">Support</TabsTrigger>
-              <TabsTrigger value="settings" className="text-[10px]">Settings</TabsTrigger>
+            <TabsList className="w-full grid grid-cols-6 h-auto">
+              <TabsTrigger value="overview" className="text-[11px] sm:text-xs py-2">Dashboard</TabsTrigger>
+              <TabsTrigger value="users" className="text-[11px] sm:text-xs py-2">Users</TabsTrigger>
+              <TabsTrigger value="transactions" className="text-[11px] sm:text-xs py-2">Txns</TabsTrigger>
+              <TabsTrigger value="kyc" className="text-[11px] sm:text-xs py-2">KYC</TabsTrigger>
+              <TabsTrigger value="support" className="text-[11px] sm:text-xs py-2">Support</TabsTrigger>
+              <TabsTrigger value="settings" className="text-[11px] sm:text-xs py-2">Settings</TabsTrigger>
             </TabsList>
 
             {/* DASHBOARD */}
