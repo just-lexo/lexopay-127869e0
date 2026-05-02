@@ -672,6 +672,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_platform_admin: { Args: { _user_id: string }; Returns: boolean }
       lookup_public_profile: {
         Args: { _username: string }
         Returns: {
