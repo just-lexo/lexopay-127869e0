@@ -14,6 +14,8 @@ const wagmiAdapter = new WagmiAdapter({
   networks,
 });
 
+const origin = typeof window !== 'undefined' ? window.location.origin : 'https://lexopay.lovable.app';
+
 createAppKit({
   adapters: [wagmiAdapter],
   networks,
@@ -21,12 +23,21 @@ createAppKit({
   metadata: {
     name: 'LexoPay',
     description: 'Crypto to Naira off-ramp on Base',
-    url: window.location.origin,
-    icons: [`${window.location.origin}/placeholder.svg`],
+    url: origin,
+    icons: [`${origin}/placeholder.svg`],
   },
   features: {
     analytics: false,
+    email: false,
+    socials: false,
   },
+  // Enabling these wallets explicitly improves mobile deep-link reliability
+  featuredWalletIds: [
+    // Coinbase Wallet
+    'fd20dc426fb37566d803205b19bbc1d4096b248ac04548e3cfb6b3a38bd033aa',
+    // MetaMask
+    'c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96',
+  ],
   themeMode: 'dark',
 });
 

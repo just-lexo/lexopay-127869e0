@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -6,7 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Wallet, Loader2 } from 'lucide-react';
 import { useAppKit, useAppKitAccount } from '@reown/appkit/react';
-import { useSignMessage } from 'wagmi';
+import { useSignMessage, useDisconnect } from 'wagmi';
 
 interface WalletConnectButtonProps {
   onSuccess?: () => void;
@@ -27,11 +27,15 @@ export const WalletConnectButton = ({
   const { user, refreshProfile } = useAuth();
   const { toast } = useToast();
   const [connecting, setConnecting] = useState(false);
+  const [pendingAuth, setPendingAuth] = useState(false);
   const { open } = useAppKit();
   const { address, isConnected } = useAppKitAccount();
   const { signMessageAsync } = useSignMessage();
+  const { disconnectAsync } = useDisconnect();
+  const authenticatedAddrRef = useRef<string | null>(null);
 
   const authenticateWallet = async (walletAddress: string) => {
+    if (authenticatedAddrRef.current === walletAddress) return;
     setConnecting(true);
     try {
       const message = `Sign in to LexoPay with wallet: ${walletAddress}\nTimestamp: ${Date.now()}`;
@@ -67,6 +71,8 @@ export const WalletConnectButton = ({
         throw new Error(data.error || 'Authentication failed');
       }
 
+      authenticatedAddrRef.current = walletAddress;
+
       if (data.linked) {
         await refreshProfile();
         toast({ title: 'Wallet linked!', description: 'Your wallet has been connected to your account.' });
@@ -93,7 +99,7 @@ export const WalletConnectButton = ({
       }
     } catch (err: any) {
       console.error('Wallet auth error:', err);
-      if (err.code === 4001) {
+      if (err.code === 4001 || /reject/i.test(err.message || '')) {
         toast({ title: 'Connection rejected', variant: 'destructive' });
       } else {
         toast({
@@ -102,42 +108,52 @@ export const WalletConnectButton = ({
           variant: 'destructive',
         });
       }
+      // Disconnect so the user can retry cleanly
+      try { await disconnectAsync(); } catch { /* ignore */ }
+      authenticatedAddrRef.current = null;
     } finally {
       setConnecting(false);
+      setPendingAuth(false);
     }
   };
+
+  // Auto-authenticate as soon as the wallet connects after the user pressed the button
+  useEffect(() => {
+    if (pendingAuth && isConnected && address && authenticatedAddrRef.current !== address) {
+      authenticateWallet(address);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingAuth, isConnected, address]);
 
   const handleClick = async () => {
     if (isConnected && address) {
       await authenticateWallet(address);
-    } else {
-      try {
-        await open();
-        // The user will connect via the modal, then we need to authenticate
-        // We'll handle this in an effect or the user clicks again
-      } catch {
-        toast({ title: 'Connection cancelled', variant: 'destructive' });
-      }
+      return;
+    }
+    try {
+      setPendingAuth(true);
+      await open({ view: 'Connect' });
+    } catch (err) {
+      setPendingAuth(false);
+      toast({ title: 'Connection cancelled', variant: 'destructive' });
     }
   };
 
-  // If wallet just connected, auto-authenticate
-  const handleConnectedAuth = async () => {
-    if (isConnected && address && !connecting) {
-      await authenticateWallet(address);
-    }
-  };
+  const isBusy = connecting || (pendingAuth && !isConnected);
 
   return (
     <div className="space-y-2">
       <Button
         variant={variant}
         className={`w-full min-h-[48px] gap-2 ${className}`}
-        onClick={isConnected && address ? handleConnectedAuth : handleClick}
-        disabled={connecting}
+        onClick={handleClick}
+        disabled={isBusy}
       >
-        {connecting ? (
-          <Loader2 className="w-4 h-4 animate-spin" />
+        {isBusy ? (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin" />
+            {connecting ? 'Signing in…' : 'Opening wallet…'}
+          </>
         ) : (
           <>
             <Wallet className="w-4 h-4" />

@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
   ArrowLeft, Loader2, Shield, Users, Inbox, BarChart3,
   ArrowDownToLine, RefreshCw, ArrowUpFromLine, Search,
@@ -163,7 +164,7 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       <header className="glass-card border-b border-border/50 sticky top-0 z-50">
-        <div className="container max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
+        <div className="container max-w-6xl mx-auto px-4 py-3 flex items-center gap-3">
           <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => navigate('/dashboard')}>
             <ArrowLeft className="w-4 h-4" />
           </Button>
@@ -171,9 +172,11 @@ const Admin = () => {
             <h1 className="font-semibold text-base flex items-center gap-2">
               <Shield className="w-4 h-4 text-primary" /> Admin Panel
             </h1>
+            <p className="text-[11px] text-muted-foreground">System-wide monitoring &amp; management</p>
           </div>
           <Button variant="outline" size="sm" className="gap-1.5 relative" onClick={() => navigate('/admin/feedback')}>
             <Inbox className="w-4 h-4" />
+            <span className="hidden sm:inline">Feedback</span>
             {feedbackCount > 0 && (
               <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 p-0 text-[10px] flex items-center justify-center">{feedbackCount}</Badge>
             )}
@@ -181,18 +184,18 @@ const Admin = () => {
         </div>
       </header>
 
-      <main className="container max-w-lg mx-auto px-4 py-4 space-y-4">
+      <main className="container max-w-6xl mx-auto px-4 py-4 space-y-4">
         {loading ? (
           <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="w-full grid grid-cols-6">
-              <TabsTrigger value="overview" className="text-[10px]">Dashboard</TabsTrigger>
-              <TabsTrigger value="users" className="text-[10px]">Users</TabsTrigger>
-              <TabsTrigger value="transactions" className="text-[10px]">Txns</TabsTrigger>
-              <TabsTrigger value="kyc" className="text-[10px]">KYC</TabsTrigger>
-              <TabsTrigger value="support" className="text-[10px]">Support</TabsTrigger>
-              <TabsTrigger value="settings" className="text-[10px]">Settings</TabsTrigger>
+            <TabsList className="w-full grid grid-cols-6 h-auto">
+              <TabsTrigger value="overview" className="text-[11px] sm:text-xs py-2">Dashboard</TabsTrigger>
+              <TabsTrigger value="users" className="text-[11px] sm:text-xs py-2">Users</TabsTrigger>
+              <TabsTrigger value="transactions" className="text-[11px] sm:text-xs py-2">Txns</TabsTrigger>
+              <TabsTrigger value="kyc" className="text-[11px] sm:text-xs py-2">KYC</TabsTrigger>
+              <TabsTrigger value="support" className="text-[11px] sm:text-xs py-2">Support</TabsTrigger>
+              <TabsTrigger value="settings" className="text-[11px] sm:text-xs py-2">Settings</TabsTrigger>
             </TabsList>
 
             {/* DASHBOARD */}
@@ -234,57 +237,92 @@ const Admin = () => {
             <TabsContent value="users" className="space-y-4 mt-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input placeholder="Search users..." value={userSearch} onChange={(e) => setUserSearch(e.target.value)} className="pl-9" />
+                <Input placeholder="Search users by name, @username or wallet…" value={userSearch} onChange={(e) => setUserSearch(e.target.value)} className="pl-9" />
               </div>
-              {filteredUsers.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-8">No users found</p>
-              ) : (
-                <div className="space-y-2">
-                  {filteredUsers.map((u: any) => (
-                    <Card key={u.id} className="glass-card border-border/50">
-                      <CardContent className="py-3 px-3">
-                        <div className="flex items-center justify-between">
-                          <div className="min-w-0 flex-1">
-                            <p className="font-medium text-sm">{u.display_name || 'Unnamed'}</p>
-                            {u.username && <p className="text-xs text-primary">@{u.username}</p>}
-                            {u.wallet_address && (
-                              <p className="text-[10px] font-mono text-muted-foreground truncate">
-                                {u.wallet_address.slice(0, 6)}...{u.wallet_address.slice(-4)}
-                              </p>
-                            )}
-                            <p className="text-[10px] text-muted-foreground mt-0.5">Joined {new Date(u.created_at).toLocaleDateString()}</p>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            {u.is_admin && <Badge variant="default" className="text-[10px]">Admin</Badge>}
-                            <Badge variant="outline" className="text-[10px]">KYC {u.kyc_tier}</Badge>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
+              <Card className="glass-card border-border/50">
+                <CardHeader className="pb-3 flex-row items-center justify-between">
+                  <CardTitle className="text-sm">All Users ({filteredUsers.length})</CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  {filteredUsers.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-8">No users found</p>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="text-xs">User</TableHead>
+                            <TableHead className="text-xs hidden sm:table-cell">Wallet</TableHead>
+                            <TableHead className="text-xs hidden md:table-cell">Joined</TableHead>
+                            <TableHead className="text-xs text-right">Status</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredUsers.map((u: any) => (
+                            <TableRow key={u.id}>
+                              <TableCell className="py-2.5">
+                                <div className="min-w-0">
+                                  <p className="font-medium text-sm truncate">{u.display_name || 'Unnamed'}</p>
+                                  {u.username && <p className="text-xs text-primary truncate">@{u.username}</p>}
+                                </div>
+                              </TableCell>
+                              <TableCell className="hidden sm:table-cell py-2.5">
+                                {u.wallet_address ? (
+                                  <p className="text-[11px] font-mono text-muted-foreground">
+                                    {u.wallet_address.slice(0, 6)}…{u.wallet_address.slice(-4)}
+                                  </p>
+                                ) : (
+                                  <span className="text-xs text-muted-foreground">—</span>
+                                )}
+                              </TableCell>
+                              <TableCell className="hidden md:table-cell py-2.5">
+                                <p className="text-xs text-muted-foreground">{new Date(u.created_at).toLocaleDateString()}</p>
+                              </TableCell>
+                              <TableCell className="text-right py-2.5">
+                                <div className="flex flex-wrap items-center justify-end gap-1.5">
+                                  {u.is_admin && <Badge variant="default" className="text-[10px]">Admin</Badge>}
+                                  <Badge variant="outline" className="text-[10px]">KYC {u.kyc_tier}</Badge>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </TabsContent>
 
             {/* TRANSACTIONS */}
             <TabsContent value="transactions" className="space-y-4 mt-4">
               <Card className="glass-card border-border/50">
                 <CardHeader className="pb-2"><CardTitle className="text-sm">Deposits ({deposits.length})</CardTitle></CardHeader>
-                <CardContent>
-                  {deposits.length === 0 ? <p className="text-sm text-muted-foreground text-center py-3">None</p> : (
-                    <div className="space-y-2 max-h-60 overflow-y-auto">
-                      {deposits.slice(0, 20).map((d: any) => (
-                        <div key={d.id} className="flex items-center justify-between p-2 rounded-lg bg-background/50 text-sm">
-                          <div className="min-w-0 flex-1">
-                            <p className="font-mono text-xs truncate">{d.address?.slice(0, 10)}...</p>
-                            <p className="text-xs text-muted-foreground">{d.token} • {new Date(d.created_at).toLocaleDateString()}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-mono text-sm">{d.amount || '—'}</p>
-                            <Badge variant="outline" className="text-[10px]">{d.status}</Badge>
-                          </div>
-                        </div>
-                      ))}
+                <CardContent className="p-0">
+                  {deposits.length === 0 ? <p className="text-sm text-muted-foreground text-center py-6">No deposits yet</p> : (
+                    <div className="overflow-x-auto max-h-80 overflow-y-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="text-xs">Address</TableHead>
+                            <TableHead className="text-xs hidden sm:table-cell">Token</TableHead>
+                            <TableHead className="text-xs hidden md:table-cell">Date</TableHead>
+                            <TableHead className="text-xs text-right">Amount</TableHead>
+                            <TableHead className="text-xs text-right">Status</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {deposits.slice(0, 50).map((d: any) => (
+                            <TableRow key={d.id}>
+                              <TableCell className="py-2 font-mono text-[11px]">{d.address?.slice(0, 8)}…{d.address?.slice(-4)}</TableCell>
+                              <TableCell className="py-2 text-xs hidden sm:table-cell">{d.token}</TableCell>
+                              <TableCell className="py-2 text-xs text-muted-foreground hidden md:table-cell">{new Date(d.created_at).toLocaleDateString()}</TableCell>
+                              <TableCell className="py-2 text-right font-mono text-xs">{d.amount || '—'}</TableCell>
+                              <TableCell className="py-2 text-right"><Badge variant="outline" className="text-[10px]">{d.status}</Badge></TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
                     </div>
                   )}
                 </CardContent>
@@ -292,21 +330,29 @@ const Admin = () => {
 
               <Card className="glass-card border-border/50">
                 <CardHeader className="pb-2"><CardTitle className="text-sm">Conversions ({conversions.length})</CardTitle></CardHeader>
-                <CardContent>
-                  {conversions.length === 0 ? <p className="text-sm text-muted-foreground text-center py-3">None</p> : (
-                    <div className="space-y-2 max-h-60 overflow-y-auto">
-                      {conversions.slice(0, 20).map((c: any) => (
-                        <div key={c.id} className="flex items-center justify-between p-2 rounded-lg bg-background/50 text-sm">
-                          <div>
-                            <p className="font-mono text-xs">{c.from_amount} {c.from_token}</p>
-                            <p className="text-xs text-muted-foreground">{new Date(c.created_at).toLocaleDateString()}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-mono text-sm">₦{Number(c.ngn_amount).toLocaleString()}</p>
-                            <Badge variant="outline" className="text-[10px]">{c.status}</Badge>
-                          </div>
-                        </div>
-                      ))}
+                <CardContent className="p-0">
+                  {conversions.length === 0 ? <p className="text-sm text-muted-foreground text-center py-6">No conversions yet</p> : (
+                    <div className="overflow-x-auto max-h-80 overflow-y-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="text-xs">From</TableHead>
+                            <TableHead className="text-xs hidden md:table-cell">Date</TableHead>
+                            <TableHead className="text-xs text-right">NGN</TableHead>
+                            <TableHead className="text-xs text-right">Status</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {conversions.slice(0, 50).map((c: any) => (
+                            <TableRow key={c.id}>
+                              <TableCell className="py-2 font-mono text-xs">{c.from_amount} {c.from_token}</TableCell>
+                              <TableCell className="py-2 text-xs text-muted-foreground hidden md:table-cell">{new Date(c.created_at).toLocaleDateString()}</TableCell>
+                              <TableCell className="py-2 text-right font-mono text-xs">₦{Number(c.ngn_amount).toLocaleString()}</TableCell>
+                              <TableCell className="py-2 text-right"><Badge variant="outline" className="text-[10px]">{c.status}</Badge></TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
                     </div>
                   )}
                 </CardContent>
@@ -314,21 +360,31 @@ const Admin = () => {
 
               <Card className="glass-card border-border/50">
                 <CardHeader className="pb-2"><CardTitle className="text-sm">Withdrawals ({withdrawals.length})</CardTitle></CardHeader>
-                <CardContent>
-                  {withdrawals.length === 0 ? <p className="text-sm text-muted-foreground text-center py-3">None</p> : (
-                    <div className="space-y-2 max-h-60 overflow-y-auto">
-                      {withdrawals.slice(0, 20).map((w: any) => (
-                        <div key={w.id} className="flex items-center justify-between p-2 rounded-lg bg-background/50 text-sm">
-                          <div>
-                            <p className="text-xs font-medium">{w.bank_name}</p>
-                            <p className="font-mono text-xs text-muted-foreground">{maskAccount(w.account_number)}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-mono text-sm">₦{Number(w.amount).toLocaleString()}</p>
-                            <Badge variant="outline" className="text-[10px]">{w.status}</Badge>
-                          </div>
-                        </div>
-                      ))}
+                <CardContent className="p-0">
+                  {withdrawals.length === 0 ? <p className="text-sm text-muted-foreground text-center py-6">No withdrawals yet</p> : (
+                    <div className="overflow-x-auto max-h-80 overflow-y-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="text-xs">Bank</TableHead>
+                            <TableHead className="text-xs hidden sm:table-cell">Account</TableHead>
+                            <TableHead className="text-xs hidden md:table-cell">Date</TableHead>
+                            <TableHead className="text-xs text-right">Amount</TableHead>
+                            <TableHead className="text-xs text-right">Status</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {withdrawals.slice(0, 50).map((w: any) => (
+                            <TableRow key={w.id}>
+                              <TableCell className="py-2 text-xs font-medium">{w.bank_name}</TableCell>
+                              <TableCell className="py-2 font-mono text-[11px] text-muted-foreground hidden sm:table-cell">{maskAccount(w.account_number)}</TableCell>
+                              <TableCell className="py-2 text-xs text-muted-foreground hidden md:table-cell">{new Date(w.created_at).toLocaleDateString()}</TableCell>
+                              <TableCell className="py-2 text-right font-mono text-xs">₦{Number(w.amount).toLocaleString()}</TableCell>
+                              <TableCell className="py-2 text-right"><Badge variant="outline" className="text-[10px]">{w.status}</Badge></TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
                     </div>
                   )}
                 </CardContent>
