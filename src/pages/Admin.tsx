@@ -237,36 +237,61 @@ const Admin = () => {
             <TabsContent value="users" className="space-y-4 mt-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input placeholder="Search users..." value={userSearch} onChange={(e) => setUserSearch(e.target.value)} className="pl-9" />
+                <Input placeholder="Search users by name, @username or wallet…" value={userSearch} onChange={(e) => setUserSearch(e.target.value)} className="pl-9" />
               </div>
-              {filteredUsers.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-8">No users found</p>
-              ) : (
-                <div className="space-y-2">
-                  {filteredUsers.map((u: any) => (
-                    <Card key={u.id} className="glass-card border-border/50">
-                      <CardContent className="py-3 px-3">
-                        <div className="flex items-center justify-between">
-                          <div className="min-w-0 flex-1">
-                            <p className="font-medium text-sm">{u.display_name || 'Unnamed'}</p>
-                            {u.username && <p className="text-xs text-primary">@{u.username}</p>}
-                            {u.wallet_address && (
-                              <p className="text-[10px] font-mono text-muted-foreground truncate">
-                                {u.wallet_address.slice(0, 6)}...{u.wallet_address.slice(-4)}
-                              </p>
-                            )}
-                            <p className="text-[10px] text-muted-foreground mt-0.5">Joined {new Date(u.created_at).toLocaleDateString()}</p>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            {u.is_admin && <Badge variant="default" className="text-[10px]">Admin</Badge>}
-                            <Badge variant="outline" className="text-[10px]">KYC {u.kyc_tier}</Badge>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
+              <Card className="glass-card border-border/50">
+                <CardHeader className="pb-3 flex-row items-center justify-between">
+                  <CardTitle className="text-sm">All Users ({filteredUsers.length})</CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  {filteredUsers.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-8">No users found</p>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="text-xs">User</TableHead>
+                            <TableHead className="text-xs hidden sm:table-cell">Wallet</TableHead>
+                            <TableHead className="text-xs hidden md:table-cell">Joined</TableHead>
+                            <TableHead className="text-xs text-right">Status</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredUsers.map((u: any) => (
+                            <TableRow key={u.id}>
+                              <TableCell className="py-2.5">
+                                <div className="min-w-0">
+                                  <p className="font-medium text-sm truncate">{u.display_name || 'Unnamed'}</p>
+                                  {u.username && <p className="text-xs text-primary truncate">@{u.username}</p>}
+                                </div>
+                              </TableCell>
+                              <TableCell className="hidden sm:table-cell py-2.5">
+                                {u.wallet_address ? (
+                                  <p className="text-[11px] font-mono text-muted-foreground">
+                                    {u.wallet_address.slice(0, 6)}…{u.wallet_address.slice(-4)}
+                                  </p>
+                                ) : (
+                                  <span className="text-xs text-muted-foreground">—</span>
+                                )}
+                              </TableCell>
+                              <TableCell className="hidden md:table-cell py-2.5">
+                                <p className="text-xs text-muted-foreground">{new Date(u.created_at).toLocaleDateString()}</p>
+                              </TableCell>
+                              <TableCell className="text-right py-2.5">
+                                <div className="flex flex-wrap items-center justify-end gap-1.5">
+                                  {u.is_admin && <Badge variant="default" className="text-[10px]">Admin</Badge>}
+                                  <Badge variant="outline" className="text-[10px]">KYC {u.kyc_tier}</Badge>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </TabsContent>
 
             {/* TRANSACTIONS */}
