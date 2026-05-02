@@ -298,21 +298,31 @@ const Admin = () => {
             <TabsContent value="transactions" className="space-y-4 mt-4">
               <Card className="glass-card border-border/50">
                 <CardHeader className="pb-2"><CardTitle className="text-sm">Deposits ({deposits.length})</CardTitle></CardHeader>
-                <CardContent>
-                  {deposits.length === 0 ? <p className="text-sm text-muted-foreground text-center py-3">None</p> : (
-                    <div className="space-y-2 max-h-60 overflow-y-auto">
-                      {deposits.slice(0, 20).map((d: any) => (
-                        <div key={d.id} className="flex items-center justify-between p-2 rounded-lg bg-background/50 text-sm">
-                          <div className="min-w-0 flex-1">
-                            <p className="font-mono text-xs truncate">{d.address?.slice(0, 10)}...</p>
-                            <p className="text-xs text-muted-foreground">{d.token} • {new Date(d.created_at).toLocaleDateString()}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-mono text-sm">{d.amount || '—'}</p>
-                            <Badge variant="outline" className="text-[10px]">{d.status}</Badge>
-                          </div>
-                        </div>
-                      ))}
+                <CardContent className="p-0">
+                  {deposits.length === 0 ? <p className="text-sm text-muted-foreground text-center py-6">No deposits yet</p> : (
+                    <div className="overflow-x-auto max-h-80 overflow-y-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="text-xs">Address</TableHead>
+                            <TableHead className="text-xs hidden sm:table-cell">Token</TableHead>
+                            <TableHead className="text-xs hidden md:table-cell">Date</TableHead>
+                            <TableHead className="text-xs text-right">Amount</TableHead>
+                            <TableHead className="text-xs text-right">Status</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {deposits.slice(0, 50).map((d: any) => (
+                            <TableRow key={d.id}>
+                              <TableCell className="py-2 font-mono text-[11px]">{d.address?.slice(0, 8)}…{d.address?.slice(-4)}</TableCell>
+                              <TableCell className="py-2 text-xs hidden sm:table-cell">{d.token}</TableCell>
+                              <TableCell className="py-2 text-xs text-muted-foreground hidden md:table-cell">{new Date(d.created_at).toLocaleDateString()}</TableCell>
+                              <TableCell className="py-2 text-right font-mono text-xs">{d.amount || '—'}</TableCell>
+                              <TableCell className="py-2 text-right"><Badge variant="outline" className="text-[10px]">{d.status}</Badge></TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
                     </div>
                   )}
                 </CardContent>
@@ -320,21 +330,29 @@ const Admin = () => {
 
               <Card className="glass-card border-border/50">
                 <CardHeader className="pb-2"><CardTitle className="text-sm">Conversions ({conversions.length})</CardTitle></CardHeader>
-                <CardContent>
-                  {conversions.length === 0 ? <p className="text-sm text-muted-foreground text-center py-3">None</p> : (
-                    <div className="space-y-2 max-h-60 overflow-y-auto">
-                      {conversions.slice(0, 20).map((c: any) => (
-                        <div key={c.id} className="flex items-center justify-between p-2 rounded-lg bg-background/50 text-sm">
-                          <div>
-                            <p className="font-mono text-xs">{c.from_amount} {c.from_token}</p>
-                            <p className="text-xs text-muted-foreground">{new Date(c.created_at).toLocaleDateString()}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-mono text-sm">₦{Number(c.ngn_amount).toLocaleString()}</p>
-                            <Badge variant="outline" className="text-[10px]">{c.status}</Badge>
-                          </div>
-                        </div>
-                      ))}
+                <CardContent className="p-0">
+                  {conversions.length === 0 ? <p className="text-sm text-muted-foreground text-center py-6">No conversions yet</p> : (
+                    <div className="overflow-x-auto max-h-80 overflow-y-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="text-xs">From</TableHead>
+                            <TableHead className="text-xs hidden md:table-cell">Date</TableHead>
+                            <TableHead className="text-xs text-right">NGN</TableHead>
+                            <TableHead className="text-xs text-right">Status</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {conversions.slice(0, 50).map((c: any) => (
+                            <TableRow key={c.id}>
+                              <TableCell className="py-2 font-mono text-xs">{c.from_amount} {c.from_token}</TableCell>
+                              <TableCell className="py-2 text-xs text-muted-foreground hidden md:table-cell">{new Date(c.created_at).toLocaleDateString()}</TableCell>
+                              <TableCell className="py-2 text-right font-mono text-xs">₦{Number(c.ngn_amount).toLocaleString()}</TableCell>
+                              <TableCell className="py-2 text-right"><Badge variant="outline" className="text-[10px]">{c.status}</Badge></TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
                     </div>
                   )}
                 </CardContent>
@@ -342,21 +360,31 @@ const Admin = () => {
 
               <Card className="glass-card border-border/50">
                 <CardHeader className="pb-2"><CardTitle className="text-sm">Withdrawals ({withdrawals.length})</CardTitle></CardHeader>
-                <CardContent>
-                  {withdrawals.length === 0 ? <p className="text-sm text-muted-foreground text-center py-3">None</p> : (
-                    <div className="space-y-2 max-h-60 overflow-y-auto">
-                      {withdrawals.slice(0, 20).map((w: any) => (
-                        <div key={w.id} className="flex items-center justify-between p-2 rounded-lg bg-background/50 text-sm">
-                          <div>
-                            <p className="text-xs font-medium">{w.bank_name}</p>
-                            <p className="font-mono text-xs text-muted-foreground">{maskAccount(w.account_number)}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-mono text-sm">₦{Number(w.amount).toLocaleString()}</p>
-                            <Badge variant="outline" className="text-[10px]">{w.status}</Badge>
-                          </div>
-                        </div>
-                      ))}
+                <CardContent className="p-0">
+                  {withdrawals.length === 0 ? <p className="text-sm text-muted-foreground text-center py-6">No withdrawals yet</p> : (
+                    <div className="overflow-x-auto max-h-80 overflow-y-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="text-xs">Bank</TableHead>
+                            <TableHead className="text-xs hidden sm:table-cell">Account</TableHead>
+                            <TableHead className="text-xs hidden md:table-cell">Date</TableHead>
+                            <TableHead className="text-xs text-right">Amount</TableHead>
+                            <TableHead className="text-xs text-right">Status</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {withdrawals.slice(0, 50).map((w: any) => (
+                            <TableRow key={w.id}>
+                              <TableCell className="py-2 text-xs font-medium">{w.bank_name}</TableCell>
+                              <TableCell className="py-2 font-mono text-[11px] text-muted-foreground hidden sm:table-cell">{maskAccount(w.account_number)}</TableCell>
+                              <TableCell className="py-2 text-xs text-muted-foreground hidden md:table-cell">{new Date(w.created_at).toLocaleDateString()}</TableCell>
+                              <TableCell className="py-2 text-right font-mono text-xs">₦{Number(w.amount).toLocaleString()}</TableCell>
+                              <TableCell className="py-2 text-right"><Badge variant="outline" className="text-[10px]">{w.status}</Badge></TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
                     </div>
                   )}
                 </CardContent>
