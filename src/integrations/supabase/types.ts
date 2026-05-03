@@ -486,6 +486,41 @@ export type Database = {
         }
         Relationships: []
       }
+      support_messages: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          sender_id: string
+          sender_role: Database["public"]["Enums"]["support_sender_role"]
+          ticket_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          sender_id: string
+          sender_role: Database["public"]["Enums"]["support_sender_role"]
+          ticket_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          sender_id?: string
+          sender_role?: Database["public"]["Enums"]["support_sender_role"]
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_tickets: {
         Row: {
           admin_reply: string | null
@@ -732,6 +767,7 @@ export type Database = {
       invite_request_status: "PENDING" | "APPROVED" | "DECLINED"
       kyc_status: "not_started" | "pending" | "approved" | "rejected"
       payment_request_status: "PENDING" | "PAID" | "DECLINED" | "EXPIRED"
+      support_sender_role: "user" | "admin"
       ticket_status: "open" | "in_progress" | "resolved" | "closed"
       transaction_kind: "DEPOSIT" | "CONVERT" | "WITHDRAW" | "SEND" | "RECEIVE"
       wallet_type: "CRYPTO" | "NGN"
@@ -871,6 +907,7 @@ export const Constants = {
       invite_request_status: ["PENDING", "APPROVED", "DECLINED"],
       kyc_status: ["not_started", "pending", "approved", "rejected"],
       payment_request_status: ["PENDING", "PAID", "DECLINED", "EXPIRED"],
+      support_sender_role: ["user", "admin"],
       ticket_status: ["open", "in_progress", "resolved", "closed"],
       transaction_kind: ["DEPOSIT", "CONVERT", "WITHDRAW", "SEND", "RECEIVE"],
       wallet_type: ["CRYPTO", "NGN"],
