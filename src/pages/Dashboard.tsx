@@ -3,9 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useWallets } from '@/hooks/useWallets';
 import { useHideBalances } from '@/hooks/useHideBalances';
 import { RecentActivity } from '@/components/dashboard/RecentActivity';
-import { TipCard } from '@/components/dashboard/TipCard';
 import { PaymentRequests } from '@/components/dashboard/PaymentRequests';
-import { OnChainBalances } from '@/components/dashboard/OnChainBalances';
 import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -225,13 +223,7 @@ const Dashboard = () => {
               </Button>
             </div>
 
-            {/* On-Chain Wallet Balances */}
-            <OnChainBalances />
-
-            {/* Tip Card */}
-            <TipCard />
-
-            {/* Payment Requests */}
+            {/* Active Payment Requests (auto-hides if none) */}
             <PaymentRequests />
 
             {/* Recent Activity */}
