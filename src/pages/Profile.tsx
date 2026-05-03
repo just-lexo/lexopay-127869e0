@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { BottomNav } from '@/components/BottomNav';
-import { FeedbackModal } from '@/components/FeedbackModal';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -51,7 +51,7 @@ const Profile = () => {
   const { profile, user, signOut, refreshProfile } = useAuth();
   const { toast } = useToast();
 
-  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  
   const [editOpen, setEditOpen] = useState(false);
   const [editDisplayName, setEditDisplayName] = useState('');
   const [editUsername, setEditUsername] = useState('');
@@ -274,11 +274,6 @@ const Profile = () => {
               <ChevronRight className="w-4 h-4 text-muted-foreground" />
             </button>
 
-            <button className="flex items-center gap-3 py-3 w-full text-left hover:bg-muted/30 transition-colors rounded-md px-2 -mx-2" onClick={() => setFeedbackOpen(true)}>
-              <MessageSquarePlus className="w-5 h-5 text-muted-foreground" />
-              <p className="text-sm font-medium">Send Feedback</p>
-            </button>
-
             {profile?.is_admin && (
               <button className="flex items-center gap-3 py-3 w-full text-left hover:bg-muted/30 transition-colors rounded-md px-2 -mx-2" onClick={() => navigate('/admin')}>
                 <Shield className="w-5 h-5 text-muted-foreground" />
@@ -296,7 +291,6 @@ const Profile = () => {
       </main>
 
       <BottomNav />
-      <FeedbackModal open={feedbackOpen} onOpenChange={setFeedbackOpen} />
 
       {/* Edit Profile Dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
