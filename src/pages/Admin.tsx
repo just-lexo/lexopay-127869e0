@@ -174,11 +174,13 @@ const Admin = () => {
             </h1>
             <p className="text-[11px] text-muted-foreground">System-wide monitoring &amp; management</p>
           </div>
-          <Button variant="outline" size="sm" className="gap-1.5 relative" onClick={() => navigate('/admin/feedback')}>
-            <Inbox className="w-4 h-4" />
-            <span className="hidden sm:inline">Feedback</span>
-            {feedbackCount > 0 && (
-              <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 p-0 text-[10px] flex items-center justify-center">{feedbackCount}</Badge>
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setActiveTab('support')}>
+            <MessageCircle className="w-4 h-4" />
+            <span className="hidden sm:inline">Support</span>
+            {supportTickets.filter((t: any) => t.status === 'open' || t.status === 'in_progress').length > 0 && (
+              <Badge variant="destructive" className="h-5 min-w-5 px-1 text-[10px]">
+                {supportTickets.filter((t: any) => t.status === 'open' || t.status === 'in_progress').length}
+              </Badge>
             )}
           </Button>
         </div>
