@@ -51,7 +51,7 @@ const Profile = () => {
   const { profile, user, signOut, refreshProfile } = useAuth();
   const { toast } = useToast();
 
-  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  
   const [editOpen, setEditOpen] = useState(false);
   const [editDisplayName, setEditDisplayName] = useState('');
   const [editUsername, setEditUsername] = useState('');
