@@ -101,7 +101,6 @@ export function PaymentRequests() {
     try {
       const { data: convData, error: convError } = await supabase.rpc('convert_crypto_to_ngn', {
         _token: convertQuote.token, _network: 'base', _amount: convertQuote.amount,
-        _rate: convertQuote.rate, _fee: convertQuote.fee, _net_ngn: convertQuote.netNgn,
       });
       if (convError) throw convError;
       const convResult = convData as { success: boolean; error?: string };
