@@ -122,17 +122,20 @@ const Admin = () => {
     setTogglingMaintenance(false);
   };
 
-  const handleKYCAction = async (submissionId: string, action: 'approved' | 'rejected') => {
+  const handleKYCAction = async (submissionId: string, action: 'approved' | 'rejected', reason?: string) => {
+    const updates: Record<string, any> = { status: action, updated_at: new Date().toISOString() };
+    if (action === 'rejected') updates.admin_note = reason?.trim() || 'Submission rejected. Please review and resubmit.';
+    if (action === 'approved') updates.admin_note = null;
+
     const { error } = await supabase
       .from('kyc_submissions')
-      .update({ status: action, updated_at: new Date().toISOString() })
+      .update(updates)
       .eq('id', submissionId);
 
     if (error) {
       toast({ title: 'Failed to update KYC', variant: 'destructive' });
     } else {
       toast({ title: `KYC ${action}` });
-      // Update the user's kyc_tier if approved
       if (action === 'approved') {
         const submission = kycSubmissions.find(k => k.id === submissionId);
         if (submission) {
@@ -141,6 +144,19 @@ const Admin = () => {
       }
       fetchData();
     }
+  };
+
+  const openSignedUrl = async (bucket: string, path: string | null | undefined) => {
+    if (!path) {
+      toast({ title: 'No file uploaded', variant: 'destructive' });
+      return;
+    }
+    const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 60 * 5);
+    if (error || !data?.signedUrl) {
+      toast({ title: 'Could not load file', variant: 'destructive' });
+      return;
+    }
+    window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
   };
 
   const handleTicketReply = async (ticketId: string, newStatus?: string) => {
