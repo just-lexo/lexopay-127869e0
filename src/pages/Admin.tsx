@@ -50,6 +50,8 @@ const Admin = () => {
   const [supportTickets, setSupportTickets] = useState<any[]>([]);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
+  const [rejectingId, setRejectingId] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState('');
 
   const isAdmin = profile?.is_admin === true;
 
