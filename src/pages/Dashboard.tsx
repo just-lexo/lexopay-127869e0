@@ -2,9 +2,12 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWallets } from '@/hooks/useWallets';
 import { useHideBalances } from '@/hooks/useHideBalances';
+import { useKycStatus } from '@/hooks/useKycStatus';
 import { RecentActivity } from '@/components/dashboard/RecentActivity';
 import { PaymentRequests } from '@/components/dashboard/PaymentRequests';
 import { BottomNav } from '@/components/BottomNav';
+import { EmailVerificationBanner } from '@/components/EmailVerificationBanner';
+import { KycGateBanner } from '@/components/KycGateBanner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -28,6 +31,7 @@ const Dashboard = () => {
   const { profile } = useAuth();
   const { cryptoBalances, ngnBalance, loading } = useWallets();
   const { hidden, toggle, mask } = useHideBalances();
+  const { status: kycStatus } = useKycStatus();
 
   const formatCurrency = (amount: number, currency: string = 'NGN') => {
     if (currency === 'NGN') {
@@ -78,6 +82,10 @@ const Dashboard = () => {
           </div>
         ) : (
           <>
+            {/* Verification banners */}
+            <EmailVerificationBanner />
+            {kycStatus !== 'APPROVED' && <KycGateBanner status={kycStatus} feature="withdrawals" />}
+
             {/* Wallet Cards */}
             <div className="grid gap-4">
               {/* Crypto Wallet */}
