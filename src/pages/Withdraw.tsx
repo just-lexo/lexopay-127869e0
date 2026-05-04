@@ -245,6 +245,9 @@ const Withdraw = () => {
       </header>
 
       <main className="container max-w-lg mx-auto px-4 py-4 space-y-4">
+        <EmailVerificationBanner />
+        {kycStatus !== 'APPROVED' && <KycGateBanner status={kycStatus} feature="withdrawals" />}
+
         {/* Available Balance */}
         <Card className="glass-card border-success/20">
           <CardContent className="py-3">
