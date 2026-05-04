@@ -17,7 +17,7 @@ import {
   ArrowLeft, Loader2, Shield, Users, Inbox, BarChart3,
   ArrowDownToLine, RefreshCw, ArrowUpFromLine, Search,
   AlertTriangle, Settings, UserX, UserCheck, CheckCircle, XCircle,
-  MessageCircle, Send as SendIcon,
+  MessageCircle, Send as SendIcon, FileText, Camera,
 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 
