@@ -683,14 +683,7 @@ export type Database = {
     }
     Functions: {
       convert_crypto_to_ngn: {
-        Args: {
-          _amount: number
-          _fee: number
-          _net_ngn: number
-          _network: string
-          _rate: number
-          _token: string
-        }
+        Args: { _amount: number; _network: string; _token: string }
         Returns: Json
       }
       get_user_wallet_id: {
@@ -724,6 +717,17 @@ export type Database = {
         }[]
       }
       pay_payment_request: { Args: { _request_id: string }; Returns: Json }
+      request_crypto_conversion: {
+        Args: {
+          _amount: number
+          _estimated_fee: number
+          _estimated_ngn: number
+          _estimated_rate: number
+          _network: string
+          _token: string
+        }
+        Returns: Json
+      }
       reset_all_users_data: { Args: { _seed_balance?: boolean }; Returns: Json }
       reset_demo_data: { Args: { _seed_balance?: boolean }; Returns: Json }
       transfer_crypto:
