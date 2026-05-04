@@ -263,8 +263,12 @@ export type Database = {
         Row: {
           admin_note: string | null
           created_at: string
+          date_of_birth: string | null
+          document_url: string | null
           full_name: string
           id: string
+          id_number: string | null
+          id_type: string | null
           phone_number: string
           selfie_url: string | null
           status: Database["public"]["Enums"]["kyc_status"]
@@ -274,8 +278,12 @@ export type Database = {
         Insert: {
           admin_note?: string | null
           created_at?: string
+          date_of_birth?: string | null
+          document_url?: string | null
           full_name: string
           id?: string
+          id_number?: string | null
+          id_type?: string | null
           phone_number: string
           selfie_url?: string | null
           status?: Database["public"]["Enums"]["kyc_status"]
@@ -285,8 +293,12 @@ export type Database = {
         Update: {
           admin_note?: string | null
           created_at?: string
+          date_of_birth?: string | null
+          document_url?: string | null
           full_name?: string
           id?: string
+          id_number?: string | null
+          id_type?: string | null
           phone_number?: string
           selfie_url?: string | null
           status?: Database["public"]["Enums"]["kyc_status"]
@@ -686,6 +698,7 @@ export type Database = {
         Args: { _amount: number; _network: string; _token: string }
         Returns: Json
       }
+      get_user_kyc_status: { Args: { _user_id: string }; Returns: string }
       get_user_wallet_id: {
         Args: {
           _type: Database["public"]["Enums"]["wallet_type"]
