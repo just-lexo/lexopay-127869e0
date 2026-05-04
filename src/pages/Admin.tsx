@@ -17,7 +17,7 @@ import {
   ArrowLeft, Loader2, Shield, Users, Inbox, BarChart3,
   ArrowDownToLine, RefreshCw, ArrowUpFromLine, Search,
   AlertTriangle, Settings, UserX, UserCheck, CheckCircle, XCircle,
-  MessageCircle, Send as SendIcon,
+  MessageCircle, Send as SendIcon, FileText, Camera,
 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -50,6 +50,8 @@ const Admin = () => {
   const [supportTickets, setSupportTickets] = useState<any[]>([]);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
+  const [rejectingId, setRejectingId] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState('');
 
   const isAdmin = profile?.is_admin === true;
 
@@ -122,17 +124,20 @@ const Admin = () => {
     setTogglingMaintenance(false);
   };
 
-  const handleKYCAction = async (submissionId: string, action: 'approved' | 'rejected') => {
+  const handleKYCAction = async (submissionId: string, action: 'approved' | 'rejected', reason?: string) => {
+    const updates: Record<string, any> = { status: action, updated_at: new Date().toISOString() };
+    if (action === 'rejected') updates.admin_note = reason?.trim() || 'Submission rejected. Please review and resubmit.';
+    if (action === 'approved') updates.admin_note = null;
+
     const { error } = await supabase
       .from('kyc_submissions')
-      .update({ status: action, updated_at: new Date().toISOString() })
+      .update(updates)
       .eq('id', submissionId);
 
     if (error) {
       toast({ title: 'Failed to update KYC', variant: 'destructive' });
     } else {
       toast({ title: `KYC ${action}` });
-      // Update the user's kyc_tier if approved
       if (action === 'approved') {
         const submission = kycSubmissions.find(k => k.id === submissionId);
         if (submission) {
@@ -141,6 +146,19 @@ const Admin = () => {
       }
       fetchData();
     }
+  };
+
+  const openSignedUrl = async (bucket: string, path: string | null | undefined) => {
+    if (!path) {
+      toast({ title: 'No file uploaded', variant: 'destructive' });
+      return;
+    }
+    const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 60 * 5);
+    if (error || !data?.signedUrl) {
+      toast({ title: 'Could not load file', variant: 'destructive' });
+      return;
+    }
+    window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
   };
 
   const handleTicketReply = async (ticketId: string, newStatus?: string) => {
@@ -398,7 +416,7 @@ const Admin = () => {
             <TabsContent value="kyc" className="space-y-4 mt-4">
               <Card className="glass-card border-border/50">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm">KYC Submissions</CardTitle>
+                  <CardTitle className="text-sm">KYC Submissions ({kycSubmissions.length})</CardTitle>
                   <CardDescription className="text-xs">Review and approve identity verification requests</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -407,26 +425,81 @@ const Admin = () => {
                   ) : (
                     <div className="space-y-3">
                       {kycSubmissions.map((kyc: any) => (
-                        <div key={kyc.id} className="p-3 rounded-lg bg-background/50 space-y-2">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="text-sm font-medium">{kyc.full_name}</p>
-                              <p className="text-xs text-muted-foreground">{kyc.phone_number}</p>
-                              <p className="text-[10px] text-muted-foreground">{new Date(kyc.created_at).toLocaleDateString()}</p>
+                        <div key={kyc.id} className="p-3 rounded-lg bg-background/50 space-y-3">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-medium truncate">{kyc.full_name}</p>
+                              <p className="text-xs text-muted-foreground truncate">{kyc.phone_number}</p>
+                              <p className="text-[10px] text-muted-foreground">Submitted {new Date(kyc.created_at).toLocaleString()}</p>
                             </div>
-                            <Badge variant={kyc.status === 'approved' ? 'default' : kyc.status === 'rejected' ? 'destructive' : 'secondary'} className="text-[10px]">
-                              {kyc.status}
+                            <Badge variant={kyc.status === 'approved' ? 'default' : kyc.status === 'rejected' ? 'destructive' : 'secondary'} className="text-[10px] shrink-0">
+                              {String(kyc.status).toUpperCase()}
                             </Badge>
                           </div>
-                          {kyc.status === 'pending' && (
-                            <div className="flex gap-2">
-                              <Button size="sm" variant="outline" className="flex-1 gap-1 text-xs h-8" onClick={() => handleKYCAction(kyc.id, 'approved')}>
-                                <CheckCircle className="w-3 h-3" /> Approve
-                              </Button>
-                              <Button size="sm" variant="outline" className="flex-1 gap-1 text-xs h-8 text-destructive" onClick={() => handleKYCAction(kyc.id, 'rejected')}>
-                                <XCircle className="w-3 h-3" /> Reject
-                              </Button>
+
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div>
+                              <p className="text-muted-foreground">Date of Birth</p>
+                              <p className="font-medium">{kyc.date_of_birth || '—'}</p>
                             </div>
+                            <div>
+                              <p className="text-muted-foreground">ID Type</p>
+                              <p className="font-medium">{kyc.id_type || '—'}</p>
+                            </div>
+                            <div className="col-span-2">
+                              <p className="text-muted-foreground">ID Number</p>
+                              <p className="font-mono font-medium break-all">{kyc.id_number || '—'}</p>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-wrap gap-2">
+                            <Button size="sm" variant="outline" className="text-xs h-8 gap-1" onClick={() => openSignedUrl('kyc-documents', kyc.document_url)}>
+                              <FileText className="w-3 h-3" /> View ID Document
+                            </Button>
+                            <Button size="sm" variant="outline" className="text-xs h-8 gap-1" onClick={() => openSignedUrl('kyc-selfies', kyc.selfie_url)}>
+                              <Camera className="w-3 h-3" /> View Selfie
+                            </Button>
+                          </div>
+
+                          {kyc.status === 'rejected' && kyc.admin_note && (
+                            <div className="p-2 rounded-md border border-destructive/20 bg-destructive/5">
+                              <p className="text-[10px] font-medium text-destructive mb-0.5">Rejection note</p>
+                              <p className="text-xs text-muted-foreground">{kyc.admin_note}</p>
+                            </div>
+                          )}
+
+                          {kyc.status === 'pending' && (
+                            rejectingId === kyc.id ? (
+                              <div className="space-y-2">
+                                <Textarea
+                                  placeholder="Reason for rejection (shown to user)…"
+                                  value={rejectReason}
+                                  onChange={(e) => setRejectReason(e.target.value)}
+                                  className="text-xs min-h-[60px]"
+                                />
+                                <div className="flex gap-2">
+                                  <Button size="sm" variant="outline" className="flex-1 text-xs h-8" onClick={() => { setRejectingId(null); setRejectReason(''); }}>
+                                    Cancel
+                                  </Button>
+                                  <Button size="sm" variant="destructive" className="flex-1 text-xs h-8" disabled={!rejectReason.trim()} onClick={async () => {
+                                    await handleKYCAction(kyc.id, 'rejected', rejectReason);
+                                    setRejectingId(null);
+                                    setRejectReason('');
+                                  }}>
+                                    Confirm Reject
+                                  </Button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex gap-2">
+                                <Button size="sm" variant="outline" className="flex-1 gap-1 text-xs h-8 text-success" onClick={() => handleKYCAction(kyc.id, 'approved')}>
+                                  <CheckCircle className="w-3 h-3" /> Approve
+                                </Button>
+                                <Button size="sm" variant="outline" className="flex-1 gap-1 text-xs h-8 text-destructive" onClick={() => { setRejectingId(kyc.id); setRejectReason(''); }}>
+                                  <XCircle className="w-3 h-3" /> Reject
+                                </Button>
+                              </div>
+                            )
                           )}
                         </div>
                       ))}

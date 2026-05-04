@@ -34,6 +34,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useMaintenanceMode } from '@/hooks/useMaintenanceMode';
+import { useKycStatus } from '@/hooks/useKycStatus';
+import { EmailVerificationBanner } from '@/components/EmailVerificationBanner';
+import { KycGateBanner } from '@/components/KycGateBanner';
 
 const WITHDRAWAL_FEE = 20;
 
@@ -48,12 +51,13 @@ interface PendingWithdrawal {
 
 const Withdraw = () => {
   const navigate = useNavigate();
-  const { user, profile } = useAuth();
+  const { user, profile, emailConfirmed } = useAuth();
   const { maintenance } = useMaintenanceMode();
   const { ngnBalance, refetch } = useWallets();
   const { mask } = useHideBalances();
   const { toast } = useToast();
   const { accounts: savedAccounts, defaultAccount, loading: loadingSaved } = useSavedBankAccounts();
+  const { status: kycStatus, isApproved: kycApproved } = useKycStatus();
 
   const [mode, setMode] = useState<'default' | 'other'>('default');
   const [selectedBank, setSelectedBank] = useState<Bank | null>(null);
@@ -82,8 +86,9 @@ const Withdraw = () => {
   const effectiveAccountName = usingDefault ? defaultAccount.account_name : accountName;
   const effectiveVerified = usingDefault ? true : isVerified;
 
-  const canWithdraw = effectiveVerified && withdrawAmount > 0 && availableBalance >= totalDeduction 
-    && (mode === 'default' || faceVerified);
+  const canWithdraw = effectiveVerified && withdrawAmount > 0 && availableBalance >= totalDeduction
+    && (mode === 'default' || faceVerified)
+    && emailConfirmed && kycApproved;
 
   // Auto-set mode based on saved accounts
   useEffect(() => {
@@ -137,6 +142,14 @@ const Withdraw = () => {
 
   const handleWithdraw = async () => {
     if (!user || !effectiveBankCode || !effectiveAccountName || !canWithdraw) return;
+    if (!emailConfirmed) {
+      toast({ title: 'Verify your email', description: 'Please verify your email to withdraw.', variant: 'destructive' });
+      return;
+    }
+    if (!kycApproved) {
+      toast({ title: 'Verification required', description: 'Complete identity verification to withdraw.', variant: 'destructive' });
+      return;
+    }
     if (maintenance) {
       toast({ title: 'Under maintenance', description: 'LexoPay is currently under maintenance.', variant: 'destructive' });
       return;
@@ -232,6 +245,9 @@ const Withdraw = () => {
       </header>
 
       <main className="container max-w-lg mx-auto px-4 py-4 space-y-4">
+        <EmailVerificationBanner />
+        {kycStatus !== 'APPROVED' && <KycGateBanner status={kycStatus} feature="withdrawals" />}
+
         {/* Available Balance */}
         <Card className="glass-card border-success/20">
           <CardContent className="py-3">
