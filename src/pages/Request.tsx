@@ -101,6 +101,10 @@ const Request = () => {
 
   const handleSubmit = async () => {
     if (!user || !recipient) return;
+    if (!gateAllowed) {
+      toast({ title: 'Action blocked', description: 'Verify your email and complete KYC to send requests.', variant: 'destructive' });
+      return;
+    }
     const numAmount = parseFloat(amount);
     if (!numAmount || numAmount <= 0) {
       toast({ title: 'Invalid amount', description: 'Please enter a valid amount.', variant: 'destructive' });
