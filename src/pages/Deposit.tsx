@@ -173,7 +173,7 @@ const Deposit = () => {
 
             {/* Deposit Address */}
             {!depositAddress ? (
-              <Button className="w-full touch-target gradient-primary hover:opacity-90" onClick={handleGenerateAddress} disabled={loading}>
+              <Button className="w-full touch-target gradient-primary hover:opacity-90" onClick={handleGenerateAddress} disabled={loading || !gateAllowed}>
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><QrCode className="w-4 h-4 mr-2" />Generate Deposit Address</>}
               </Button>
             ) : (
