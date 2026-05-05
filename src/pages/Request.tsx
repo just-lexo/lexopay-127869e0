@@ -151,7 +151,7 @@ const Request = () => {
     }
   };
 
-  const canSubmit = recipient && parseFloat(amount) > 0;
+  const canSubmit = recipient && parseFloat(amount) > 0 && gateAllowed;
 
   return (
     <div className="min-h-screen bg-background pb-20">
