@@ -33,6 +33,7 @@ const Convert = () => {
   const { mask } = useHideBalances();
   const { toast } = useToast();
   const { maintenance } = useMaintenanceMode();
+  const { allowed: gateAllowed } = useTransactionGate();
 
   const [selectedToken, setSelectedToken] = useState<string>('USDT');
   const [amount, setAmount] = useState<string>('');
