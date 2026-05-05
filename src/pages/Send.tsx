@@ -120,6 +120,10 @@ const Send = () => {
 
   const handleSend = async () => {
     if (!user || !recipient || !canSend || !profile) return;
+    if (!gateAllowed) {
+      toast({ title: 'Action blocked', description: 'Verify your email and complete KYC to send.', variant: 'destructive' });
+      return;
+    }
 
     setLoading(true);
     try {
