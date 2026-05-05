@@ -28,6 +28,7 @@ export function PaymentRequests() {
   const { ngnBalance, cryptoBalances, refetch: refetchWallets } = useWallets();
   const { received, sent, loading, refetch } = usePaymentRequests();
   const { toast } = useToast();
+  const { allowed: gateAllowed } = useTransactionGate();
 
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [convertPayReq, setConvertPayReq] = useState<PaymentRequest | null>(null);
