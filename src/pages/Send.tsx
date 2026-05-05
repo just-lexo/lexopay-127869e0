@@ -54,7 +54,7 @@ const Send = () => {
   const selectedBalance = cryptoBalances.find(b => b.token === selectedToken);
   const availableBalance = selectedBalance?.balance ?? 0;
   const sendAmount = parseFloat(amount) || 0;
-  const canSend = recipient && sendAmount > 0 && availableBalance >= sendAmount;
+  const canSend = recipient && sendAmount > 0 && availableBalance >= sendAmount && gateAllowed;
 
   // Auto-search prefilled recipient
   useEffect(() => {
