@@ -48,6 +48,10 @@ export function PaymentRequests() {
 
   const handlePay = async (req: PaymentRequest) => {
     if (!user) return;
+    if (!gateAllowed) {
+      toast({ title: 'Action blocked', description: 'Verify your email and complete KYC to pay requests.', variant: 'destructive' });
+      return;
+    }
     if (req.asset === 'NGN') {
       const ngnAvailable = ngnBalance?.balance ?? 0;
       if (ngnAvailable < req.amount) { await showConvertPayModal(req); return; }
