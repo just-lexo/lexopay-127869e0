@@ -129,6 +129,7 @@ const Deposit = () => {
       </header>
 
       <main className="container max-w-lg mx-auto px-4 py-4 space-y-4">
+        <TransactionGate feature="deposits" />
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="w-full">
             <TabsTrigger value="deposit" className="flex-1">New Deposit</TabsTrigger>
