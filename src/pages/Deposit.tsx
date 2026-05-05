@@ -56,6 +56,7 @@ const Deposit = () => {
   const { refetch } = useWallets();
   const { toast } = useToast();
   const { maintenance } = useMaintenanceMode();
+  const { allowed: gateAllowed } = useTransactionGate();
 
   const [selectedToken, setSelectedToken] = useState<SupportedToken>('USDC');
   const [selectedNetwork] = useState<NetworkId>('base');
