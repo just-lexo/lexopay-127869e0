@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { SUPPORTED_TOKENS, type SupportedToken } from '@/adapters';
 import { createNotification } from '@/hooks/useNotifications';
 import { TestModeBanner } from '@/components/TestModeBanner';
+import { TransactionGate, useTransactionGate } from '@/components/TransactionGate';
  import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
