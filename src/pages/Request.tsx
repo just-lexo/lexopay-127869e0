@@ -46,6 +46,7 @@ const Request = () => {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const { toast } = useToast();
+  const { allowed: gateAllowed } = useTransactionGate();
 
   const [recipientUsername, setRecipientUsername] = useState('');
   const [recipient, setRecipient] = useState<RecipientProfile | null>(null);
