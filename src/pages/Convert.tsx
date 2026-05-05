@@ -243,6 +243,8 @@ const Convert = () => {
       </header>
 
       <main className="container max-w-lg mx-auto px-4 py-4 space-y-4">
+        <TransactionGate feature="conversions" />
+
         {/* From Token */}
         <Card className="glass-card border-border/50">
           <CardHeader className="pb-3">
