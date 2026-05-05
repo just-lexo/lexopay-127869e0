@@ -81,6 +81,10 @@ const Convert = () => {
       toast({ title: 'Under maintenance', description: 'LexoPay is currently under maintenance.', variant: 'destructive' });
       return;
     }
+    if (!gateAllowed) {
+      toast({ title: 'Action blocked', description: 'Verify your email and complete KYC to convert.', variant: 'destructive' });
+      return;
+    }
 
     const numAmount = parseFloat(amount);
     if (numAmount > availableBalance) {
