@@ -36,6 +36,7 @@ const Send = () => {
   const { cryptoBalances, refetch } = useWallets();
   const { mask } = useHideBalances();
   const { toast } = useToast();
+  const { allowed: gateAllowed } = useTransactionGate();
 
   // Pre-fill recipient from URL query param
   const searchParams = new URLSearchParams(window.location.search);
