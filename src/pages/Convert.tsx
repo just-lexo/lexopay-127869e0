@@ -24,6 +24,7 @@ import {
   Wallet,
 } from 'lucide-react';
 import { useMaintenanceMode } from '@/hooks/useMaintenanceMode';
+import { TransactionGate, useTransactionGate } from '@/components/TransactionGate';
 
 const Convert = () => {
   const navigate = useNavigate();
