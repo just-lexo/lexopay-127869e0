@@ -86,6 +86,10 @@ const Deposit = () => {
       toast({ title: 'Under maintenance', description: 'LexoPay is currently under maintenance. Please try again later.', variant: 'destructive' });
       return;
     }
+    if (!gateAllowed) {
+      toast({ title: 'Action blocked', description: 'Verify your email and complete KYC to deposit.', variant: 'destructive' });
+      return;
+    }
     setLoading(true);
     try {
       const address = generateUserDepositAddress(user.id);
