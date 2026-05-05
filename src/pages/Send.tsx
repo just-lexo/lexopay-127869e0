@@ -306,6 +306,8 @@ const Send = () => {
       </header>
 
       <main className="container max-w-lg mx-auto px-4 py-4 space-y-4">
+        <TransactionGate feature="sending crypto" />
+
         {/* Token Selection */}
         <Card className="glass-card border-border/50">
           <CardHeader className="pb-3">
