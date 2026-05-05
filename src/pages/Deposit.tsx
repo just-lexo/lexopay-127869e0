@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useMaintenanceMode } from '@/hooks/useMaintenanceMode';
+import { TransactionGate, useTransactionGate } from '@/components/TransactionGate';
 
 interface DepositRecord {
   id: string;
