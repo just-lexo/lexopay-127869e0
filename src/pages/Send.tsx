@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { SUPPORTED_TOKENS, type SupportedToken } from '@/adapters';
 import { createNotification } from '@/hooks/useNotifications';
 import { TestModeBanner } from '@/components/TestModeBanner';
+import { TransactionGate, useTransactionGate } from '@/components/TransactionGate';
  import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -35,6 +36,7 @@ const Send = () => {
   const { cryptoBalances, refetch } = useWallets();
   const { mask } = useHideBalances();
   const { toast } = useToast();
+  const { allowed: gateAllowed } = useTransactionGate();
 
   // Pre-fill recipient from URL query param
   const searchParams = new URLSearchParams(window.location.search);
@@ -52,7 +54,7 @@ const Send = () => {
   const selectedBalance = cryptoBalances.find(b => b.token === selectedToken);
   const availableBalance = selectedBalance?.balance ?? 0;
   const sendAmount = parseFloat(amount) || 0;
-  const canSend = recipient && sendAmount > 0 && availableBalance >= sendAmount;
+  const canSend = recipient && sendAmount > 0 && availableBalance >= sendAmount && gateAllowed;
 
   // Auto-search prefilled recipient
   useEffect(() => {
@@ -118,6 +120,10 @@ const Send = () => {
 
   const handleSend = async () => {
     if (!user || !recipient || !canSend || !profile) return;
+    if (!gateAllowed) {
+      toast({ title: 'Action blocked', description: 'Verify your email and complete KYC to send.', variant: 'destructive' });
+      return;
+    }
 
     setLoading(true);
     try {
@@ -300,6 +306,8 @@ const Send = () => {
       </header>
 
       <main className="container max-w-lg mx-auto px-4 py-4 space-y-4">
+        <TransactionGate feature="sending crypto" />
+
         {/* Token Selection */}
         <Card className="glass-card border-border/50">
           <CardHeader className="pb-3">

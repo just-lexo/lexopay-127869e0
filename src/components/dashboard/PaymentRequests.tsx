@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { useTransactionGate } from '@/components/TransactionGate';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
@@ -27,6 +28,7 @@ export function PaymentRequests() {
   const { ngnBalance, cryptoBalances, refetch: refetchWallets } = useWallets();
   const { received, sent, loading, refetch } = usePaymentRequests();
   const { toast } = useToast();
+  const { allowed: gateAllowed } = useTransactionGate();
 
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [convertPayReq, setConvertPayReq] = useState<PaymentRequest | null>(null);
@@ -46,6 +48,10 @@ export function PaymentRequests() {
 
   const handlePay = async (req: PaymentRequest) => {
     if (!user) return;
+    if (!gateAllowed) {
+      toast({ title: 'Action blocked', description: 'Verify your email and complete KYC to pay requests.', variant: 'destructive' });
+      return;
+    }
     if (req.asset === 'NGN') {
       const ngnAvailable = ngnBalance?.balance ?? 0;
       if (ngnAvailable < req.amount) { await showConvertPayModal(req); return; }
@@ -169,7 +175,7 @@ export function PaymentRequests() {
                 </div>
                 {type === 'received' && (
                   <div className="flex gap-2">
-                    <Button size="sm" className="flex-1 gradient-primary h-8 text-xs" onClick={() => handlePay(req)} disabled={actionLoading === req.id}>
+                    <Button size="sm" className="flex-1 gradient-primary h-8 text-xs" onClick={() => handlePay(req)} disabled={actionLoading === req.id || !gateAllowed}>
                       {actionLoading === req.id ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Pay'}
                     </Button>
                     <Button size="sm" variant="outline" className="flex-1 h-8 text-xs" onClick={() => handleDecline(req)} disabled={actionLoading === req.id}>

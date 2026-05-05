@@ -24,6 +24,7 @@ import {
   Wallet,
 } from 'lucide-react';
 import { useMaintenanceMode } from '@/hooks/useMaintenanceMode';
+import { TransactionGate, useTransactionGate } from '@/components/TransactionGate';
 
 const Convert = () => {
   const navigate = useNavigate();
@@ -32,6 +33,7 @@ const Convert = () => {
   const { mask } = useHideBalances();
   const { toast } = useToast();
   const { maintenance } = useMaintenanceMode();
+  const { allowed: gateAllowed } = useTransactionGate();
 
   const [selectedToken, setSelectedToken] = useState<string>('USDT');
   const [amount, setAmount] = useState<string>('');
@@ -77,6 +79,10 @@ const Convert = () => {
     if (!user || !quote || !cryptoWalletId || !ngnWalletId) return;
     if (maintenance) {
       toast({ title: 'Under maintenance', description: 'LexoPay is currently under maintenance.', variant: 'destructive' });
+      return;
+    }
+    if (!gateAllowed) {
+      toast({ title: 'Action blocked', description: 'Verify your email and complete KYC to convert.', variant: 'destructive' });
       return;
     }
 
@@ -237,6 +243,8 @@ const Convert = () => {
       </header>
 
       <main className="container max-w-lg mx-auto px-4 py-4 space-y-4">
+        <TransactionGate feature="conversions" />
+
         {/* From Token */}
         <Card className="glass-card border-border/50">
           <CardHeader className="pb-3">
@@ -357,7 +365,8 @@ const Convert = () => {
             !quote || 
             !amount || 
             numAmount <= 0 || 
-            numAmount > availableBalance;
+            numAmount > availableBalance ||
+            !gateAllowed;
 
           return (
             <Button

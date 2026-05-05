@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useMaintenanceMode } from '@/hooks/useMaintenanceMode';
+import { TransactionGate, useTransactionGate } from '@/components/TransactionGate';
 
 interface DepositRecord {
   id: string;
@@ -55,6 +56,7 @@ const Deposit = () => {
   const { refetch } = useWallets();
   const { toast } = useToast();
   const { maintenance } = useMaintenanceMode();
+  const { allowed: gateAllowed } = useTransactionGate();
 
   const [selectedToken, setSelectedToken] = useState<SupportedToken>('USDC');
   const [selectedNetwork] = useState<NetworkId>('base');
@@ -82,6 +84,10 @@ const Deposit = () => {
     if (!user) return;
     if (maintenance) {
       toast({ title: 'Under maintenance', description: 'LexoPay is currently under maintenance. Please try again later.', variant: 'destructive' });
+      return;
+    }
+    if (!gateAllowed) {
+      toast({ title: 'Action blocked', description: 'Verify your email and complete KYC to deposit.', variant: 'destructive' });
       return;
     }
     setLoading(true);
@@ -123,6 +129,7 @@ const Deposit = () => {
       </header>
 
       <main className="container max-w-lg mx-auto px-4 py-4 space-y-4">
+        <TransactionGate feature="deposits" />
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="w-full">
             <TabsTrigger value="deposit" className="flex-1">New Deposit</TabsTrigger>
@@ -166,7 +173,7 @@ const Deposit = () => {
 
             {/* Deposit Address */}
             {!depositAddress ? (
-              <Button className="w-full touch-target gradient-primary hover:opacity-90" onClick={handleGenerateAddress} disabled={loading}>
+              <Button className="w-full touch-target gradient-primary hover:opacity-90" onClick={handleGenerateAddress} disabled={loading || !gateAllowed}>
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><QrCode className="w-4 h-4 mr-2" />Generate Deposit Address</>}
               </Button>
             ) : (

@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { createNotification } from '@/hooks/useNotifications';
 import { TestModeBanner } from '@/components/TestModeBanner';
+import { TransactionGate, useTransactionGate } from '@/components/TransactionGate';
 import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -45,6 +46,7 @@ const Request = () => {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const { toast } = useToast();
+  const { allowed: gateAllowed } = useTransactionGate();
 
   const [recipientUsername, setRecipientUsername] = useState('');
   const [recipient, setRecipient] = useState<RecipientProfile | null>(null);
@@ -99,6 +101,10 @@ const Request = () => {
 
   const handleSubmit = async () => {
     if (!user || !recipient) return;
+    if (!gateAllowed) {
+      toast({ title: 'Action blocked', description: 'Verify your email and complete KYC to send requests.', variant: 'destructive' });
+      return;
+    }
     const numAmount = parseFloat(amount);
     if (!numAmount || numAmount <= 0) {
       toast({ title: 'Invalid amount', description: 'Please enter a valid amount.', variant: 'destructive' });
@@ -145,7 +151,7 @@ const Request = () => {
     }
   };
 
-  const canSubmit = recipient && parseFloat(amount) > 0;
+  const canSubmit = recipient && parseFloat(amount) > 0 && gateAllowed;
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -166,6 +172,7 @@ const Request = () => {
       </header>
 
       <main className="container max-w-lg mx-auto px-4 py-4 space-y-4">
+        <TransactionGate feature="payment requests" />
         {/* Recipient */}
         <Card className="glass-card border-border/50">
           <CardHeader className="pb-3">
