@@ -365,7 +365,8 @@ const Convert = () => {
             !quote || 
             !amount || 
             numAmount <= 0 || 
-            numAmount > availableBalance;
+            numAmount > availableBalance ||
+            !gateAllowed;
 
           return (
             <Button
