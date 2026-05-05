@@ -175,7 +175,7 @@ export function PaymentRequests() {
                 </div>
                 {type === 'received' && (
                   <div className="flex gap-2">
-                    <Button size="sm" className="flex-1 gradient-primary h-8 text-xs" onClick={() => handlePay(req)} disabled={actionLoading === req.id}>
+                    <Button size="sm" className="flex-1 gradient-primary h-8 text-xs" onClick={() => handlePay(req)} disabled={actionLoading === req.id || !gateAllowed}>
                       {actionLoading === req.id ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Pay'}
                     </Button>
                     <Button size="sm" variant="outline" className="flex-1 h-8 text-xs" onClick={() => handleDecline(req)} disabled={actionLoading === req.id}>
