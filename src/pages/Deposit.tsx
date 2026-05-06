@@ -269,6 +269,23 @@ const Deposit = () => {
           </TabsContent>
 
           <TabsContent value="history" className="space-y-2 mt-4">
+            <Card className="glass-card border-border/50">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Missing a deposit?</CardTitle>
+                <CardDescription className="text-xs">Paste the Basescan transaction hash to credit it now.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Input
+                  value={recoverHash}
+                  onChange={(e) => setRecoverHash(e.target.value)}
+                  placeholder="0x… tx hash"
+                  className="text-xs font-mono"
+                />
+                <Button onClick={handleRecover} disabled={recovering || !recoverHash} variant="outline" className="w-full">
+                  {recovering ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Recover Deposit'}
+                </Button>
+              </CardContent>
+            </Card>
             {deposits.length === 0 ? (
               <Card className="glass-card border-border/50">
                 <CardContent className="py-12 text-center">
