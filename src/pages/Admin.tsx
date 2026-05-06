@@ -48,6 +48,25 @@ const Admin = () => {
   const [feedbackCount, setFeedbackCount] = useState(0);
   const [togglingMaintenance, setTogglingMaintenance] = useState(false);
   const [supportTickets, setSupportTickets] = useState<any[]>([]);
+  const [syncingDeposits, setSyncingDeposits] = useState(false);
+
+  const handleSyncDeposits = async () => {
+    setSyncingDeposits(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-deposits', {
+        body: { blocks: 50000 },
+      });
+      if (error) throw error;
+      toast({
+        title: 'Deposit sync complete',
+        description: `Credited ${data?.credited ?? 0} new deposit(s) across ${data?.addresses ?? 0} address(es).`,
+      });
+    } catch (e: any) {
+      toast({ title: 'Sync failed', description: e?.message || 'Unable to sync deposits', variant: 'destructive' });
+    } finally {
+      setSyncingDeposits(false);
+    }
+  };
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
   const [rejectingId, setRejectingId] = useState<string | null>(null);
