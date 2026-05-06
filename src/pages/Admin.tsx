@@ -49,6 +49,32 @@ const Admin = () => {
   const [togglingMaintenance, setTogglingMaintenance] = useState(false);
   const [supportTickets, setSupportTickets] = useState<any[]>([]);
   const [syncingDeposits, setSyncingDeposits] = useState(false);
+  const [recoverTxHash, setRecoverTxHash] = useState('');
+  const [recovering, setRecovering] = useState(false);
+
+  const handleRecoverByTx = async () => {
+    const tx = recoverTxHash.trim();
+    if (!/^0x[0-9a-fA-F]{64}$/.test(tx)) {
+      toast({ title: 'Invalid hash', description: 'Enter a 0x… 66-char tx hash.', variant: 'destructive' });
+      return;
+    }
+    setRecovering(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('recover-deposit-by-tx', {
+        body: { tx_hash: tx },
+      });
+      if (error) throw error;
+      toast({
+        title: data?.credited > 0 ? 'Deposit recovered' : 'No new credit',
+        description: `Credited ${data?.credited ?? 0} transfer(s). Confirmations: ${data?.confirmations ?? 0}.`,
+      });
+      if (data?.credited > 0) { setRecoverTxHash(''); fetchData(); }
+    } catch (e: any) {
+      toast({ title: 'Recovery failed', description: e?.message || 'Unable to recover deposit', variant: 'destructive' });
+    } finally {
+      setRecovering(false);
+    }
+  };
 
   const handleSyncDeposits = async () => {
     setSyncingDeposits(true);
