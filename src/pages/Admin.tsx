@@ -49,6 +49,32 @@ const Admin = () => {
   const [togglingMaintenance, setTogglingMaintenance] = useState(false);
   const [supportTickets, setSupportTickets] = useState<any[]>([]);
   const [syncingDeposits, setSyncingDeposits] = useState(false);
+  const [recoverTxHash, setRecoverTxHash] = useState('');
+  const [recovering, setRecovering] = useState(false);
+
+  const handleRecoverByTx = async () => {
+    const tx = recoverTxHash.trim();
+    if (!/^0x[0-9a-fA-F]{64}$/.test(tx)) {
+      toast({ title: 'Invalid hash', description: 'Enter a 0x… 66-char tx hash.', variant: 'destructive' });
+      return;
+    }
+    setRecovering(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('recover-deposit-by-tx', {
+        body: { tx_hash: tx },
+      });
+      if (error) throw error;
+      toast({
+        title: data?.credited > 0 ? 'Deposit recovered' : 'No new credit',
+        description: `Credited ${data?.credited ?? 0} transfer(s). Confirmations: ${data?.confirmations ?? 0}.`,
+      });
+      if (data?.credited > 0) { setRecoverTxHash(''); fetchData(); }
+    } catch (e: any) {
+      toast({ title: 'Recovery failed', description: e?.message || 'Unable to recover deposit', variant: 'destructive' });
+    } finally {
+      setRecovering(false);
+    }
+  };
 
   const handleSyncDeposits = async () => {
     setSyncingDeposits(true);
@@ -567,6 +593,21 @@ const Admin = () => {
                     {syncingDeposits ? 'Syncing…' : 'Sync Deposits Now'}
                   </Button>
                   <p className="text-[11px] text-muted-foreground mt-2">Auto-detection also runs every minute in the background.</p>
+
+                  <div className="mt-4 pt-4 border-t border-border/50 space-y-2">
+                    <p className="text-xs font-medium">Recover specific transaction</p>
+                    <Input
+                      value={recoverTxHash}
+                      onChange={(e) => setRecoverTxHash(e.target.value)}
+                      placeholder="0x… Base tx hash"
+                      className="text-xs font-mono"
+                    />
+                    <Button onClick={handleRecoverByTx} disabled={recovering || !recoverTxHash} variant="outline" className="w-full gap-2">
+                      {recovering ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                      {recovering ? 'Recovering…' : 'Recover by Tx Hash'}
+                    </Button>
+                    <p className="text-[11px] text-muted-foreground">Parses Transfer logs and credits the matching user. Idempotent.</p>
+                  </div>
                 </CardContent>
               </Card>
 
