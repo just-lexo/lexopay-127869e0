@@ -66,6 +66,35 @@ const Deposit = () => {
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState('deposit');
+  const [recoverHash, setRecoverHash] = useState('');
+  const [recovering, setRecovering] = useState(false);
+
+  const handleRecover = async () => {
+    const tx = recoverHash.trim();
+    if (!/^0x[0-9a-fA-F]{64}$/.test(tx)) {
+      toast({ title: 'Invalid hash', description: 'Paste the full 0x… Base tx hash.', variant: 'destructive' });
+      return;
+    }
+    setRecovering(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('recover-deposit-by-tx', {
+        body: { tx_hash: tx },
+      });
+      if (error) throw error;
+      if ((data?.credited ?? 0) > 0) {
+        toast({ title: 'Deposit credited', description: 'Your balance has been updated.' });
+        setRecoverHash('');
+        await fetchDeposits();
+        await refetch();
+      } else {
+        toast({ title: 'Already processed', description: 'This tx was already credited or has no matching deposit address.' });
+      }
+    } catch (e: any) {
+      toast({ title: 'Recovery failed', description: e?.message || 'Unable to recover this transaction.', variant: 'destructive' });
+    } finally {
+      setRecovering(false);
+    }
+  };
 
   const fetchDeposits = async () => {
     if (!user) return;
