@@ -48,6 +48,25 @@ const Admin = () => {
   const [feedbackCount, setFeedbackCount] = useState(0);
   const [togglingMaintenance, setTogglingMaintenance] = useState(false);
   const [supportTickets, setSupportTickets] = useState<any[]>([]);
+  const [syncingDeposits, setSyncingDeposits] = useState(false);
+
+  const handleSyncDeposits = async () => {
+    setSyncingDeposits(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-deposits', {
+        body: { blocks: 50000 },
+      });
+      if (error) throw error;
+      toast({
+        title: 'Deposit sync complete',
+        description: `Credited ${data?.credited ?? 0} new deposit(s) across ${data?.addresses ?? 0} address(es).`,
+      });
+    } catch (e: any) {
+      toast({ title: 'Sync failed', description: e?.message || 'Unable to sync deposits', variant: 'destructive' });
+    } finally {
+      setSyncingDeposits(false);
+    }
+  };
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
   const [rejectingId, setRejectingId] = useState<string | null>(null);
@@ -534,6 +553,20 @@ const Admin = () => {
                       <p className="text-xs text-warning">Users cannot perform deposits, conversions, or withdrawals.</p>
                     </div>
                   )}
+                </CardContent>
+              </Card>
+
+              <Card className="glass-card border-border/50">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2"><RefreshCw className="w-4 h-4" /> Deposit Recovery</CardTitle>
+                  <CardDescription className="text-xs">Scan recent Base history and credit any missed deposits. Duplicates are skipped.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button onClick={handleSyncDeposits} disabled={syncingDeposits} className="w-full gap-2">
+                    {syncingDeposits ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                    {syncingDeposits ? 'Syncing…' : 'Sync Deposits Now'}
+                  </Button>
+                  <p className="text-[11px] text-muted-foreground mt-2">Auto-detection also runs every minute in the background.</p>
                 </CardContent>
               </Card>
 
