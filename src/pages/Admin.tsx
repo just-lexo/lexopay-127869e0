@@ -526,20 +526,6 @@ const Admin = () => {
                   )}
                 </CardContent>
               </Card>
-
-              <Card className="glass-card border-border/50">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2"><RefreshCw className="w-4 h-4" /> Deposit Recovery</CardTitle>
-                  <CardDescription className="text-xs">Scan recent Base blockchain history and credit any missed deposits. Safe to run repeatedly — duplicate transactions are skipped.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button onClick={handleSyncDeposits} disabled={syncingDeposits} className="w-full gap-2">
-                    {syncingDeposits ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-                    {syncingDeposits ? 'Syncing…' : 'Sync Deposits Now'}
-                  </Button>
-                  <p className="text-[11px] text-muted-foreground mt-2">Auto-detection also runs every minute in the background.</p>
-                </CardContent>
-              </Card>
             </TabsContent>
 
             {/* SUPPORT CHAT */}
