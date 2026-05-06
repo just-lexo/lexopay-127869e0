@@ -593,6 +593,21 @@ const Admin = () => {
                     {syncingDeposits ? 'Syncing…' : 'Sync Deposits Now'}
                   </Button>
                   <p className="text-[11px] text-muted-foreground mt-2">Auto-detection also runs every minute in the background.</p>
+
+                  <div className="mt-4 pt-4 border-t border-border/50 space-y-2">
+                    <p className="text-xs font-medium">Recover specific transaction</p>
+                    <Input
+                      value={recoverTxHash}
+                      onChange={(e) => setRecoverTxHash(e.target.value)}
+                      placeholder="0x… Base tx hash"
+                      className="text-xs font-mono"
+                    />
+                    <Button onClick={handleRecoverByTx} disabled={recovering || !recoverTxHash} variant="outline" className="w-full gap-2">
+                      {recovering ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                      {recovering ? 'Recovering…' : 'Recover by Tx Hash'}
+                    </Button>
+                    <p className="text-[11px] text-muted-foreground">Parses Transfer logs and credits the matching user. Idempotent.</p>
+                  </div>
                 </CardContent>
               </Card>
 
