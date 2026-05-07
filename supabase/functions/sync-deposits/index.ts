@@ -27,10 +27,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const RPC = Deno.env.get("BASE_RPC_URL");
-    if (!RPC) {
-      return json({ error: "BASE_RPC_URL not configured" }, 500);
-    }
+    const RPC = Deno.env.get("BASE_RPC_URL") || "https://mainnet.base.org";
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
