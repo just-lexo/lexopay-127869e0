@@ -90,19 +90,38 @@ Deno.serve(async (req) => {
       return json({ error: "No token transfers found in this transaction" }, 400);
     }
 
-    // Match against known deposit addresses
-    const recipients = Array.from(new Set(candidates.map((c) => c.to)));
-    const { data: addrRows } = await supabase
-      .from("deposits")
-      .select("user_id, address, network")
-      .in("address", recipients);
+    // Match against known deposit addresses (stored) AND derived addresses
+    // for every user (in case the address was never persisted).
+    const recipients = Array.from(new Set(candidates.map((c) => c.to.toLowerCase())));
 
     const addrMap = new Map<string, { user_id: string; network: string }>();
+
+    // 1) Stored deposit rows
+    const { data: addrRows } = await supabase
+      .from("deposits")
+      .select("user_id, address, network");
     for (const r of addrRows || []) {
-      if (r.address) addrMap.set(r.address.toLowerCase(), { user_id: r.user_id, network: r.network || "base" });
+      if (r.address) {
+        addrMap.set(String(r.address).toLowerCase(), {
+          user_id: r.user_id,
+          network: r.network || "base",
+        });
+      }
     }
 
-    const matched = candidates.filter((c) => addrMap.has(c.to));
+    // 2) Derived addresses for every profile
+    const { data: profiles } = await supabase
+      .from("profiles").select("user_id");
+    for (const p of profiles || []) {
+      const derived = deriveDepositAddress(p.user_id).toLowerCase();
+      if (!addrMap.has(derived)) {
+        addrMap.set(derived, { user_id: p.user_id, network: "base" });
+      }
+    }
+
+    console.log("recover-deposit-by-tx", { txHash, recipients, knownAddrs: addrMap.size });
+
+    const matched = candidates.filter((c) => addrMap.has(c.to.toLowerCase()));
     if (matched.length === 0) {
       return json({
         error: "No matching deposit address for this transaction",
