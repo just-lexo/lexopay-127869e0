@@ -139,7 +139,7 @@ Deno.serve(async (req) => {
     let credited = 0;
     const results: any[] = [];
     for (const m of matched) {
-      const owner = addrMap.get(m.to)!;
+      const owner = addrMap.get(m.to.toLowerCase())!;
       // Non-admin: only their own
       if (!isAdmin && owner.user_id !== callerId) continue;
 
