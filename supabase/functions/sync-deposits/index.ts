@@ -58,6 +58,13 @@ Deno.serve(async (req) => {
       if (d.address) addressMap.set(d.address.toLowerCase(), { user_id: d.user_id, network: d.network });
     }
 
+    // Also include derived addresses for every profile (fallback if not persisted)
+    const { data: profiles } = await supabase.from("profiles").select("user_id");
+    for (const p of profiles || []) {
+      const derived = deriveDepositAddress(p.user_id).toLowerCase();
+      if (!addressMap.has(derived)) addressMap.set(derived, { user_id: p.user_id, network: "base" });
+    }
+
     if (addressMap.size === 0) return json({ message: "No addresses to sync", credited: 0 });
 
     // Existing tx_hashes to skip
