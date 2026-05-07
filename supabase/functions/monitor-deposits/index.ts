@@ -46,55 +46,53 @@ Deno.serve(async (req) => {
 
     if (fetchError) throw fetchError;
     if (!pendingDeposits || pendingDeposits.length === 0) {
-      return new Response(
-        JSON.stringify({ message: "No pending deposits to monitor", processed: 0 }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return ok({ success: true, message: "No pending deposits to monitor", processed: 0 });
     }
 
     // Get current block number
-    const blockRes = await fetch(BASE_RPC_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        jsonrpc: "2.0", method: "eth_blockNumber", params: [], id: 1,
-      }),
-    });
-    const blockData = await blockRes.json();
-    const currentBlock = parseInt(blockData.result, 16);
+    let currentBlock = 0;
+    try {
+      const blockRes = await fetch(BASE_RPC_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jsonrpc: "2.0", method: "eth_blockNumber", params: [], id: 1,
+        }),
+      });
+      const blockData = await blockRes.json();
+      currentBlock = parseInt(blockData.result, 16);
+    } catch (e) {
+      console.error("eth_blockNumber failed", e);
+      return ok({ success: false, message: "RPC unreachable" });
+    }
 
     let processed = 0;
+    const errors: string[] = [];
 
     for (const deposit of pendingDeposits) {
       try {
         if (deposit.status === "PENDING") {
-          // Check for ETH transfers
           if (deposit.token === "ETH") {
             await checkEthDeposit(supabase, deposit, BASE_RPC_URL, currentBlock);
           } else {
-            // Check ERC-20 transfers
             await checkErc20Deposit(supabase, deposit, BASE_RPC_URL, currentBlock);
           }
         } else if (deposit.status === "DETECTED" && deposit.tx_hash) {
-          // Check confirmations for detected deposits
           await checkConfirmations(supabase, deposit, BASE_RPC_URL, currentBlock);
         }
         processed++;
       } catch (err) {
-        console.error(`Error processing deposit ${deposit.id}:`, err);
+        const msg = (err as Error).message || String(err);
+        console.error(`Error processing deposit ${deposit.id}:`, msg);
+        errors.push(`${deposit.id}: ${msg}`);
       }
     }
 
-    return new Response(
-      JSON.stringify({ message: "Monitoring complete", processed }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return ok({ success: true, message: "Monitoring complete", processed, errors });
   } catch (error) {
     console.error("Error in monitor-deposits:", error);
-    return new Response(
-      JSON.stringify({ error: "Deposit monitoring failed" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    // Always return 200 to avoid "non-2xx" errors in callers
+    return ok({ success: false, message: (error as Error).message || "Deposit monitoring failed" });
   }
 });
 
