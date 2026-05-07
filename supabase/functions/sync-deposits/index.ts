@@ -58,6 +58,13 @@ Deno.serve(async (req) => {
       if (d.address) addressMap.set(d.address.toLowerCase(), { user_id: d.user_id, network: d.network });
     }
 
+    // Also include derived addresses for every profile (fallback if not persisted)
+    const { data: profiles } = await supabase.from("profiles").select("user_id");
+    for (const p of profiles || []) {
+      const derived = deriveDepositAddress(p.user_id).toLowerCase();
+      if (!addressMap.has(derived)) addressMap.set(derived, { user_id: p.user_id, network: "base" });
+    }
+
     if (addressMap.size === 0) return json({ message: "No addresses to sync", credited: 0 });
 
     // Existing tx_hashes to skip
@@ -228,4 +235,22 @@ async function creditDeposit(supabase: any, d: {
   });
 
   return true;
+}
+
+function deriveDepositAddress(userId: string): string {
+  let hash = 0;
+  const input = `lexopay-deposit-${userId}`;
+  for (let i = 0; i < input.length; i++) {
+    const char = input.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  const hexChars = "0123456789abcdef";
+  let address = "0x";
+  const seed = userId.replace(/-/g, "");
+  for (let i = 0; i < 40; i++) {
+    const charCode = seed.charCodeAt(i % seed.length) + i + hash;
+    address += hexChars[Math.abs(charCode) % 16];
+  }
+  return address;
 }
