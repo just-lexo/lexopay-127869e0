@@ -122,8 +122,31 @@ const Deposit = () => {
     }
     setLoading(true);
     try {
-      const address = generateUserDepositAddress(user.id);
+      const address = generateUserDepositAddress(user.id).toLowerCase();
       setDepositAddress(address);
+
+      // Persist address as a PENDING deposit so it can be matched on-chain.
+      const { data: existing } = await supabase
+        .from('deposits')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('address', address)
+        .eq('token', selectedToken)
+        .eq('network', selectedNetwork)
+        .in('status', ['PENDING', 'DETECTED'])
+        .maybeSingle();
+
+      if (!existing) {
+        await supabase.from('deposits').insert({
+          user_id: user.id,
+          address,
+          token: selectedToken,
+          network: selectedNetwork,
+          status: 'PENDING',
+        });
+        await fetchDeposits();
+      }
+
       toast({ title: 'Address generated', description: 'Send your crypto to this address.' });
     } catch {
       toast({ title: 'Error', description: 'Failed to generate address.', variant: 'destructive' });
