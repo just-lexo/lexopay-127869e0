@@ -16,7 +16,14 @@ const TOKEN_CONTRACTS: Record<string, string> = {
   USDT: "0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2",
 };
 
-const REQUIRED_CONFIRMATIONS = 12;
+const REQUIRED_CONFIRMATIONS = 2;
+
+function ok(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -24,13 +31,8 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const BASE_RPC_URL = Deno.env.get("BASE_RPC_URL");
-    if (!BASE_RPC_URL) {
-      return new Response(
-        JSON.stringify({ error: "BASE_RPC_URL not configured" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    const BASE_RPC_URL =
+      Deno.env.get("BASE_RPC_URL") || "https://mainnet.base.org";
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
