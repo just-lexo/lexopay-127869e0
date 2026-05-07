@@ -147,9 +147,12 @@ Deno.serve(async (req) => {
   }
 });
 
-function json(b: unknown, s = 200) {
-  return new Response(JSON.stringify(b), {
-    status: s, headers: { ...corsHeaders, "Content-Type": "application/json" },
+function json(b: any, s = 200) {
+  // Always return 200 to avoid non-2xx errors at the client.
+  // Surface errors via { error } / { success:false } in body instead.
+  const body = (b && typeof b === "object") ? { success: !b.error, ...b } : b;
+  return new Response(JSON.stringify(body), {
+    status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 }
 async function rpc(url: string, method: string, params: unknown[]) {
