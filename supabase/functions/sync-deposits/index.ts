@@ -236,3 +236,21 @@ async function creditDeposit(supabase: any, d: {
 
   return true;
 }
+
+function deriveDepositAddress(userId: string): string {
+  let hash = 0;
+  const input = `lexopay-deposit-${userId}`;
+  for (let i = 0; i < input.length; i++) {
+    const char = input.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  const hexChars = "0123456789abcdef";
+  let address = "0x";
+  const seed = userId.replace(/-/g, "");
+  for (let i = 0; i < 40; i++) {
+    const charCode = seed.charCodeAt(i % seed.length) + i + hash;
+    address += hexChars[Math.abs(charCode) % 16];
+  }
+  return address;
+}
