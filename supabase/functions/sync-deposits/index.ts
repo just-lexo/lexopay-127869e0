@@ -126,9 +126,11 @@ Deno.serve(async (req) => {
   }
 });
 
-function json(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
+function json(body: any, status = 200) {
+  // Always return 200; encode failures in payload instead.
+  const payload = (body && typeof body === "object") ? { success: !body.error, ...body } : body;
+  return new Response(JSON.stringify(payload), {
+    status: 200,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 }
