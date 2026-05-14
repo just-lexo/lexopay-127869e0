@@ -1,3 +1,4 @@
+import { BrandLogo } from "@/components/BrandLogo";
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWallets } from '@/hooks/useWallets';
@@ -53,9 +54,7 @@ const Dashboard = () => {
         <div className="container max-w-lg mx-auto px-4 py-3">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0 flex-1">
-              <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center shrink-0">
-                <span className="text-primary-foreground font-bold text-sm">L</span>
-              </div>
+              <BrandLogo className="w-9 h-9 shrink-0" rounded="rounded-xl" />
               <div className="min-w-0">
                 <p className="text-xs text-muted-foreground">Welcome back,</p>
                 <p className="font-semibold text-sm truncate">{profile?.display_name || 'User'}</p>

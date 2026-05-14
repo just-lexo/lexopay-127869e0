@@ -1,3 +1,4 @@
+import { BrandLogo } from "@/components/BrandLogo";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Wallet, RefreshCw, Building2, Shield, Zap, Globe } from "lucide-react";
@@ -11,9 +12,7 @@ const Landing = () => {
       <header className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-border/50">
         <div className="container flex items-center justify-between h-14 px-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">L</span>
-            </div>
+            <BrandLogo className="w-8 h-8" rounded="rounded-lg" />
             <span className="font-bold text-lg">LexoPay</span>
           </div>
           <Button variant="ghost" onClick={() => navigate('/auth')} className="touch-target">
@@ -143,9 +142,7 @@ const Landing = () => {
         <div className="container max-w-5xl mx-auto">
           <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-md gradient-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-xs">L</span>
-              </div>
+              <BrandLogo className="w-6 h-6" rounded="rounded-md" />
               <span className="font-semibold">LexoPay</span>
             </div>
             <div className="flex items-center gap-6 text-sm text-muted-foreground">
