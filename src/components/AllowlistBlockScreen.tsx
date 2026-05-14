@@ -150,9 +150,7 @@ export function AllowlistBlockScreen() {
         <div className="container max-w-lg mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">L</span>
-              </div>
+              <BrandLogo className="w-9 h-9" rounded="rounded-xl" />
               <span className="font-semibold text-sm">LexoPay</span>
             </div>
             <Button variant="ghost" size="icon" className="h-9 w-9" onClick={handleSignOut}>

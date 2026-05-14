@@ -208,7 +208,7 @@ const Receipt = () => {
             {/* HEADER */}
             <div className="bg-gradient-to-br from-primary to-primary/70 px-5 py-5 text-primary-foreground">
               <div className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center font-bold">L</div>
+                <BrandLogo className="w-9 h-9 bg-white/20 p-0.5" rounded="rounded-lg" />
                 <div>
                   <p className="font-bold text-lg leading-tight">LexoPay</p>
                   <p className="text-[11px] opacity-90 tracking-wide uppercase">Transaction Receipt</p>

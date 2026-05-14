@@ -181,9 +181,7 @@ const Auth = () => {
           {step === 'auth' && (
             <>
               <CardHeader className="text-center pb-4">
-                <div className="w-11 h-11 rounded-xl gradient-primary flex items-center justify-center mx-auto mb-3">
-                  <span className="text-primary-foreground font-bold text-lg">L</span>
-                </div>
+                <BrandLogo className="w-11 h-11 mx-auto mb-3" rounded="rounded-xl" />
                 <CardTitle className="text-xl">
                   {isLogin ? 'Welcome back' : 'Create account'}
                 </CardTitle>
