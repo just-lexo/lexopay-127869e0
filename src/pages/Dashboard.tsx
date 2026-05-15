@@ -84,6 +84,7 @@ const Dashboard = () => {
             {/* Verification banners */}
             <EmailVerificationBanner />
             {kycStatus !== 'APPROVED' && <KycGateBanner status={kycStatus} feature="withdrawals" />}
+            <KycTierHub variant="compact" />
 
             {/* Wallet Cards */}
             <div className="grid gap-4">
