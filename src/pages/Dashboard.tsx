@@ -9,6 +9,7 @@ import { PaymentRequests } from '@/components/dashboard/PaymentRequests';
 import { BottomNav } from '@/components/BottomNav';
 import { EmailVerificationBanner } from '@/components/EmailVerificationBanner';
 import { KycGateBanner } from '@/components/KycGateBanner';
+import { KycTierHub } from '@/components/KycTierHub';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
