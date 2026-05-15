@@ -37,6 +37,8 @@ import { useMaintenanceMode } from '@/hooks/useMaintenanceMode';
 import { useKycStatus } from '@/hooks/useKycStatus';
 import { EmailVerificationBanner } from '@/components/EmailVerificationBanner';
 import { KycGateBanner } from '@/components/KycGateBanner';
+import { PinPromptModal } from '@/components/PinPromptModal';
+import { usePinStatus } from '@/hooks/usePinStatus';
 
 const WITHDRAWAL_FEE = 20;
 
@@ -58,6 +60,8 @@ const Withdraw = () => {
   const { toast } = useToast();
   const { accounts: savedAccounts, defaultAccount, loading: loadingSaved } = useSavedBankAccounts();
   const { status: kycStatus, isApproved: kycApproved } = useKycStatus();
+  const { hasPin } = usePinStatus();
+  const [pinOpen, setPinOpen] = useState(false);
 
   const [mode, setMode] = useState<'default' | 'other'>('default');
   const [selectedBank, setSelectedBank] = useState<Bank | null>(null);
@@ -140,7 +144,7 @@ const Withdraw = () => {
     }
   };
 
-  const handleWithdraw = async () => {
+  const handleWithdraw = async (pin?: string) => {
     if (!user || !effectiveBankCode || !effectiveAccountName || !canWithdraw) return;
     if (!emailConfirmed) {
       toast({ title: 'Verify your email', description: 'Please verify your email to withdraw.', variant: 'destructive' });
@@ -164,6 +168,7 @@ const Withdraw = () => {
         _bank_name: effectiveBank!,
         _account_number: effectiveAccountNumber,
         _account_name: effectiveAccountName,
+        _pin: pin ?? null,
       });
 
       if (error) throw error;
@@ -225,6 +230,7 @@ const Withdraw = () => {
       setFaceVerifyOpen(true);
       return;
     }
+    if (hasPin) { setPinOpen(true); return; }
     handleWithdraw();
   };
 
