@@ -109,6 +109,7 @@ const Admin = () => {
   useEffect(() => {
     if (!isAdmin) { navigate('/dashboard'); return; }
     fetchData();
+    fetchTreasury();
   }, [isAdmin]);
 
   const fetchData = async () => {
