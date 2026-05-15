@@ -532,6 +532,7 @@ const Admin = () => {
                             <TableHead className="text-xs hidden md:table-cell">Date</TableHead>
                             <TableHead className="text-xs text-right">Amount</TableHead>
                             <TableHead className="text-xs text-right">Status</TableHead>
+                            <TableHead className="text-xs text-right">Action</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -541,7 +542,23 @@ const Admin = () => {
                               <TableCell className="py-2 font-mono text-[11px] text-muted-foreground hidden sm:table-cell">{maskAccount(w.account_number)}</TableCell>
                               <TableCell className="py-2 text-xs text-muted-foreground hidden md:table-cell">{new Date(w.created_at).toLocaleDateString()}</TableCell>
                               <TableCell className="py-2 text-right font-mono text-xs">₦{Number(w.amount).toLocaleString()}</TableCell>
-                              <TableCell className="py-2 text-right"><Badge variant="outline" className="text-[10px]">{w.status}</Badge></TableCell>
+                              <TableCell className="py-2 text-right">
+                                <Badge variant={w.status === 'SUCCESS' ? 'default' : w.status === 'FAILED' ? 'destructive' : 'outline'} className="text-[10px]">{w.status}</Badge>
+                              </TableCell>
+                              <TableCell className="py-2 text-right">
+                                {w.status === 'PROCESSING' ? (
+                                  <div className="flex justify-end gap-1">
+                                    <Button size="sm" variant="outline" className="h-7 text-[10px] px-2" disabled={busyId === w.id}
+                                      onClick={() => handleResolveWithdrawal(w.id, true)}>
+                                      <CheckCircle className="w-3 h-3 mr-1" />Paid
+                                    </Button>
+                                    <Button size="sm" variant="destructive" className="h-7 text-[10px] px-2" disabled={busyId === w.id}
+                                      onClick={() => handleResolveWithdrawal(w.id, false)}>
+                                      <XCircle className="w-3 h-3 mr-1" />Fail
+                                    </Button>
+                                  </div>
+                                ) : <span className="text-[10px] text-muted-foreground">—</span>}
+                              </TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
