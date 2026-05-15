@@ -50,6 +50,8 @@ const Send = () => {
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  // Stable idempotency key per confirm session — prevents double-spend on retries
+  const idemKeyRef = useRef<string>('');
 
   const selectedBalance = cryptoBalances.find(b => b.token === selectedToken);
   const availableBalance = selectedBalance?.balance ?? 0;
