@@ -51,6 +51,12 @@ const Admin = () => {
   const [syncingDeposits, setSyncingDeposits] = useState(false);
   const [recoverTxHash, setRecoverTxHash] = useState('');
   const [recovering, setRecovering] = useState(false);
+  const [treasury, setTreasury] = useState<any>(null);
+
+  const fetchTreasury = async () => {
+    const { data } = await supabase.rpc('admin_treasury_kpis');
+    setTreasury(data || null);
+  };
 
   const handleRecoverByTx = async () => {
     const tx = recoverTxHash.trim();
