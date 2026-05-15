@@ -159,6 +159,7 @@ const Admin = () => {
     if (!isAdmin) { navigate('/dashboard'); return; }
     fetchData();
     fetchTreasury();
+    fetchAuditLog();
   }, [isAdmin]);
 
   const fetchData = async () => {
