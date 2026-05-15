@@ -861,6 +861,10 @@ export type Database = {
         Args: { _pin: string; _uid: string }
         Returns: boolean
       }
+      admin_resolve_withdrawal: {
+        Args: { _note?: string; _success: boolean; _withdrawal_id: string }
+        Returns: Json
+      }
       admin_set_account_frozen: {
         Args: { _frozen: boolean; _reason?: string; _target_user: string }
         Returns: Json
