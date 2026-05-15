@@ -59,6 +59,57 @@ export type Database = {
         }
         Relationships: []
       }
+      conversion_quotes: {
+        Row: {
+          consumed: boolean
+          consumed_at: string | null
+          created_at: string
+          display_rate: number
+          expires_at: string
+          fee: number
+          from_amount: number
+          id: string
+          market_rate: number
+          network: string
+          ngn_amount: number
+          spread_pct: number
+          token: string
+          user_id: string
+        }
+        Insert: {
+          consumed?: boolean
+          consumed_at?: string | null
+          created_at?: string
+          display_rate: number
+          expires_at: string
+          fee: number
+          from_amount: number
+          id?: string
+          market_rate: number
+          network: string
+          ngn_amount: number
+          spread_pct?: number
+          token: string
+          user_id: string
+        }
+        Update: {
+          consumed?: boolean
+          consumed_at?: string | null
+          created_at?: string
+          display_rate?: number
+          expires_at?: string
+          fee?: number
+          from_amount?: number
+          id?: string
+          market_rate?: number
+          network?: string
+          ngn_amount?: number
+          spread_pct?: number
+          token?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       conversions: {
         Row: {
           created_at: string
@@ -574,6 +625,7 @@ export type Database = {
           amount_display: string
           created_at: string
           id: string
+          idempotency_key: string | null
           kind: Database["public"]["Enums"]["transaction_kind"]
           metadata: Json | null
           status: string
@@ -585,6 +637,7 @@ export type Database = {
           amount_display: string
           created_at?: string
           id?: string
+          idempotency_key?: string | null
           kind: Database["public"]["Enums"]["transaction_kind"]
           metadata?: Json | null
           status: string
@@ -596,6 +649,7 @@ export type Database = {
           amount_display?: string
           created_at?: string
           id?: string
+          idempotency_key?: string | null
           kind?: Database["public"]["Enums"]["transaction_kind"]
           metadata?: Json | null
           status?: string
@@ -694,6 +748,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      consume_conversion_quote: { Args: { _quote_id: string }; Returns: Json }
       convert_crypto_to_ngn: {
         Args: { _amount: number; _network: string; _token: string }
         Returns: Json
@@ -730,6 +785,16 @@ export type Database = {
         }[]
       }
       pay_payment_request: { Args: { _request_id: string }; Returns: Json }
+      process_internal_transfer: {
+        Args: {
+          _amount: number
+          _idempotency_key: string
+          _network: string
+          _recipient_username: string
+          _token: string
+        }
+        Returns: Json
+      }
       request_crypto_conversion: {
         Args: {
           _amount: number
