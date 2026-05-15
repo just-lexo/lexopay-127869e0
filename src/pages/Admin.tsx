@@ -52,11 +52,60 @@ const Admin = () => {
   const [recoverTxHash, setRecoverTxHash] = useState('');
   const [recovering, setRecovering] = useState(false);
   const [treasury, setTreasury] = useState<any>(null);
+  const [auditLog, setAuditLog] = useState<any[]>([]);
+  const [busyId, setBusyId] = useState<string | null>(null);
 
   const fetchTreasury = async () => {
     const { data } = await supabase.rpc('admin_treasury_kpis');
     setTreasury(data || null);
   };
+
+  const fetchAuditLog = async () => {
+    const { data } = await supabase
+      .from('admin_audit_log')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(100);
+    setAuditLog((data as any[]) || []);
+  };
+
+  const handleFreeze = async (userId: string, freeze: boolean) => {
+    const reason = freeze ? (window.prompt('Reason for freezing this account?') || '').trim() : null;
+    if (freeze && !reason) return;
+    setBusyId(userId);
+    const { data, error } = await supabase.rpc('admin_set_account_frozen', {
+      _target_user: userId, _frozen: freeze, _reason: reason,
+    });
+    setBusyId(null);
+    const r = data as any;
+    if (error || !r?.success) {
+      toast({ title: 'Failed', description: error?.message || r?.error || 'Try again', variant: 'destructive' });
+    } else {
+      toast({ title: freeze ? 'Account frozen' : 'Account unfrozen' });
+      fetchData();
+      fetchAuditLog();
+    }
+  };
+
+  const handleResolveWithdrawal = async (id: string, success: boolean) => {
+    const note = window.prompt(success ? 'Optional success note (e.g. provider ref)' : 'Reason for failing this withdrawal?') || '';
+    if (!success && !note.trim()) return;
+    setBusyId(id);
+    const { data, error } = await supabase.rpc('admin_resolve_withdrawal', {
+      _withdrawal_id: id, _success: success, _note: note,
+    });
+    setBusyId(null);
+    const r = data as any;
+    if (error || !r?.success) {
+      toast({ title: 'Failed', description: error?.message || r?.error || 'Try again', variant: 'destructive' });
+    } else {
+      toast({ title: success ? 'Marked as paid' : 'Refunded user' });
+      fetchData();
+      fetchTreasury();
+      fetchAuditLog();
+    }
+  };
+
 
   const handleRecoverByTx = async () => {
     const tx = recoverTxHash.trim();
@@ -110,6 +159,7 @@ const Admin = () => {
     if (!isAdmin) { navigate('/dashboard'); return; }
     fetchData();
     fetchTreasury();
+    fetchAuditLog();
   }, [isAdmin]);
 
   const fetchData = async () => {
@@ -262,11 +312,12 @@ const Admin = () => {
           <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="w-full grid grid-cols-6 h-auto">
+            <TabsList className="w-full grid grid-cols-7 h-auto">
               <TabsTrigger value="overview" className="text-[11px] sm:text-xs py-2">Dashboard</TabsTrigger>
               <TabsTrigger value="users" className="text-[11px] sm:text-xs py-2">Users</TabsTrigger>
               <TabsTrigger value="transactions" className="text-[11px] sm:text-xs py-2">Txns</TabsTrigger>
               <TabsTrigger value="kyc" className="text-[11px] sm:text-xs py-2">KYC</TabsTrigger>
+              <TabsTrigger value="audit" className="text-[11px] sm:text-xs py-2">Audit</TabsTrigger>
               <TabsTrigger value="support" className="text-[11px] sm:text-xs py-2">Support</TabsTrigger>
               <TabsTrigger value="settings" className="text-[11px] sm:text-xs py-2">Settings</TabsTrigger>
             </TabsList>
@@ -377,7 +428,21 @@ const Admin = () => {
                               <TableCell className="text-right py-2.5">
                                 <div className="flex flex-wrap items-center justify-end gap-1.5">
                                   {u.is_admin && <Badge variant="default" className="text-[10px]">Admin</Badge>}
+                                  {u.is_frozen && <Badge variant="destructive" className="text-[10px]">Frozen</Badge>}
                                   <Badge variant="outline" className="text-[10px]">KYC {u.kyc_tier}</Badge>
+                                  {!u.is_admin && (
+                                    <Button
+                                      size="sm"
+                                      variant={u.is_frozen ? 'outline' : 'destructive'}
+                                      className="h-7 text-[10px] px-2"
+                                      disabled={busyId === u.user_id}
+                                      onClick={() => handleFreeze(u.user_id, !u.is_frozen)}
+                                    >
+                                      {busyId === u.user_id ? <Loader2 className="w-3 h-3 animate-spin" />
+                                        : u.is_frozen ? <><UserCheck className="w-3 h-3 mr-1" />Unfreeze</>
+                                        : <><UserX className="w-3 h-3 mr-1" />Freeze</>}
+                                    </Button>
+                                  )}
                                 </div>
                               </TableCell>
                             </TableRow>
@@ -467,6 +532,7 @@ const Admin = () => {
                             <TableHead className="text-xs hidden md:table-cell">Date</TableHead>
                             <TableHead className="text-xs text-right">Amount</TableHead>
                             <TableHead className="text-xs text-right">Status</TableHead>
+                            <TableHead className="text-xs text-right">Action</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -476,7 +542,23 @@ const Admin = () => {
                               <TableCell className="py-2 font-mono text-[11px] text-muted-foreground hidden sm:table-cell">{maskAccount(w.account_number)}</TableCell>
                               <TableCell className="py-2 text-xs text-muted-foreground hidden md:table-cell">{new Date(w.created_at).toLocaleDateString()}</TableCell>
                               <TableCell className="py-2 text-right font-mono text-xs">₦{Number(w.amount).toLocaleString()}</TableCell>
-                              <TableCell className="py-2 text-right"><Badge variant="outline" className="text-[10px]">{w.status}</Badge></TableCell>
+                              <TableCell className="py-2 text-right">
+                                <Badge variant={w.status === 'SUCCESS' ? 'default' : w.status === 'FAILED' ? 'destructive' : 'outline'} className="text-[10px]">{w.status}</Badge>
+                              </TableCell>
+                              <TableCell className="py-2 text-right">
+                                {w.status === 'PROCESSING' ? (
+                                  <div className="flex justify-end gap-1">
+                                    <Button size="sm" variant="outline" className="h-7 text-[10px] px-2" disabled={busyId === w.id}
+                                      onClick={() => handleResolveWithdrawal(w.id, true)}>
+                                      <CheckCircle className="w-3 h-3 mr-1" />Paid
+                                    </Button>
+                                    <Button size="sm" variant="destructive" className="h-7 text-[10px] px-2" disabled={busyId === w.id}
+                                      onClick={() => handleResolveWithdrawal(w.id, false)}>
+                                      <XCircle className="w-3 h-3 mr-1" />Fail
+                                    </Button>
+                                  </div>
+                                ) : <span className="text-[10px] text-muted-foreground">—</span>}
+                              </TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
@@ -585,6 +667,59 @@ const Admin = () => {
             </TabsContent>
 
             {/* SUPPORT CHAT */}
+            {/* AUDIT */}
+            <TabsContent value="audit" className="space-y-4 mt-4">
+              <Card className="glass-card border-border/50">
+                <CardHeader className="pb-3 flex-row items-center justify-between">
+                  <div>
+                    <CardTitle className="text-sm">Admin Audit Log</CardTitle>
+                    <CardDescription className="text-xs">Last 100 administrative actions</CardDescription>
+                  </div>
+                  <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={fetchAuditLog}>
+                    <RefreshCw className="w-3 h-3 mr-1" /> Refresh
+                  </Button>
+                </CardHeader>
+                <CardContent className="p-0">
+                  {auditLog.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-8">No actions logged yet</p>
+                  ) : (
+                    <div className="overflow-x-auto max-h-[60vh] overflow-y-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="text-xs">When</TableHead>
+                            <TableHead className="text-xs">Action</TableHead>
+                            <TableHead className="text-xs hidden sm:table-cell">Target</TableHead>
+                            <TableHead className="text-xs">Details</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {auditLog.map((a: any) => (
+                            <TableRow key={a.id}>
+                              <TableCell className="py-2 text-[11px] text-muted-foreground whitespace-nowrap">
+                                {new Date(a.created_at).toLocaleString()}
+                              </TableCell>
+                              <TableCell className="py-2">
+                                <Badge variant="outline" className="text-[10px]">{a.action}</Badge>
+                              </TableCell>
+                              <TableCell className="py-2 hidden sm:table-cell">
+                                <p className="text-[11px] font-mono text-muted-foreground">
+                                  {a.target_kind || '—'}{a.target_user_id ? ` · ${String(a.target_user_id).slice(0, 8)}…` : ''}
+                                </p>
+                              </TableCell>
+                              <TableCell className="py-2 text-[11px] text-muted-foreground max-w-[280px] truncate">
+                                {a.details ? JSON.stringify(a.details) : '—'}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
             <TabsContent value="support" className="space-y-4 mt-4">
               <AdminSupportChat tickets={supportTickets} onRefresh={fetchData} />
             </TabsContent>
