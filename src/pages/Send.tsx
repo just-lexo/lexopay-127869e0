@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useHideBalances } from '@/hooks/useHideBalances';
@@ -50,6 +50,8 @@ const Send = () => {
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  // Stable idempotency key per confirm session — prevents double-spend on retries
+  const idemKeyRef = useRef<string>('');
 
   const selectedBalance = cryptoBalances.find(b => b.token === selectedToken);
   const availableBalance = selectedBalance?.balance ?? 0;
@@ -125,14 +127,21 @@ const Send = () => {
       return;
     }
 
+    // Generate stable idempotency key once per confirm session
+    if (!idemKeyRef.current) {
+      idemKeyRef.current =
+        (globalThis.crypto?.randomUUID?.() as string) ||
+        `idem-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    }
+
     setLoading(true);
     try {
-      // Call atomic transfer function
-      const { data, error } = await supabase.rpc('transfer_crypto', {
+      const { data, error } = await supabase.rpc('process_internal_transfer', {
         _recipient_username: recipient.username,
         _token: selectedToken,
         _network: 'base',
         _amount: sendAmount,
+        _idempotency_key: idemKeyRef.current,
       });
 
       if (error) {
@@ -145,7 +154,7 @@ const Send = () => {
         return;
       }
 
-      const result = data as { success: boolean; error?: string; reference?: string };
+      const result = data as { success: boolean; error?: string; reference?: string; duplicate?: boolean };
 
       if (!result.success) {
         toast({
@@ -183,6 +192,7 @@ const Send = () => {
       setRecipient(null);
       setRecipientError(null);
       setShowConfirm(false);
+      idemKeyRef.current = '';
       
       await refetch();
       navigate('/dashboard');

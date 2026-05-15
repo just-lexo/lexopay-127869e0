@@ -51,12 +51,19 @@ Deno.serve(async (req) => {
 
     for (const conversion of pendingConversions) {
       try {
-        // Fetch current price
-        const usdPrice = await fetchCoinbasePrice(conversion.from_token);
-        const ngnRate = usdPrice * USD_TO_NGN * (1 - SPREAD_PERCENTAGE / 100);
-        const grossNgn = conversion.from_amount * ngnRate;
-        const fee = grossNgn * 0.015; // 1.5% fee
-        const finalNgn = Math.round((grossNgn - fee) * 100) / 100;
+        // Use the LOCKED rate captured when the user confirmed the quote.
+        // Fall back to a fresh quote only if no locked values are present.
+        let ngnRate = Number(conversion.rate) || 0;
+        let fee = Number(conversion.fee) || 0;
+        let finalNgn = Number(conversion.ngn_amount) || 0;
+
+        if (!ngnRate || !finalNgn) {
+          const usdPrice = await fetchCoinbasePrice(conversion.from_token);
+          ngnRate = usdPrice * USD_TO_NGN * (1 - SPREAD_PERCENTAGE / 100);
+          const grossNgn = conversion.from_amount * ngnRate;
+          fee = grossNgn * 0.015;
+          finalNgn = Math.round((grossNgn - fee) * 100) / 100;
+        }
 
         // Get user's NGN wallet
         const { data: ngnWallet } = await supabase

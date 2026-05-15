@@ -1,10 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useHideBalances } from '@/hooks/useHideBalances';
 import { useWallets } from '@/hooks/useWallets';
-import { liveRateProvider, CONVERSION_FEE_PERCENTAGE, type ConversionQuote } from '@/adapters';
-import { createDelayedConversion, triggerConversionProcessor } from '@/services/conversionProcessor';
+import { supabase } from '@/integrations/supabase/client';
 import { createNotification } from '@/hooks/useNotifications';
 import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
@@ -12,9 +11,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  ArrowLeft, 
-  Loader2, 
+import {
+  ArrowLeft,
+  Loader2,
   RefreshCw,
   ArrowDown,
   Check,
@@ -25,6 +24,21 @@ import {
 } from 'lucide-react';
 import { useMaintenanceMode } from '@/hooks/useMaintenanceMode';
 import { TransactionGate, useTransactionGate } from '@/components/TransactionGate';
+
+interface LockedQuote {
+  id: string;
+  token: string;
+  network: string;
+  from_amount: number;
+  market_rate: number;
+  display_rate: number;
+  spread_pct: number;
+  fee_pct: number;
+  fee: number;
+  ngn_amount: number;
+  expires_at: string;
+  ttl_seconds: number;
+}
 
 const Convert = () => {
   const navigate = useNavigate();
@@ -37,43 +51,69 @@ const Convert = () => {
 
   const [selectedToken, setSelectedToken] = useState<string>('USDT');
   const [amount, setAmount] = useState<string>('');
-  const [quote, setQuote] = useState<ConversionQuote | null>(null);
+  const [quote, setQuote] = useState<LockedQuote | null>(null);
   const [loading, setLoading] = useState(false);
   const [converting, setConverting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [secondsLeft, setSecondsLeft] = useState(0);
+  const requestIdRef = useRef(0);
 
   const selectedBalance = cryptoBalances.find(
-    b => b.token === selectedToken && b.network === 'base'
+    (b) => b.token === selectedToken && b.network === 'base',
   );
   const availableBalance = selectedBalance?.balance ?? 0;
 
+  const fetchQuote = async () => {
+    const numAmount = parseFloat(amount);
+    if (!numAmount || numAmount <= 0) {
+      setQuote(null);
+      return;
+    }
+    setLoading(true);
+    const reqId = ++requestIdRef.current;
+    try {
+      const { data, error } = await supabase.functions.invoke('create-conversion-quote', {
+        body: { token: selectedToken, network: 'base', amount: numAmount },
+      });
+      if (reqId !== requestIdRef.current) return; // stale
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.message || 'Quote failed');
+      setQuote(data.quote as LockedQuote);
+    } catch (err: any) {
+      console.error('Quote error:', err);
+      setQuote(null);
+      toast({ title: 'Could not fetch rate', description: err?.message || 'Try again', variant: 'destructive' });
+    } finally {
+      if (reqId === requestIdRef.current) setLoading(false);
+    }
+  };
+
+  // Debounced quote fetch on amount/token change
   useEffect(() => {
-    const fetchQuote = async () => {
-      const numAmount = parseFloat(amount);
-      if (!numAmount || numAmount <= 0) {
-        setQuote(null);
-        return;
-      }
-
-      setLoading(true);
-      try {
-        const result = await liveRateProvider.getQuote(selectedToken, numAmount, 'NGN');
-        setQuote(result);
-      } catch (err) {
-        console.error('Error fetching quote:', err);
-        setQuote(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const debounce = setTimeout(fetchQuote, 300);
-    return () => clearTimeout(debounce);
+    const t = setTimeout(fetchQuote, 350);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [amount, selectedToken]);
 
-  const handleMaxClick = () => {
-    setAmount(availableBalance.toString());
-  };
+  // Countdown + auto-refresh on expiry
+  useEffect(() => {
+    if (!quote) {
+      setSecondsLeft(0);
+      return;
+    }
+    const tick = () => {
+      const ms = new Date(quote.expires_at).getTime() - Date.now();
+      const s = Math.max(0, Math.ceil(ms / 1000));
+      setSecondsLeft(s);
+      if (s === 0) fetchQuote();
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quote?.id]);
+
+  const handleMaxClick = () => setAmount(availableBalance.toString());
 
   const handleConvert = async () => {
     if (!user || !quote || !cryptoWalletId || !ngnWalletId) return;
@@ -85,69 +125,41 @@ const Convert = () => {
       toast({ title: 'Action blocked', description: 'Verify your email and complete KYC to convert.', variant: 'destructive' });
       return;
     }
-
-    const numAmount = parseFloat(amount);
-    if (numAmount > availableBalance) {
-      toast({
-        title: 'Insufficient balance',
-        description: `You only have ${availableBalance} ${selectedToken} available.`,
-        variant: 'destructive',
-      });
+    if (secondsLeft <= 0) {
+      toast({ title: 'Quote expired', description: 'Refreshing rate…' });
+      fetchQuote();
       return;
     }
 
     setConverting(true);
     try {
-      const result = await createDelayedConversion({
-        token: selectedToken,
-        network: 'base',
-        amount: numAmount,
-        estimatedRate: quote.rate,
-        estimatedFee: quote.fee,
-        estimatedNgn: quote.netAmount,
-      });
-
+      const { data, error } = await supabase.rpc('consume_conversion_quote', { _quote_id: quote.id });
+      if (error) throw error;
+      const result = data as { success: boolean; error?: string; conversion_id?: string };
       if (!result.success) {
-        toast({
-          title: 'Conversion failed',
-          description: result.error || 'An unexpected error occurred',
-          variant: 'destructive',
-        });
+        toast({ title: 'Conversion failed', description: result.error || 'Try again', variant: 'destructive' });
         return;
       }
-
       setShowSuccess(true);
       await refetch();
-
-      if (user) {
-        await createNotification({
-          userId: user.id,
-          type: 'conversion_processing',
-          title: 'Conversion Processing',
-          message: `Your conversion of ${numAmount} ${selectedToken} is being processed.`,
-        });
-      }
-
-      triggerConversionProcessor().catch(console.error);
-    } catch (err) {
-      console.error('Error converting:', err);
-      toast({
-        title: 'Conversion failed',
-        description: 'Something went wrong. Please try again.',
-        variant: 'destructive',
+      await createNotification({
+        userId: user.id,
+        type: 'conversion_processing',
+        title: 'Conversion Processing',
+        message: `Your conversion of ${quote.from_amount} ${quote.token} is being processed.`,
       });
+      // Trigger background processor
+      supabase.functions.invoke('process-conversions').catch(console.error);
+    } catch (err: any) {
+      console.error('Convert error:', err);
+      toast({ title: 'Conversion failed', description: err?.message || 'Try again', variant: 'destructive' });
     } finally {
       setConverting(false);
     }
   };
 
-  const formatNGN = (value: number) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN',
-      minimumFractionDigits: 2,
-    }).format(value);
-  };
+  const formatNGN = (value: number) =>
+    new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 2 }).format(value);
 
   if (showSuccess && quote) {
     return (
@@ -169,17 +181,16 @@ const Convert = () => {
               <div className="w-16 h-16 rounded-full bg-success/20 flex items-center justify-center mx-auto">
                 <Check className="w-8 h-8 text-success" />
               </div>
-              
               <div>
                 <p className="text-muted-foreground mb-2">Converting</p>
-                <p className="text-2xl font-bold">{amount} {selectedToken}</p>
+                <p className="text-2xl font-bold">
+                  {quote.from_amount} {quote.token}
+                </p>
               </div>
-
-              {/* Progress Steps */}
               <div className="space-y-3 text-left px-4">
                 <div className="flex items-center gap-3">
                   <CheckCircle2 className="w-5 h-5 text-success shrink-0" />
-                  <span className="text-sm">Deposit confirmed</span>
+                  <span className="text-sm">Rate locked & funds reserved</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <Clock className="w-5 h-5 text-primary animate-pulse shrink-0" />
@@ -190,15 +201,11 @@ const Convert = () => {
                   <span className="text-sm text-muted-foreground">Crediting wallet</span>
                 </div>
               </div>
-
               <div>
-                <p className="text-muted-foreground mb-1 text-sm">Estimated NGN</p>
-                <p className="text-2xl font-bold text-success">{formatNGN(quote.netAmount)}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Usually takes a few minutes
-                </p>
+                <p className="text-muted-foreground mb-1 text-sm">You'll receive</p>
+                <p className="text-2xl font-bold text-success">{formatNGN(quote.ngn_amount)}</p>
+                <p className="text-xs text-muted-foreground mt-1">Usually takes a few minutes</p>
               </div>
-
               <div className="flex gap-3">
                 <Button
                   variant="outline"
@@ -211,10 +218,7 @@ const Convert = () => {
                 >
                   Convert More
                 </Button>
-                <Button
-                  className="flex-1 gradient-primary"
-                  onClick={() => navigate('/dashboard')}
-                >
+                <Button className="flex-1 gradient-primary" onClick={() => navigate('/dashboard')}>
                   Done
                 </Button>
               </div>
@@ -225,9 +229,10 @@ const Convert = () => {
     );
   }
 
+  const numAmount = parseFloat(amount) || 0;
+
   return (
     <div className="min-h-screen bg-background pb-20">
-      {/* Header */}
       <header className="glass-card border-b border-border/50 sticky top-0 z-50">
         <div className="container max-w-lg mx-auto px-4 py-3">
           <div className="flex items-center gap-3">
@@ -236,7 +241,7 @@ const Convert = () => {
             </Button>
             <div className="min-w-0">
               <h1 className="font-semibold text-base">Convert to NGN</h1>
-              <p className="text-xs text-muted-foreground">Exchange crypto for Naira</p>
+              <p className="text-xs text-muted-foreground">Live rate • Locked for 60s</p>
             </div>
           </div>
         </div>
@@ -245,7 +250,6 @@ const Convert = () => {
       <main className="container max-w-lg mx-auto px-4 py-4 space-y-4">
         <TransactionGate feature="conversions" />
 
-        {/* From Token */}
         <Card className="glass-card border-border/50">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -268,7 +272,6 @@ const Convert = () => {
                 </Button>
               ))}
             </div>
-
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="amount">Amount</Label>
@@ -294,7 +297,6 @@ const Convert = () => {
           </div>
         </div>
 
-        {/* To NGN */}
         <Card className="glass-card border-success/20">
           <CardHeader className="pb-3">
             <CardTitle className="text-base">To</CardTitle>
@@ -311,7 +313,7 @@ const Convert = () => {
                 {loading ? (
                   <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
                 ) : quote ? (
-                  <p className="text-xl font-mono font-medium">{formatNGN(quote.netAmount)}</p>
+                  <p className="text-xl font-mono font-medium">{formatNGN(quote.ngn_amount)}</p>
                 ) : (
                   <p className="text-xl font-mono text-muted-foreground">₦0.00</p>
                 )}
@@ -320,21 +322,35 @@ const Convert = () => {
           </CardContent>
         </Card>
 
-        {/* Rate Details */}
         {quote && (
           <Card className="glass-card border-border/50">
             <CardContent className="py-4 space-y-3">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Rate</span>
-                <span className="font-mono">1 {selectedToken} = {formatNGN(quote.rate)}</span>
+                <span className="text-muted-foreground">Rate (locked)</span>
+                <span className="font-mono">
+                  1 {quote.token} = {formatNGN(quote.display_rate)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>Spread</span>
+                <span className="font-mono">{quote.spread_pct}%</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Fee ({CONVERSION_FEE_PERCENTAGE}%)</span>
+                <span className="text-muted-foreground">Fee ({quote.fee_pct}%)</span>
                 <span className="font-mono">{formatNGN(quote.fee)}</span>
               </div>
               <div className="border-t border-border pt-3 flex items-center justify-between">
                 <span className="font-medium">You receive</span>
-                <span className="font-mono font-bold text-success">{formatNGN(quote.netAmount)}</span>
+                <span className="font-mono font-bold text-success">{formatNGN(quote.ngn_amount)}</span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className={secondsLeft <= 10 ? 'text-destructive' : 'text-muted-foreground'}>
+                  {secondsLeft > 0 ? `Refreshes in ${secondsLeft}s` : 'Refreshing rate…'}
+                </span>
+                <Button variant="ghost" size="sm" className="h-auto py-1" onClick={fetchQuote} disabled={loading}>
+                  <RefreshCw className={`w-3 h-3 mr-1 ${loading ? 'animate-spin' : ''}`} />
+                  Refresh
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -347,7 +363,7 @@ const Convert = () => {
           </div>
         )}
 
-        {availableBalance > 0 && parseFloat(amount) > availableBalance && (
+        {availableBalance > 0 && numAmount > availableBalance && (
           <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 border border-border">
             <Info className="w-4 h-4 text-muted-foreground" />
             <p className="text-sm text-muted-foreground">
@@ -356,17 +372,16 @@ const Convert = () => {
           </div>
         )}
 
-        {/* Convert Button */}
         {(() => {
-          const numAmount = parseFloat(amount) || 0;
-          const isDisabled = 
-            converting || 
+          const isDisabled =
+            converting ||
             availableBalance === 0 ||
-            !quote || 
-            !amount || 
-            numAmount <= 0 || 
+            !quote ||
+            !amount ||
+            numAmount <= 0 ||
             numAmount > availableBalance ||
-            !gateAllowed;
+            !gateAllowed ||
+            secondsLeft <= 0;
 
           return (
             <Button
@@ -381,7 +396,7 @@ const Convert = () => {
               ) : (
                 <>
                   <RefreshCw className="w-4 h-4 mr-2" />
-                  Convert to NGN
+                  Convert at locked rate
                 </>
               )}
             </Button>
@@ -389,7 +404,7 @@ const Convert = () => {
         })()}
 
         <p className="text-xs text-muted-foreground text-center">
-          Conversions are processed in the background. NGN will be credited once complete.
+          Quote locked for 60 seconds. Funds are reserved on confirm and credited once conversion completes.
         </p>
       </main>
 
