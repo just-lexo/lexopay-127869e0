@@ -51,6 +51,12 @@ const Admin = () => {
   const [syncingDeposits, setSyncingDeposits] = useState(false);
   const [recoverTxHash, setRecoverTxHash] = useState('');
   const [recovering, setRecovering] = useState(false);
+  const [treasury, setTreasury] = useState<any>(null);
+
+  const fetchTreasury = async () => {
+    const { data } = await supabase.rpc('admin_treasury_kpis');
+    setTreasury(data || null);
+  };
 
   const handleRecoverByTx = async () => {
     const tx = recoverTxHash.trim();
@@ -103,6 +109,7 @@ const Admin = () => {
   useEffect(() => {
     if (!isAdmin) { navigate('/dashboard'); return; }
     fetchData();
+    fetchTreasury();
   }, [isAdmin]);
 
   const fetchData = async () => {
@@ -272,7 +279,30 @@ const Admin = () => {
                 <StatCard icon={<RefreshCw className="w-4 h-4" />} label="Conversions" value={stats.totalConversions.toString()} />
                 <StatCard icon={<ArrowUpFromLine className="w-4 h-4" />} label="Withdrawals" value={stats.totalWithdrawals.toString()} />
               </div>
-              <StatCard icon={<BarChart3 className="w-4 h-4" />} label="Total Volume" value={`₦${stats.totalVolume.toLocaleString()}`} />
+
+              {treasury && !treasury.error && (
+                <Card className="glass-card border-border/50">
+                  <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Shield className="w-4 h-4 text-primary" /> Treasury (30d)
+                    </CardTitle>
+                    <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={fetchTreasury}>
+                      <RefreshCw className="w-3 h-3 mr-1" /> Refresh
+                    </Button>
+                  </CardHeader>
+                  <CardContent className="grid grid-cols-2 gap-3 text-xs">
+                    <KPIRow label="Fee revenue" value={`₦${Number(treasury.fee_revenue_30d || 0).toLocaleString()}`} />
+                    <KPIRow label="Spread revenue" value={`₦${Number(treasury.spread_revenue_30d || 0).toLocaleString()}`} />
+                    <KPIRow label="Deposits in" value={`₦${Number(treasury.deposits_30d || 0).toLocaleString()}`} />
+                    <KPIRow label="Withdrawals out" value={`₦${Number(treasury.withdrawals_30d || 0).toLocaleString()}`} />
+                    <KPIRow label="Total NGN held" value={`₦${Number(treasury.total_ngn_balance || 0).toLocaleString()}`} />
+                    <KPIRow label="Verified users" value={`${treasury.verified_users ?? 0} / ${treasury.total_users ?? 0}`} />
+                    <KPIRow label="Frozen accounts" value={`${treasury.frozen_users ?? 0}`} tone={Number(treasury.frozen_users) > 0 ? 'warn' : undefined} />
+                    <KPIRow label="Pending ops" value={`${(treasury.pending_conversions ?? 0) + (treasury.pending_withdrawals ?? 0)}`} />
+                  </CardContent>
+                </Card>
+              )}
+
 
               <Card className="glass-card border-border/50">
                 <CardHeader className="pb-3"><CardTitle className="text-sm">Recent Activity</CardTitle></CardHeader>
@@ -635,6 +665,13 @@ const StatCard = ({ icon, label, value }: { icon: React.ReactNode; label: string
       <p className="text-xl font-bold">{value}</p>
     </CardContent>
   </Card>
+);
+
+const KPIRow = ({ label, value, tone }: { label: string; value: string; tone?: 'warn' }) => (
+  <div className="rounded-lg bg-background/50 p-2.5">
+    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</p>
+    <p className={`text-sm font-semibold mt-0.5 ${tone === 'warn' ? 'text-warning' : ''}`}>{value}</p>
+  </div>
 );
 
 export default Admin;
