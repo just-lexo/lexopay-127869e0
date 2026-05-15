@@ -41,7 +41,7 @@ const PinSetup = () => {
       }
       toast({ title: hasPin ? 'PIN updated' : 'PIN set successfully' });
       await refetch();
-      navigate(-1);
+      navigate(required ? '/dashboard' : -1 as any, { replace: true });
     } catch (err: any) {
       toast({ title: 'Error', description: err?.message || 'Try again', variant: 'destructive' });
     } finally {
