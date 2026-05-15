@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action: string
+          admin_id: string
+          created_at: string
+          details: Json
+          id: string
+          target_id: string | null
+          target_kind: string | null
+          target_user_id: string | null
+        }
+        Insert: {
+          action: string
+          admin_id: string
+          created_at?: string
+          details?: Json
+          id?: string
+          target_id?: string | null
+          target_kind?: string | null
+          target_user_id?: string | null
+        }
+        Update: {
+          action?: string
+          admin_id?: string
+          created_at?: string
+          details?: Json
+          id?: string
+          target_id?: string | null
+          target_kind?: string | null
+          target_user_id?: string | null
+        }
+        Relationships: []
+      }
       allowlist: {
         Row: {
           created_at: string
@@ -189,6 +222,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      daily_usage: {
+        Row: {
+          ngn_outflow: number
+          updated_at: string
+          usage_date: string
+          user_id: string
+        }
+        Insert: {
+          ngn_outflow?: number
+          updated_at?: string
+          usage_date: string
+          user_id: string
+        }
+        Update: {
+          ngn_outflow?: number
+          updated_at?: string
+          usage_date?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       deposits: {
         Row: {
@@ -475,10 +529,15 @@ export type Database = {
         Row: {
           created_at: string
           display_name: string | null
+          frozen_at: string | null
+          frozen_reason: string | null
           id: string
           is_admin: boolean
+          is_frozen: boolean
           kyc_tier: number
           onboarding_completed: boolean
+          pin_set_at: string | null
+          transaction_pin_hash: string | null
           updated_at: string
           user_id: string
           username: string | null
@@ -488,10 +547,15 @@ export type Database = {
         Insert: {
           created_at?: string
           display_name?: string | null
+          frozen_at?: string | null
+          frozen_reason?: string | null
           id?: string
           is_admin?: boolean
+          is_frozen?: boolean
           kyc_tier?: number
           onboarding_completed?: boolean
+          pin_set_at?: string | null
+          transaction_pin_hash?: string | null
           updated_at?: string
           user_id: string
           username?: string | null
@@ -501,10 +565,15 @@ export type Database = {
         Update: {
           created_at?: string
           display_name?: string | null
+          frozen_at?: string | null
+          frozen_reason?: string | null
           id?: string
           is_admin?: boolean
+          is_frozen?: boolean
           kyc_tier?: number
           onboarding_completed?: boolean
+          pin_set_at?: string | null
+          transaction_pin_hash?: string | null
           updated_at?: string
           user_id?: string
           username?: string | null
@@ -659,6 +728,42 @@ export type Database = {
         }
         Relationships: []
       }
+      treasury_ledger: {
+        Row: {
+          amount: number
+          asset: string
+          created_at: string
+          entry_type: string
+          id: string
+          metadata: Json
+          reference_id: string | null
+          reference_kind: string | null
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          asset: string
+          created_at?: string
+          entry_type: string
+          id?: string
+          metadata?: Json
+          reference_id?: string | null
+          reference_kind?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          asset?: string
+          created_at?: string
+          entry_type?: string
+          id?: string
+          metadata?: Json
+          reference_id?: string | null
+          reference_kind?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -748,11 +853,29 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _bump_daily_usage: {
+        Args: { _ngn: number; _uid: string }
+        Returns: undefined
+      }
+      _verify_pin_internal: {
+        Args: { _pin: string; _uid: string }
+        Returns: boolean
+      }
+      admin_set_account_frozen: {
+        Args: { _frozen: boolean; _reason?: string; _target_user: string }
+        Returns: Json
+      }
+      admin_treasury_kpis: { Args: never; Returns: Json }
+      change_transaction_pin: {
+        Args: { _new_pin: string; _old_pin: string }
+        Returns: Json
+      }
       consume_conversion_quote: { Args: { _quote_id: string }; Returns: Json }
       convert_crypto_to_ngn: {
         Args: { _amount: number; _network: string; _token: string }
         Returns: Json
       }
+      get_tier_daily_limit: { Args: { _tier: number }; Returns: number }
       get_user_kyc_status: { Args: { _user_id: string }; Returns: string }
       get_user_wallet_id: {
         Args: {
@@ -785,16 +908,28 @@ export type Database = {
         }[]
       }
       pay_payment_request: { Args: { _request_id: string }; Returns: Json }
-      process_internal_transfer: {
-        Args: {
-          _amount: number
-          _idempotency_key: string
-          _network: string
-          _recipient_username: string
-          _token: string
-        }
-        Returns: Json
-      }
+      process_internal_transfer:
+        | {
+            Args: {
+              _amount: number
+              _idempotency_key: string
+              _network: string
+              _recipient_username: string
+              _token: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              _amount: number
+              _idempotency_key: string
+              _network: string
+              _pin?: string
+              _recipient_username: string
+              _token: string
+            }
+            Returns: Json
+          }
       request_crypto_conversion: {
         Args: {
           _amount: number
@@ -808,6 +943,7 @@ export type Database = {
       }
       reset_all_users_data: { Args: { _seed_balance?: boolean }; Returns: Json }
       reset_demo_data: { Args: { _seed_balance?: boolean }; Returns: Json }
+      set_transaction_pin: { Args: { _pin: string }; Returns: Json }
       transfer_crypto:
         | {
             Args: {
@@ -828,17 +964,30 @@ export type Database = {
             }
             Returns: Json
           }
-      withdraw_ngn: {
-        Args: {
-          _account_name: string
-          _account_number: string
-          _amount: number
-          _bank_code: string
-          _bank_name: string
-          _fee: number
-        }
-        Returns: Json
-      }
+      withdraw_ngn:
+        | {
+            Args: {
+              _account_name: string
+              _account_number: string
+              _amount: number
+              _bank_code: string
+              _bank_name: string
+              _fee: number
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              _account_name: string
+              _account_number: string
+              _amount: number
+              _bank_code: string
+              _bank_name: string
+              _fee: number
+              _pin?: string
+            }
+            Returns: Json
+          }
     }
     Enums: {
       allowlist_type: "EMAIL" | "USERNAME"

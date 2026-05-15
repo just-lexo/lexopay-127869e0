@@ -8,6 +8,8 @@ import { SUPPORTED_TOKENS, type SupportedToken } from '@/adapters';
 import { createNotification } from '@/hooks/useNotifications';
 import { TestModeBanner } from '@/components/TestModeBanner';
 import { TransactionGate, useTransactionGate } from '@/components/TransactionGate';
+import { PinPromptModal } from '@/components/PinPromptModal';
+import { usePinStatus } from '@/hooks/usePinStatus';
  import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -37,6 +39,8 @@ const Send = () => {
   const { mask } = useHideBalances();
   const { toast } = useToast();
   const { allowed: gateAllowed } = useTransactionGate();
+  const { hasPin } = usePinStatus();
+  const [pinOpen, setPinOpen] = useState(false);
 
   // Pre-fill recipient from URL query param
   const searchParams = new URLSearchParams(window.location.search);
@@ -120,7 +124,7 @@ const Send = () => {
     }
   };
 
-  const handleSend = async () => {
+  const handleSend = async (pin?: string) => {
     if (!user || !recipient || !canSend || !profile) return;
     if (!gateAllowed) {
       toast({ title: 'Action blocked', description: 'Verify your email and complete KYC to send.', variant: 'destructive' });
@@ -142,6 +146,7 @@ const Send = () => {
         _network: 'base',
         _amount: sendAmount,
         _idempotency_key: idemKeyRef.current,
+        _pin: pin ?? null,
       });
 
       if (error) {
@@ -277,7 +282,7 @@ const Send = () => {
 
           <Button
             className="w-full min-h-[48px] gradient-primary hover:opacity-90"
-            onClick={handleSend}
+            onClick={() => { if (hasPin) setPinOpen(true); else handleSend(); }}
             disabled={loading}
           >
             {loading ? (
@@ -290,6 +295,15 @@ const Send = () => {
             )}
           </Button>
         </main>
+
+        <PinPromptModal
+          open={pinOpen}
+          onOpenChange={setPinOpen}
+          hasPin={hasPin}
+          loading={loading}
+          onSubmit={async (pin) => { setPinOpen(false); await handleSend(pin); }}
+          description={`Confirm sending ${sendAmount} ${selectedToken} to @${recipient.username}.`}
+        />
 
         <BottomNav />
       </div>
