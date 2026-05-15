@@ -667,4 +667,11 @@ const StatCard = ({ icon, label, value }: { icon: React.ReactNode; label: string
   </Card>
 );
 
+const KPIRow = ({ label, value, tone }: { label: string; value: string; tone?: 'warn' }) => (
+  <div className="rounded-lg bg-background/50 p-2.5">
+    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</p>
+    <p className={`text-sm font-semibold mt-0.5 ${tone === 'warn' ? 'text-warning' : ''}`}>{value}</p>
+  </div>
+);
+
 export default Admin;
