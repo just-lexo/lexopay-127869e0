@@ -205,6 +205,7 @@ const KYC = () => {
           </div>
         ) : (
           <>
+            <KycTierHub variant="full" />
             {currentStatus && (
               <Card className="glass-card border-border/50">
                 <CardContent className="py-4">
