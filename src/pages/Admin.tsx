@@ -312,11 +312,12 @@ const Admin = () => {
           <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="w-full grid grid-cols-6 h-auto">
+            <TabsList className="w-full grid grid-cols-7 h-auto">
               <TabsTrigger value="overview" className="text-[11px] sm:text-xs py-2">Dashboard</TabsTrigger>
               <TabsTrigger value="users" className="text-[11px] sm:text-xs py-2">Users</TabsTrigger>
               <TabsTrigger value="transactions" className="text-[11px] sm:text-xs py-2">Txns</TabsTrigger>
               <TabsTrigger value="kyc" className="text-[11px] sm:text-xs py-2">KYC</TabsTrigger>
+              <TabsTrigger value="audit" className="text-[11px] sm:text-xs py-2">Audit</TabsTrigger>
               <TabsTrigger value="support" className="text-[11px] sm:text-xs py-2">Support</TabsTrigger>
               <TabsTrigger value="settings" className="text-[11px] sm:text-xs py-2">Settings</TabsTrigger>
             </TabsList>
