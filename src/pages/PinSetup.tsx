@@ -13,6 +13,8 @@ const cleanDigits = (v: string) => v.replace(/\D/g, '').slice(0, 6);
 
 const PinSetup = () => {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const required = params.get('required') === '1';
   const { toast } = useToast();
   const { hasPin, loading: loadingStatus, refetch } = usePinStatus();
 
