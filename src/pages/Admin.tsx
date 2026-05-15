@@ -667,6 +667,59 @@ const Admin = () => {
             </TabsContent>
 
             {/* SUPPORT CHAT */}
+            {/* AUDIT */}
+            <TabsContent value="audit" className="space-y-4 mt-4">
+              <Card className="glass-card border-border/50">
+                <CardHeader className="pb-3 flex-row items-center justify-between">
+                  <div>
+                    <CardTitle className="text-sm">Admin Audit Log</CardTitle>
+                    <CardDescription className="text-xs">Last 100 administrative actions</CardDescription>
+                  </div>
+                  <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={fetchAuditLog}>
+                    <RefreshCw className="w-3 h-3 mr-1" /> Refresh
+                  </Button>
+                </CardHeader>
+                <CardContent className="p-0">
+                  {auditLog.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-8">No actions logged yet</p>
+                  ) : (
+                    <div className="overflow-x-auto max-h-[60vh] overflow-y-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="text-xs">When</TableHead>
+                            <TableHead className="text-xs">Action</TableHead>
+                            <TableHead className="text-xs hidden sm:table-cell">Target</TableHead>
+                            <TableHead className="text-xs">Details</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {auditLog.map((a: any) => (
+                            <TableRow key={a.id}>
+                              <TableCell className="py-2 text-[11px] text-muted-foreground whitespace-nowrap">
+                                {new Date(a.created_at).toLocaleString()}
+                              </TableCell>
+                              <TableCell className="py-2">
+                                <Badge variant="outline" className="text-[10px]">{a.action}</Badge>
+                              </TableCell>
+                              <TableCell className="py-2 hidden sm:table-cell">
+                                <p className="text-[11px] font-mono text-muted-foreground">
+                                  {a.target_kind || '—'}{a.target_user_id ? ` · ${String(a.target_user_id).slice(0, 8)}…` : ''}
+                                </p>
+                              </TableCell>
+                              <TableCell className="py-2 text-[11px] text-muted-foreground max-w-[280px] truncate">
+                                {a.details ? JSON.stringify(a.details) : '—'}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
             <TabsContent value="support" className="space-y-4 mt-4">
               <AdminSupportChat tickets={supportTickets} onRefresh={fetchData} />
             </TabsContent>
