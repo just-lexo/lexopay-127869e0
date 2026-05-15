@@ -52,11 +52,60 @@ const Admin = () => {
   const [recoverTxHash, setRecoverTxHash] = useState('');
   const [recovering, setRecovering] = useState(false);
   const [treasury, setTreasury] = useState<any>(null);
+  const [auditLog, setAuditLog] = useState<any[]>([]);
+  const [busyId, setBusyId] = useState<string | null>(null);
 
   const fetchTreasury = async () => {
     const { data } = await supabase.rpc('admin_treasury_kpis');
     setTreasury(data || null);
   };
+
+  const fetchAuditLog = async () => {
+    const { data } = await supabase
+      .from('admin_audit_log')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(100);
+    setAuditLog((data as any[]) || []);
+  };
+
+  const handleFreeze = async (userId: string, freeze: boolean) => {
+    const reason = freeze ? (window.prompt('Reason for freezing this account?') || '').trim() : null;
+    if (freeze && !reason) return;
+    setBusyId(userId);
+    const { data, error } = await supabase.rpc('admin_set_account_frozen', {
+      _target_user: userId, _frozen: freeze, _reason: reason,
+    });
+    setBusyId(null);
+    const r = data as any;
+    if (error || !r?.success) {
+      toast({ title: 'Failed', description: error?.message || r?.error || 'Try again', variant: 'destructive' });
+    } else {
+      toast({ title: freeze ? 'Account frozen' : 'Account unfrozen' });
+      fetchData();
+      fetchAuditLog();
+    }
+  };
+
+  const handleResolveWithdrawal = async (id: string, success: boolean) => {
+    const note = window.prompt(success ? 'Optional success note (e.g. provider ref)' : 'Reason for failing this withdrawal?') || '';
+    if (!success && !note.trim()) return;
+    setBusyId(id);
+    const { data, error } = await supabase.rpc('admin_resolve_withdrawal', {
+      _withdrawal_id: id, _success: success, _note: note,
+    });
+    setBusyId(null);
+    const r = data as any;
+    if (error || !r?.success) {
+      toast({ title: 'Failed', description: error?.message || r?.error || 'Try again', variant: 'destructive' });
+    } else {
+      toast({ title: success ? 'Marked as paid' : 'Refunded user' });
+      fetchData();
+      fetchTreasury();
+      fetchAuditLog();
+    }
+  };
+
 
   const handleRecoverByTx = async () => {
     const tx = recoverTxHash.trim();
