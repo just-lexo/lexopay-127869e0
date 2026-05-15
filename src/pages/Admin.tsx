@@ -428,7 +428,21 @@ const Admin = () => {
                               <TableCell className="text-right py-2.5">
                                 <div className="flex flex-wrap items-center justify-end gap-1.5">
                                   {u.is_admin && <Badge variant="default" className="text-[10px]">Admin</Badge>}
+                                  {u.is_frozen && <Badge variant="destructive" className="text-[10px]">Frozen</Badge>}
                                   <Badge variant="outline" className="text-[10px]">KYC {u.kyc_tier}</Badge>
+                                  {!u.is_admin && (
+                                    <Button
+                                      size="sm"
+                                      variant={u.is_frozen ? 'outline' : 'destructive'}
+                                      className="h-7 text-[10px] px-2"
+                                      disabled={busyId === u.user_id}
+                                      onClick={() => handleFreeze(u.user_id, !u.is_frozen)}
+                                    >
+                                      {busyId === u.user_id ? <Loader2 className="w-3 h-3 animate-spin" />
+                                        : u.is_frozen ? <><UserCheck className="w-3 h-3 mr-1" />Unfreeze</>
+                                        : <><UserX className="w-3 h-3 mr-1" />Freeze</>}
+                                    </Button>
+                                  )}
                                 </div>
                               </TableCell>
                             </TableRow>
