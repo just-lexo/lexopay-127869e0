@@ -499,9 +499,17 @@ const Withdraw = () => {
         onOpenChange={setFaceVerifyOpen}
         onVerified={() => {
           setFaceVerified(true);
-          // After verification, proceed with withdrawal
-          handleWithdraw();
+          if (hasPin) setPinOpen(true); else handleWithdraw();
         }}
+      />
+
+      <PinPromptModal
+        open={pinOpen}
+        onOpenChange={setPinOpen}
+        hasPin={hasPin}
+        loading={loading}
+        onSubmit={async (pin) => { setPinOpen(false); await handleWithdraw(pin); }}
+        description={`Confirm withdrawal of ${formatCurrency(withdrawAmount)} to ${effectiveAccountName ?? 'your bank'}.`}
       />
     </div>
   );

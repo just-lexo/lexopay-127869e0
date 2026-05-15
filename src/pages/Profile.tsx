@@ -35,6 +35,7 @@ import {
   MessageSquarePlus,
   Edit,
   Loader2,
+  KeyRound,
   AlertTriangle,
   Wallet,
   Copy,
@@ -268,6 +269,12 @@ const Profile = () => {
         {/* Actions */}
         <Card className="glass-card border-border/50">
           <CardContent className="py-2 divide-y divide-border/50">
+            <button className="flex items-center gap-3 py-3 w-full text-left hover:bg-muted/30 transition-colors rounded-md px-2 -mx-2" onClick={() => navigate('/pin')}>
+              <KeyRound className="w-5 h-5 text-muted-foreground" />
+              <p className="text-sm font-medium flex-1">Transaction PIN</p>
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            </button>
+
             <button className="flex items-center gap-3 py-3 w-full text-left hover:bg-muted/30 transition-colors rounded-md px-2 -mx-2" onClick={() => navigate('/support')}>
               <MessageSquarePlus className="w-5 h-5 text-muted-foreground" />
               <p className="text-sm font-medium flex-1">Support</p>
