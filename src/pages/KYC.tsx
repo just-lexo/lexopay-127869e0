@@ -15,6 +15,7 @@ import {
 import {
   ArrowLeft, Loader2, BadgeCheck, Camera, FileText, CheckCircle2, Clock, XCircle, ShieldCheck,
 } from 'lucide-react';
+import { KycTierHub } from '@/components/KycTierHub';
 
 type KycStatus = 'pending' | 'approved' | 'rejected' | null;
 
