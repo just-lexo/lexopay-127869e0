@@ -53,15 +53,21 @@ const PinSetup = () => {
     <div className="min-h-screen bg-background pb-20">
       <header className="glass-card border-b border-border/50 sticky top-0 z-50">
         <div className="container max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
-          <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => navigate(-1)}>
-            <ArrowLeft className="w-4 h-4" />
-          </Button>
+          {required ? (
+            <div className="h-9 w-9" />
+          ) : (
+            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => navigate(-1)}>
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
+          )}
           <div>
             <h1 className="font-semibold text-base flex items-center gap-2">
               <KeyRound className="w-4 h-4 text-primary" />
               {hasPin ? 'Change Transaction PIN' : 'Set Transaction PIN'}
             </h1>
-            <p className="text-xs text-muted-foreground">Required for sends and withdrawals</p>
+            <p className="text-xs text-muted-foreground">
+              {required ? 'Required to continue using LexoPay' : 'Required for sends and withdrawals'}
+            </p>
           </div>
         </div>
       </header>
