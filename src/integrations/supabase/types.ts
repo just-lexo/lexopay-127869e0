@@ -367,6 +367,7 @@ export type Database = {
       kyc_submissions: {
         Row: {
           admin_note: string | null
+          bvn: string | null
           created_at: string
           date_of_birth: string | null
           document_url: string | null
@@ -374,14 +375,19 @@ export type Database = {
           id: string
           id_number: string | null
           id_type: string | null
+          nin: string | null
           phone_number: string
+          provider: string | null
+          provider_response: Json | null
           selfie_url: string | null
           status: Database["public"]["Enums"]["kyc_status"]
+          tier_target: number | null
           updated_at: string
           user_id: string
         }
         Insert: {
           admin_note?: string | null
+          bvn?: string | null
           created_at?: string
           date_of_birth?: string | null
           document_url?: string | null
@@ -389,14 +395,19 @@ export type Database = {
           id?: string
           id_number?: string | null
           id_type?: string | null
+          nin?: string | null
           phone_number: string
+          provider?: string | null
+          provider_response?: Json | null
           selfie_url?: string | null
           status?: Database["public"]["Enums"]["kyc_status"]
+          tier_target?: number | null
           updated_at?: string
           user_id: string
         }
         Update: {
           admin_note?: string | null
+          bvn?: string | null
           created_at?: string
           date_of_birth?: string | null
           document_url?: string | null
@@ -404,9 +415,13 @@ export type Database = {
           id?: string
           id_number?: string | null
           id_type?: string | null
+          nin?: string | null
           phone_number?: string
+          provider?: string | null
+          provider_response?: Json | null
           selfie_url?: string | null
           status?: Database["public"]["Enums"]["kyc_status"]
+          tier_target?: number | null
           updated_at?: string
           user_id?: string
         }
@@ -861,6 +876,19 @@ export type Database = {
         Args: { _pin: string; _uid: string }
         Returns: boolean
       }
+      admin_apply_kyc_provider_result: {
+        Args: {
+          _provider: string
+          _provider_response: Json
+          _tier: number
+          _user_id: string
+        }
+        Returns: Json
+      }
+      admin_resolve_conversion: {
+        Args: { _conversion_id: string; _note?: string; _success: boolean }
+        Returns: Json
+      }
       admin_resolve_withdrawal: {
         Args: { _note?: string; _success: boolean; _withdrawal_id: string }
         Returns: Json
@@ -869,7 +897,51 @@ export type Database = {
         Args: { _frozen: boolean; _reason?: string; _target_user: string }
         Returns: Json
       }
+      admin_set_rate_override: {
+        Args: {
+          _enabled: boolean
+          _manual_price_usd: number
+          _spread_pct: number
+          _token: string
+        }
+        Returns: Json
+      }
+      admin_treasury_adjust: {
+        Args: {
+          _amount: number
+          _asset: string
+          _entry_type: string
+          _note?: string
+        }
+        Returns: Json
+      }
       admin_treasury_kpis: { Args: never; Returns: Json }
+      admin_treasury_per_asset: {
+        Args: never
+        Returns: {
+          asset: string
+          deposits_in: number
+          fee_revenue: number
+          manual_net: number
+          net: number
+          spread_revenue: number
+          withdrawals_out: number
+        }[]
+      }
+      admin_treasury_pnl: {
+        Args: { _days?: number }
+        Returns: {
+          day: string
+          fee_revenue: number
+          manual: number
+          spread_revenue: number
+          total: number
+        }[]
+      }
+      calculate_withdraw_fee: {
+        Args: { _amount: number; _tier: number }
+        Returns: Json
+      }
       change_transaction_pin: {
         Args: { _new_pin: string; _old_pin: string }
         Returns: Json

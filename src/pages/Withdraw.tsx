@@ -39,8 +39,7 @@ import { EmailVerificationBanner } from '@/components/EmailVerificationBanner';
 import { KycGateBanner } from '@/components/KycGateBanner';
 import { PinPromptModal } from '@/components/PinPromptModal';
 import { usePinStatus } from '@/hooks/usePinStatus';
-
-const WITHDRAWAL_FEE = 20;
+import { calculateWithdrawFee } from '@/lib/withdrawFee';
 
 interface PendingWithdrawal {
   id: string;
@@ -80,6 +79,8 @@ const Withdraw = () => {
   
   const availableBalance = ngnBalance?.balance ?? 0;
   const withdrawAmount = parseFloat(amount) || 0;
+  const feeBreakdown = calculateWithdrawFee(withdrawAmount, profile?.kyc_tier ?? 0);
+  const WITHDRAWAL_FEE = feeBreakdown.total_fee;
   const totalDeduction = withdrawAmount + WITHDRAWAL_FEE;
 
   // For default mode, auto-fill from saved account
@@ -419,9 +420,20 @@ const Withdraw = () => {
                   <span>{formatCurrency(withdrawAmount)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Transfer fee</span>
-                  <span>{formatCurrency(WITHDRAWAL_FEE)}</span>
+                  <span className="text-muted-foreground">
+                    Transfer fee
+                    {feeBreakdown.tier_discount_pct > 0 && (
+                      <span className="ml-1 text-[10px] text-success">(−{feeBreakdown.tier_discount_pct}% tier {profile?.kyc_tier})</span>
+                    )}
+                  </span>
+                  <span>{formatCurrency(feeBreakdown.base_fee)}</span>
                 </div>
+                {feeBreakdown.stamp_duty > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Stamp duty (CBN)</span>
+                    <span>{formatCurrency(feeBreakdown.stamp_duty)}</span>
+                  </div>
+                )}
                 <div className="border-t border-border/50 pt-2 flex justify-between font-medium">
                   <span>Total deduction</span>
                   <span className={totalDeduction > availableBalance ? 'text-destructive' : ''}>

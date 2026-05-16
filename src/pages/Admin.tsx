@@ -13,6 +13,9 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AdminSupportChat } from '@/components/admin/AdminSupportChat';
+import { TreasurySection } from '@/components/admin/TreasurySection';
+import { RateOverridesSection } from '@/components/admin/RateOverridesSection';
+import { ConversionsQueueSection } from '@/components/admin/ConversionsQueueSection';
 import {
   ArrowLeft, Loader2, Shield, Users, Inbox, BarChart3,
   ArrowDownToLine, RefreshCw, ArrowUpFromLine, Search,
@@ -312,10 +315,11 @@ const Admin = () => {
           <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="w-full grid grid-cols-7 h-auto">
+            <TabsList className="w-full grid grid-cols-4 sm:grid-cols-8 h-auto">
               <TabsTrigger value="overview" className="text-[11px] sm:text-xs py-2">Dashboard</TabsTrigger>
               <TabsTrigger value="users" className="text-[11px] sm:text-xs py-2">Users</TabsTrigger>
               <TabsTrigger value="transactions" className="text-[11px] sm:text-xs py-2">Txns</TabsTrigger>
+              <TabsTrigger value="treasury" className="text-[11px] sm:text-xs py-2">Treasury</TabsTrigger>
               <TabsTrigger value="kyc" className="text-[11px] sm:text-xs py-2">KYC</TabsTrigger>
               <TabsTrigger value="audit" className="text-[11px] sm:text-xs py-2">Audit</TabsTrigger>
               <TabsTrigger value="support" className="text-[11px] sm:text-xs py-2">Support</TabsTrigger>
@@ -455,8 +459,15 @@ const Admin = () => {
               </Card>
             </TabsContent>
 
+            {/* TREASURY */}
+            <TabsContent value="treasury" className="space-y-4 mt-4">
+              <TreasurySection />
+              <RateOverridesSection />
+            </TabsContent>
+
             {/* TRANSACTIONS */}
             <TabsContent value="transactions" className="space-y-4 mt-4">
+              <ConversionsQueueSection onResolved={() => { fetchData(); fetchTreasury(); }} />
               <Card className="glass-card border-border/50">
                 <CardHeader className="pb-2"><CardTitle className="text-sm">Deposits ({deposits.length})</CardTitle></CardHeader>
                 <CardContent className="p-0">
