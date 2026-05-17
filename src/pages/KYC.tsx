@@ -16,7 +16,6 @@ import {
   ArrowLeft, Loader2, BadgeCheck, Camera, FileText, CheckCircle2, Clock, XCircle, ShieldCheck,
 } from 'lucide-react';
 import { KycTierHub } from '@/components/KycTierHub';
-import { InstantKycVerify } from '@/components/InstantKycVerify';
 
 type KycStatus = 'pending' | 'approved' | 'rejected' | null;
 
@@ -207,9 +206,6 @@ const KYC = () => {
         ) : (
           <>
             <KycTierHub variant="full" />
-            {status !== 'approved' && status !== 'pending' && (
-              <InstantKycVerify onVerified={() => { setStatus('approved'); fetchKYC(); }} />
-            )}
             {currentStatus && (
               <Card className="glass-card border-border/50">
                 <CardContent className="py-4">

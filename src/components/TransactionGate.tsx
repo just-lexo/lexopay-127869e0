@@ -14,7 +14,8 @@ interface Props {
 export function useTransactionGate() {
   const { emailConfirmed } = useAuth();
   const { isApproved, status: kycStatus, loading } = useKycStatus();
-  const allowed = emailConfirmed && isApproved;
+  // Only email verification hard-blocks. KYC tier governs daily NGN limits server-side.
+  const allowed = emailConfirmed;
   return { allowed, emailConfirmed, kycApproved: isApproved, kycStatus, loading };
 }
 
@@ -24,7 +25,9 @@ export function TransactionGate({ feature = 'this action' }: Props) {
   return (
     <div className="space-y-2">
       {!emailConfirmed && <EmailVerificationBanner />}
-      {emailConfirmed && !kycApproved && <KycGateBanner status={kycStatus} feature={feature} />}
+      {emailConfirmed && !kycApproved && (
+        <KycGateBanner status={kycStatus} feature={`higher ${feature} limits`} />
+      )}
     </div>
   );
 }
